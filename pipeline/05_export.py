@@ -14,9 +14,14 @@ u["sheet_name"] = first_src.map(src.sheet_name).fillna("")
 u["source_url"] = first_src.map(src.url).fillna("")
 cols = ["poly_id", "unit_id", "formation", "symbol_std", "lith_class", "lith_detail", "age_top_ma", "age_base_ma",
         "interval_top", "interval_base", "color_hex", "description", "sheet_name", "source_url", "source_id"]
-for c in cols:
+for c in cols + ["symbol_orig", "name_orig", "desc_orig"]:
     if c not in u.columns:
         u[c] = ""
+# Unit yang belum dikurasi tetap informatif: pakai simbol, nama, dan keterangan asli dari sumber.
+blank = lambda s: s.isna() | (s.astype(str).str.strip() == "")
+u["symbol_std"] = u.symbol_std.mask(blank(u.symbol_std), u.symbol_orig.astype(str).str.split(";").str[0])
+u["formation"] = u.formation.mask(blank(u.formation), u.name_orig)
+u["description"] = u.description.mask(blank(u.description), u.desc_orig)
 u = u.rename(columns={"symbol_std": "symbol"})
 cols = [("symbol" if c == "symbol_std" else c) for c in cols]
 u[cols + ["geometry"]].to_file(od / "units.geojsonl", driver="GeoJSONSeq")
