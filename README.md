@@ -58,4 +58,4 @@ Data mentah GeoMap tidak disimpan di repo ini.
 
 ## Status
 
-MVP dalam pengembangan. Lihat PRD untuk roadmap (M0 scaffold → M1 PoC Bangka–Belitung → M2 MVP publik).
+MVP dalam pengembangan (M0 scaffold selesai). PRD: [docs/PRD.md](docs/PRD.md) · [versi lengkap](https://claude.ai/code/artifact/ad4fc269-8236-42dc-9846-63c9516de477) · [desain UI](https://claude.ai/artifact/6bmHZNaq7XYGdZ8T8E6CHn)
