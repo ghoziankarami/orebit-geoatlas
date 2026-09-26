@@ -30,6 +30,8 @@ DEFAULT_LAYER = "https://geoportal.esdm.go.id/gis4/rest/services/BGS_PM/Geologi_
 REGION_BBOX = {
     # lon_min, lat_min, lon_max, lat_max (EPSG:4326)
     "babel": (105.0, -3.6, 109.0, -1.3),
+    # Timur dibatasi pas di 105.0 (batas barat babel) supaya tidak tumpang-tindih poligon.
+    "sumatra": (95.0, -6.5, 105.0, 6.5),
 }
 CHUNK = 250          # objectId per permintaan (di bawah maxRecordCount, URL/POST tetap kecil)
 PAUSE_S = 1.0
