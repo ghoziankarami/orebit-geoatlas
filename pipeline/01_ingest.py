@@ -70,7 +70,7 @@ for f in files:
         typ = pick_field(cols, LINE_TYPE_FIELDS)
         lines.append(gpd.GeoDataFrame({
             "source_id": sid,
-            "type_orig": gdf[typ].astype(str).str.strip() if typ else "",
+            "type_orig": gdf[typ].astype(str).str.strip() if typ else pd.Series("", index=gdf.index),
         }, geometry=gdf.geometry, crs=4326))
     else:
         print(f"[LEWATI] {key}: tipe geometri {geom_types}")
