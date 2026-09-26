@@ -1,0 +1,3 @@
+# Satu baris per unit baku. color_hex boleh kosong (otomatis dari umur base via ics_intervals.csv).
+unit_id,formation,symbol_std,lith_class,lith_detail,age_top_ma,age_base_ma,interval_top,interval_base,color_hex,description
+QA,Aluvium,Qa,unconsolidated,"kerakal, kerikil, pasir, lanau, lempung",0,0.0117,Holosen,Holosen,,Endapan sungai dan pantai

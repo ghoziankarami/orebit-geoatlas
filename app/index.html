@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Orebit GeoAtlas — Peta Geologi Indonesia</title>
+  <meta name="description" content="Peta geologi Indonesia yang mulus dan ringan: formasi, umur, dan litologi dari skala global sampai 1:100.000." />
+  <meta property="og:title" content="Orebit GeoAtlas — Peta Geologi Indonesia" />
+  <meta property="og:description" content="Jelajahi formasi, umur, dan litologi Indonesia langsung di browser." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div id="map" aria-label="Peta geologi"></div>
+
+  <aside class="panel" id="panel" aria-label="Kontrol peta">
+    <button class="sheet-handle" id="sheetHandle" aria-label="Buka atau tutup panel"></button>
+    <header class="brand">
+      <h1>GeoAtlas</h1>
+      <p id="t-tagline"></p>
+      <button class="lang" id="langBtn" type="button"></button>
+    </header>
+
+    <form class="search" id="searchForm" role="search">
+      <label class="sr-only" for="searchInput" id="t-searchLabel"></label>
+      <input id="searchInput" type="search" autocomplete="off" />
+      <ul id="searchResults" class="search-results" hidden></ul>
+    </form>
+
+    <section class="block">
+      <h2 id="t-colorBy"></h2>
+      <div class="segmented" role="radiogroup" id="modeGroup">
+        <button type="button" role="radio" data-mode="age" id="t-modeAge"></button>
+        <button type="button" role="radio" data-mode="lith" id="t-modeLith"></button>
+      </div>
+    </section>
+
+    <section class="block">
+      <h2 id="t-ageFilter"></h2>
+      <div class="age-range">
+        <input type="range" id="ageMin" min="0" max="600" step="1" aria-labelledby="t-ageFilter" />
+        <input type="range" id="ageMax" min="0" max="600" step="1" aria-labelledby="t-ageFilter" />
+      </div>
+      <p class="age-readout" id="ageReadout"></p>
+    </section>
+
+    <section class="block">
+      <label class="toggle"><input type="checkbox" id="linesToggle" checked /> <span id="t-lines"></span></label>
+    </section>
+
+    <section class="block legend" id="legend" aria-live="polite"></section>
+
+    <footer class="panel-foot">
+      <p id="t-disclaimer"></p>
+    </footer>
+  </aside>
+
+  <aside class="detail" id="detail" hidden aria-live="polite">
+    <button class="close" id="detailClose" type="button" aria-label="Tutup">×</button>
+    <div id="detailBody"></div>
+  </aside>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
