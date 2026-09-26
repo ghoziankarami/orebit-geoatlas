@@ -1,0 +1,9 @@
+lith_class,parent,label_id,label_en,color_hex
+unconsolidated,sedimentary,Endapan permukaan,Unconsolidated,#F2E6A0
+carbonate,sedimentary,Karbonat,Carbonate,#8FC7E6
+siliciclastic,sedimentary,Sedimen klastik,Siliciclastic,#E4B77A
+volcanic,igneous,Vulkanik,Volcanic,#E7766B
+plutonic_felsic,igneous,Plutonik felsik,Felsic plutonic,#E9A1C4
+plutonic_mafic,igneous,Plutonik mafik–ultramafik,Mafic–ultramafic plutonic,#6FA37B
+metamorphic,metamorphic,Metamorf,Metamorphic,#A895C9
+melange,mixed,Melange & campuran,Melange & mixed,#9AA4AB

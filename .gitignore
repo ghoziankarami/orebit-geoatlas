@@ -1,0 +1,10 @@
+node_modules/
+app/dist/
+data/raw/*
+data/out/*
+!data/raw/.gitkeep
+!data/out/.gitkeep
+.env
+__pycache__/
+*.pyc
+.DS_Store
