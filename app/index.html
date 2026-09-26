@@ -7,6 +7,7 @@
   <meta name="description" content="Peta geologi Indonesia yang mulus dan ringan: formasi, umur, dan litologi dari skala global sampai 1:100.000." />
   <meta property="og:title" content="Orebit GeoAtlas — Peta Geologi Indonesia" />
   <meta property="og:description" content="Jelajahi formasi, umur, dan litologi Indonesia langsung di browser." />
+  <meta name="theme-color" content="#FFFFFF" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -15,17 +16,20 @@
   <div id="map" aria-label="Peta geologi"></div>
 
   <aside class="panel" id="panel" aria-label="Kontrol peta">
-    <button class="sheet-handle" id="sheetHandle" aria-label="Buka atau tutup panel"></button>
+    <button class="sheet-handle" id="sheetHandle" type="button" aria-expanded="true"><span></span></button>
     <header class="brand">
-      <h1>GeoAtlas</h1>
-      <p id="t-tagline"></p>
+      <div>
+        <h1>GeoAtlas</h1>
+        <p class="tagline" id="t-tagline"></p>
+        <p class="sheet-hint" id="sheetHint"></p>
+      </div>
       <button class="lang" id="langBtn" type="button"></button>
     </header>
 
     <form class="search" id="searchForm" role="search">
       <label class="sr-only" for="searchInput" id="t-searchLabel"></label>
-      <input id="searchInput" type="search" autocomplete="off" />
-      <ul id="searchResults" class="search-results" hidden></ul>
+      <input id="searchInput" type="search" autocomplete="off" enterkeyhint="search" />
+      <div id="searchResults" class="search-results" hidden></div>
     </form>
 
     <section class="block">
@@ -39,6 +43,8 @@
     <section class="block">
       <h2 id="t-ageFilter"></h2>
       <div class="age-range">
+        <div class="age-track"></div>
+        <div class="age-fill" id="ageFill"></div>
         <input type="range" id="ageMin" min="0" max="600" step="1" aria-labelledby="t-ageFilter" />
         <input type="range" id="ageMax" min="0" max="600" step="1" aria-labelledby="t-ageFilter" />
       </div>
@@ -53,13 +59,51 @@
 
     <footer class="panel-foot">
       <p id="t-disclaimer"></p>
+      <button class="link-btn" id="aboutBtn" type="button"></button>
     </footer>
   </aside>
 
   <aside class="detail" id="detail" hidden aria-live="polite">
-    <button class="close" id="detailClose" type="button" aria-label="Tutup">×</button>
+    <button class="close" id="detailClose" type="button">
+      <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3 L13 13 M13 3 L3 13" /></svg>
+    </button>
     <div id="detailBody"></div>
+    <div class="detail-actions" id="detailActions">
+      <a class="btn primary" id="detailSource" target="_blank" rel="noopener" hidden></a>
+      <button class="btn" id="detailCopy" type="button"></button>
+    </div>
   </aside>
+
+  <div class="map-ctrls" aria-label="Navigasi peta">
+    <div class="ctrl-group">
+      <button type="button" id="zoomIn" class="ctrl">
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2 V14 M2 8 H14" /></svg>
+      </button>
+      <button type="button" id="zoomOut" class="ctrl">
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8 H14" /></svg>
+      </button>
+    </div>
+    <button type="button" id="locateBtn" class="ctrl solo">
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="5" /><path d="M9 1 V4 M9 14 V17 M1 9 H4 M14 9 H17" /></svg>
+    </button>
+  </div>
+
+  <div class="map-foot">
+    <div id="scaleSlot"></div>
+    <p class="attrib">
+      <a href="https://macrostrat.org" target="_blank" rel="noopener">Macrostrat</a> (CC-BY 4.0),
+      <a href="https://geologi.esdm.go.id/geomap" target="_blank" rel="noopener">Pusat Survei Geologi</a>,
+      © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>,
+      <a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a>
+    </p>
+  </div>
+
+  <p class="toast" id="toast" role="status" hidden></p>
+
+  <dialog class="about" id="aboutDialog" aria-labelledby="aboutTitle">
+    <div class="about-body" id="aboutBody"></div>
+    <form method="dialog"><button class="btn primary" id="aboutClose" type="submit"></button></form>
+  </dialog>
 
   <script type="module" src="/src/main.ts"></script>
 </body>
