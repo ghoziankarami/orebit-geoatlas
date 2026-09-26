@@ -20,19 +20,22 @@ u["unit_key"] = u.unit_id.fillna("").where(u.unit_id.fillna("") != "", "RAW:" + 
 # Tutup celah kecil di sambungan lembar dengan buffer +/-
 u["geometry"] = u.buffer(SNAP_M / 2).buffer(-SNAP_M / 2)
 
-keep = [c for c in u.columns if c not in ("geometry", "source_id", "symbol_orig", "name_orig")]
+keep = [c for c in u.columns if c not in ("geometry", "source_id", "symbol_orig")]
 merged = u.dissolve(by="unit_key", aggfunc={
     **{c: "first" for c in keep if c != "unit_key"},
     "source_id": lambda s: ";".join(sorted(set(s))),
     "symbol_orig": lambda s: ";".join(sorted(set(s))),
 }).explode(index_parts=False).reset_index()
 
-# Sambungan lembar = batas cakupan tiap sumber
-extents = u.dissolve(by="source_id").boundary
-seams = gpd.GeoSeries(extents.values, crs=utm).union_all()
-touch = merged[merged.boundary.intersects(seams.buffer(SNAP_M))]
-review = touch[~touch.source_id.str.contains(";")]  # poligon di sambungan yang tidak menyatu dengan lembar tetangga
-review.to_crs(4326).to_file(od / "edge_review.gpkg", driver="GPKG")
+# Sambungan lembar = batas cakupan tiap sumber. Hanya relevan bila ada lebih dari satu sumber;
+# dengan satu sumber (mis. layanan ESDM yang sudah seamless) tidak ada sambungan untuk ditinjau.
+review = merged.iloc[0:0]
+if u.source_id.nunique() > 1:
+    extents = u.dissolve(by="source_id").boundary
+    seams = gpd.GeoSeries(extents.values, crs=utm).union_all()
+    touch = merged[merged.boundary.intersects(seams.buffer(SNAP_M))]
+    review = touch[~touch.source_id.str.contains(";")]  # poligon di sambungan yang tidak menyatu dengan lembar tetangga
+    review.to_crs(4326).to_file(od / "edge_review.gpkg", driver="GPKG")
 
 merged = merged.to_crs(4326)
 merged["poly_id"] = [f"{region}-{i:06d}" for i in range(len(merged))]

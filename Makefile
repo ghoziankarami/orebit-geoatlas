@@ -1,7 +1,10 @@
 REGION ?= babel
 PY ?= python3
 
-.PHONY: setup inventory tiles app dev validate clean
+.PHONY: setup fetch-esdm inventory tiles app dev validate clean
+
+fetch-esdm:       ## Tarik poligon Peta Geologi dari layanan ArcGIS ESDM → data/raw/$(REGION)/esdm/
+	cd pipeline && $(PY) 00_fetch_esdm.py $(REGION)
 
 setup:            ## Pasang dependensi pipeline & app
 	$(PY) -m pip install -r pipeline/requirements.txt
