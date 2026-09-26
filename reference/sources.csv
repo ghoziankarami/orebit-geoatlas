@@ -1,1 +1,3 @@
 source_id,file_key,sheet_name,scale,year,authors,publisher,license,url
+1,babel/esdm/esdm_litologi.geojson,"Peta Geologi (layanan Geologi Litologi ESDM, status Mei 2018)",,2018,,"Pusat Survei Geologi, Badan Geologi","Lisensi Terbuka PSG (atribusi, tidak diperjualbelikan)",https://geoportal.esdm.go.id/gis4/rest/services/BGS_PM/Geologi_Litologi/MapServer
+2,sumatra/esdm/esdm_litologi.geojson,"Peta Geologi (layanan Geologi Litologi ESDM, status Mei 2018)",,2018,,"Pusat Survei Geologi, Badan Geologi","Lisensi Terbuka PSG (atribusi, tidak diperjualbelikan)",https://geoportal.esdm.go.id/gis4/rest/services/BGS_PM/Geologi_Litologi/MapServer
