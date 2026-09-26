@@ -1,9 +1,15 @@
 import type maplibregl from "maplibre-gl";
 import type { ExpressionSpecification } from "maplibre-gl";
 import { CONFIG } from "./config";
-import { macrostratLithColor, orebitLithColor } from "./lithology";
+import { macrostratLithColor, macrostratLithColorCoarse, orebitLithColor, orebitLithColorCoarse } from "./lithology";
 
 export type ColorMode = "age" | "lith";
+
+/** Zoom tempat legenda/warna beralih dari "besar" (period/kelompok litologi) ke "detail"
+ * (epoch/formasi per-unit). Di bawah ini ringkas biar tidak riuh saat cakupan peta luas; di atas
+ * ini rinci karena pengguna sudah fokus ke satu area. */
+export const FINE_ZOOM = 11;
+export const isFineZoom = (zoom: number): boolean => zoom >= FINE_ZOOM;
 
 const MS = "macrostrat";
 const OB = "orebit";
@@ -61,12 +67,19 @@ export function addGeologyLayers(map: maplibregl.Map) {
   }
 }
 
+const msAgeColor: ExpressionSpecification = ["coalesce", ["get", "color"], "#D9DEE1"];
+const obAgeColor: ExpressionSpecification = ["step", ["zoom"],
+  ["coalesce", ["get", "color_hex_coarse"], ["get", "color_hex"], "#D9DEE1"],
+  FINE_ZOOM,
+  ["coalesce", ["get", "color_hex"], "#D9DEE1"],
+] as unknown as ExpressionSpecification;
+const msLithColor: ExpressionSpecification = ["step", ["zoom"], macrostratLithColorCoarse, FINE_ZOOM, macrostratLithColor] as unknown as ExpressionSpecification;
+const obLithColor: ExpressionSpecification = ["step", ["zoom"], orebitLithColorCoarse, FINE_ZOOM, orebitLithColor] as unknown as ExpressionSpecification;
+
 export function setColorMode(map: maplibregl.Map, mode: ColorMode) {
-  map.setPaintProperty("ms-units", "fill-color",
-    mode === "age" ? ["coalesce", ["get", "color"], "#D9DEE1"] : macrostratLithColor);
+  map.setPaintProperty("ms-units", "fill-color", mode === "age" ? msAgeColor : msLithColor);
   if (map.getLayer("ob-units")) {
-    map.setPaintProperty("ob-units", "fill-color",
-      mode === "age" ? ["coalesce", ["get", "color_hex"], "#D9DEE1"] : orebitLithColor);
+    map.setPaintProperty("ob-units", "fill-color", mode === "age" ? obAgeColor : obLithColor);
   }
 }
 

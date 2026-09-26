@@ -6,7 +6,7 @@ import { renderAbout } from "./about";
 import { CONFIG } from "./config";
 import { hideDetail, showDetail } from "./detail";
 import { getLang, setLang, t, type Key } from "./i18n";
-import { addGeologyLayers, highlight, QUERY_LAYERS, setAgeFilter, setColorMode, setLinesVisible } from "./layers";
+import { addGeologyLayers, highlight, isFineZoom, QUERY_LAYERS, setAgeFilter, setColorMode, setLinesVisible } from "./layers";
 import { renderLegend } from "./legend";
 import { initSearch } from "./search";
 import { readState, writeState } from "./state";
@@ -81,7 +81,7 @@ function applyText() {
   for (const [id, key] of Object.entries(LABEL_IDS)) $(id).setAttribute("aria-label", t(key));
   $<HTMLInputElement>("searchInput").placeholder = t("searchPlaceholder");
   $("langBtn").textContent = getLang() === "id" ? "EN" : "ID";
-  renderLegend(state.mode);
+  renderLegend(state.mode, isFineZoom(map.getZoom()));
   renderAbout();
   updateSheetHint();
   updateAgeReadout();
@@ -138,7 +138,7 @@ ageMax.addEventListener("input", onAgeInput);
 const modeButtons = document.querySelectorAll<HTMLButtonElement>("#modeGroup button");
 function applyMode() {
   modeButtons.forEach((b) => b.setAttribute("aria-checked", String(b.dataset.mode === state.mode)));
-  renderLegend(state.mode);
+  renderLegend(state.mode, isFineZoom(map.getZoom()));
   updateSheetHint();
   if (map.getLayer("ms-units")) setColorMode(map, state.mode);
 }
@@ -200,6 +200,16 @@ map.on("load", () => {
   setColorMode(map, state.mode);
   setAgeFilter(map, state.ageMin, effectiveMax(state.ageMax));
   setLinesVisible(map, state.lines);
+});
+
+// Legend besar↔detail mengikuti ambang zoom yang sama dengan warna peta (lihat layers.ts:FINE_ZOOM).
+let lastFine = isFineZoom(map.getZoom());
+map.on("zoom", () => {
+  const fine = isFineZoom(map.getZoom());
+  if (fine !== lastFine) {
+    lastFine = fine;
+    renderLegend(state.mode, fine);
+  }
 });
 
 const queryLayers = () => QUERY_LAYERS.filter((id) => map.getLayer(id));
