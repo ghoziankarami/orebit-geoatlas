@@ -12,10 +12,19 @@ RAW = ROOT / "data" / "raw"
 OUT = ROOT / "data" / "out"
 REF = ROOT / "reference"
 
-# Kandidat nama kolom pada SHP GeoMap (berbeda antar-lembar). Tambahkan bila menemukan varian baru.
-SYMBOL_FIELDS = ["SIMBOL", "SYMBOL", "SIMB", "KODE", "KODE_UNIT", "UNIT", "LABEL", "SYMBOL_1"]
-NAME_FIELDS = ["NAMA", "NAMA_UNIT", "FORMASI", "NAME", "KETERANGAN", "KET", "UNIT_NAME", "DESKRIPSI"]
-LINE_TYPE_FIELDS = ["JENIS", "TYPE", "KETERANGAN", "KET", "NAMA"]
+# Kandidat nama kolom pada SHP GeoMap / layanan ESDM (berbeda antar-lembar). Tambahkan bila menemukan varian baru.
+# SIMOBJ/NAMOBJ = konvensi KUGI (Katalog Unsur Geografi Indonesia) yang dipakai layanan ESDM.
+SYMBOL_FIELDS = ["SIMOBJ", "SIMBOL", "SYMBOL", "SIMB", "NOTASI", "KODE", "KODE_UNIT", "UNIT", "LABEL", "SYMBOL_1"]
+NAME_FIELDS = ["NAMOBJ", "NAMA_FORMASI", "FORMASI", "NAMA", "NAMA_UNIT", "NAME", "UNIT_NAME"]
+# Kolom keterangan tambahan (umur, litologi, deskripsi) yang digabung ke desc_orig untuk membantu kurasi.
+DESC_FIELDS = ["UMUR", "UMRBTN", "UMUR_BATUAN", "LITOLOGI", "JNSBTN", "BATUAN", "KETERANGAN", "KET", "DESKRIPSI", "REMARK"]
+LINE_TYPE_FIELDS = ["JENIS", "TYPE", "KETERANGAN", "KET", "NAMA", "NAMOBJ"]
+VECTOR_GLOBS = ["*.shp", "*.geojson", "*.gpkg"]
+
+
+def pick_fields(columns: list[str], candidates: list[str]) -> list[str]:
+    upper = {c.upper(): c for c in columns}
+    return [upper[c] for c in candidates if c in upper]
 
 
 def region_arg() -> str:
