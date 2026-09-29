@@ -30,7 +30,7 @@ class FetchIntegrityTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory, patch.object(fetch, "request", self.response), \
              patch.object(fetch.time, "sleep"):
             with patch.object(fetch, "RAW", Path(directory)):
-                with patch.object(sys, "argv", ["fetch", "all"]):
+                with patch.object(sys, "argv", ["fetch", "all", "--skip-faults"]):
                     fetch.main()
             output = Path(directory) / "all" / "esdm"
             self.assertEqual(json.loads((output / "esdm_manifest.json").read_text())["count"], 2)
@@ -41,10 +41,19 @@ class FetchIntegrityTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory, patch.object(fetch, "request", self.response), \
              patch.object(fetch.time, "sleep"):
             with patch.object(fetch, "RAW", Path(directory)):
-                with patch.object(sys, "argv", ["fetch", "all"]):
+                with patch.object(sys, "argv", ["fetch", "all", "--skip-faults"]):
                     with self.assertRaises(SystemExit):
                         fetch.main()
             self.assertFalse((Path(directory) / "all" / "esdm" / "esdm_litologi.geojson").exists())
+
+    def test_fault_discovery_requires_unique_polyline_candidate(self):
+        def metadata(url, params, post=False):
+            if url.endswith("/MapServer"):
+                return {"layers": [{"id": 0, "name": "Litologi"}, {"id": 1, "name": "Sesar"}]}
+            return {"geometryType": "esriGeometryPolyline" if url.endswith("/1") else "esriGeometryPolygon"}
+        with patch.object(fetch, "request", metadata):
+            self.assertEqual(fetch.discover_fault_layer("https://example.test/MapServer"),
+                             "https://example.test/MapServer/1")
 
 
 if __name__ == "__main__":

@@ -27,6 +27,10 @@ from pathlib import Path
 from common import RAW
 
 DEFAULT_LAYER = "https://geoportal.esdm.go.id/gis4/rest/services/BGS_PM/Geologi_Litologi/MapServer/0"
+GEOSTRUCTURE_SERVICE = (
+    "https://geoportal.esdm.go.id/gis4/rest/services/"
+    "bgl_bgs_pm/Geologi_Geostruktur/MapServer"
+)
 REGION_BBOX = {
     # lon_min, lat_min, lon_max, lat_max (EPSG:4326)
     "babel": (105.0, -3.6, 109.0, -1.3),
@@ -43,6 +47,30 @@ CHUNK = 250          # objectId per permintaan (di bawah maxRecordCount, URL/POS
 PAUSE_S = 1.0
 RETRIES = 3
 UA = "OrebitGeoAtlas/0.1 (+https://atlas.orebit.id)"
+
+
+def discover_fault_layer(service_url: str) -> str:
+    """Find a fault polyline from the official geostructure service metadata."""
+    service_url = service_url.rstrip("/")
+    service = request(service_url, {"f": "json"})
+    candidates = []
+    for layer in service.get("layers", []):
+        if layer.get("subLayerIds"):
+            continue
+        layer_url = f"{service_url}/{layer['id']}"
+        meta = request(layer_url, {"f": "json"})
+        name = f"{layer.get('name', '')} {meta.get('name', '')}".lower()
+        if meta.get("geometryType") == "esriGeometryPolyline" and (
+            "sesar" in name or "fault" in name
+        ):
+            candidates.append(layer_url)
+    if len(candidates) != 1:
+        raise SystemExit(
+            f"Ditemukan {len(candidates)} layer sesar polyline di {service_url}; "
+            "tetapkan --fault-layer-url eksplisit setelah memeriksa metadata."
+        )
+    print(f"Layer sesar terpilih: {candidates[0]}")
+    return candidates[0]
 
 
 def request(url: str, params: dict, post: bool = False) -> dict:
@@ -70,6 +98,7 @@ def main() -> None:
     ap.add_argument("--bbox", help="lon_min,lat_min,lon_max,lat_max")
     ap.add_argument("--layer-url", default=DEFAULT_LAYER)
     ap.add_argument("--fault-layer-url", help="URL layer ArcGIS polyline sesar yang sudah diverifikasi")
+    ap.add_argument("--skip-faults", action="store_true", help="Bangun poligon saja secara eksplisit")
     args = ap.parse_args()
 
     if args.bbox:
@@ -156,8 +185,11 @@ def main() -> None:
     (out / "laporan.txt").write_text(report, encoding="utf-8")
     print(f"\nTersimpan di {out}\n")
     print(report)
-    if args.fault_layer_url:
-        fault_url = args.fault_layer_url.rstrip("/")
+    fault_url = args.fault_layer_url or (
+        discover_fault_layer(GEOSTRUCTURE_SERVICE) if args.region == "all" and not args.skip_faults else None
+    )
+    if fault_url and not args.skip_faults:
+        fault_url = fault_url.rstrip("/")
         fault_meta = request(fault_url, {"f": "json"})
         if fault_meta.get("geometryType") != "esriGeometryPolyline":
             raise SystemExit("Layer patahan harus berupa esriGeometryPolyline.")
@@ -166,11 +198,16 @@ def main() -> None:
         fault_ids = request(f"{fault_url}/query", {**spatial, "returnIdsOnly": "true", "f": "json"}).get("objectIds") or []
         if len(set(fault_ids)) != len(fault_ids):
             raise SystemExit("Inventaris patahan berisi ID duplikat.")
+        if not fault_ids:
+            raise SystemExit("Inventaris patahan kosong; cek layer dan jangan klaim cakupan lengkap.")
+        fault_chunk = min(CHUNK, int(fault_meta.get("maxRecordCount") or 1000))
         fault_features = {}
-        for i in range(0, len(fault_ids), chunk):
+        for i in range(0, len(fault_ids), fault_chunk):
             time.sleep(PAUSE_S)
-            fc = request(f"{fault_url}/query", {"objectIds": ",".join(map(str, fault_ids[i:i+chunk])),
+            fc = request(f"{fault_url}/query", {"objectIds": ",".join(map(str, fault_ids[i:i+fault_chunk])),
                 "outFields": "*", "outSR": 4326, "returnGeometry": "true", "f": "geojson"}, post=True)
+            if fc.get("exceededTransferLimit"):
+                raise SystemExit("Batas transfer patahan tercapai; output tidak ditulis.")
             for ft in fc.get("features", []):
                 p = ft.get("properties") or {}
                 fid = p.get(fault_oid, p.get(fault_oid.lower(), ft.get("id")))
@@ -184,6 +221,10 @@ def main() -> None:
             "features": [fault_features[i] for i in sorted(fault_ids)]}, ensure_ascii=False), encoding="utf-8")
         tmp.replace(out / "esdm_faults.geojson")
         (out / "esdm_faults_layer.json").write_text(json.dumps(fault_meta, ensure_ascii=False, indent=1), encoding="utf-8")
+        (out / "esdm_faults_manifest.json").write_text(json.dumps({
+            "layer_url": fault_url, "oid_field": fault_oid, "count": len(fault_ids),
+            "bbox": bbox,
+        }, indent=2), encoding="utf-8")
         print(f"Patahan: {len(fault_ids):,} garis terverifikasi.")
 
 
