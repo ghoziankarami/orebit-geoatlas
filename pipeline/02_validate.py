@@ -8,7 +8,7 @@ from shapely import make_valid
 
 from common import out_dir, region_arg
 
-MIN_AREA_M2 = 2_000  # serpihan di bawah ini dibuang (artefak digitasi)
+MIN_AREA_M2 = 0  # jangan hilangkan pulau kecil dari layer nasional
 
 region = region_arg()
 od = out_dir(region)
@@ -17,9 +17,8 @@ n0 = len(u)
 
 u["geometry"] = u.geometry.apply(lambda g: make_valid(g) if g is not None else None)
 u = u[~u.geometry.is_empty & u.geometry.notna()]
-u = u.explode(index_parts=False)
-u = u[u.geom_type == "Polygon"]
-area = u.to_crs(u.estimate_utm_crs()).area
+u = u[u.geom_type.isin(["Polygon", "MultiPolygon"])]
+area = u.to_crs("EPSG:6933").area
 u = u[area >= MIN_AREA_M2].copy()
 
 qa = u.assign(no_symbol=u.symbol_orig.isin(["", "None", "nan"])).groupby("source_id").agg(
@@ -27,10 +26,12 @@ qa = u.assign(no_symbol=u.symbol_orig.isin(["", "None", "nan"])).groupby("source
 qa.to_csv(od / "qa_report.csv")
 u.to_parquet(od / "02_units.parquet")
 print(f"Poligon {n0:,} → {len(u):,} setelah validasi. Laporan: {od / 'qa_report.csv'}")
+if n0 != len(u):
+    print(f"[QA] Jumlah berubah {len(u)-n0:+,} akibat make_valid/explode; cek qa_report.csv sebelum publikasi.")
 
 try:
     ln = gpd.read_parquet(od / "01_lines.parquet")
-    ln = ln[ln.geometry.notna() & ~ln.geometry.is_empty].explode(index_parts=False)
+    ln = ln[ln.geometry.notna() & ~ln.geometry.is_empty]
     ln.to_parquet(od / "02_lines.parquet")
     print(f"Garis: {len(ln):,}")
 except FileNotFoundError:

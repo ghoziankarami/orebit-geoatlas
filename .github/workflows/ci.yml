@@ -11,6 +11,7 @@ jobs:
         with: { python-version: "3.11" }
       - run: pip install pandas
       - run: python pipeline/validate_reference.py
+      - run: python -m unittest discover -s pipeline -p 'test_*.py'
   app:
     runs-on: ubuntu-latest
     defaults: { run: { working-directory: app } }

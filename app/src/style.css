@@ -118,7 +118,9 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
 .detail dl { margin: 14px 0 0; display: grid; gap: 12px; }
 .detail dt { font-size: 12px; font-weight: 600; color: var(--ink-soft); }
 .detail dd { margin: 2px 0 0; font-size: 14px; max-width: 60ch; overflow-wrap: anywhere; }
-.detail-actions { display: none; }
+.detail-actions { display: flex; gap: 8px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+.detail-actions .btn { flex: 1 1 0; font-size: 13px; padding: 0 8px; }
+.detail .source-meta { display: block; margin-top: 5px; color: var(--ink-soft); font-size: 12px; }
 .muted { color: var(--ink-soft); font-size: 13px; }
 
 /* ---------- Kontrol peta ---------- */
@@ -198,7 +200,7 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
   .detail .close { width: 44px; height: 44px; top: 4px; right: 4px; }
   .detail h2 { margin-right: 40px; }
   .detail .inline-src { display: none; }
-  .detail-actions { display: flex; gap: 8px; margin-top: 14px; }
+  .detail-actions { margin-top: 14px; }
   .detail-actions .btn { flex: 1 1 0; padding: 0 8px; white-space: nowrap; }
   .toast { bottom: calc(var(--peek, 196px) + 16px); }
 }
