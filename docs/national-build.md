@@ -7,10 +7,10 @@ disimpan di Git.
 1. Pasang dependensi dengan make setup dan tippecanoe 2.17 atau lebih baru.
 2. Jalankan make fetch-all. Mode all meminta seluruh object ID langsung dari
    satu layer nasional; hasil yang kurang lengkap atau duplikat dihentikan.
-3. Mode nasional mencari layer sesar polyline secara otomatis dari metadata
-   layanan Geologi_Geostruktur yang dirujuk katalog resmi data.go.id. Bila
-   kandidat tidak tunggal, verifikasi metadata dan jalankan
-   make fetch-all FAULT_LAYER_URL=URL. Gunakan
+3. Mode nasional mengambil dua layer Patahan Aktif ESDM (overview dan detail)
+   yang terdaftar dalam folder BGS_PM. Masing-masing memiliki manifest dan
+   diverifikasi berdasarkan object ID. Untuk menggantinya dengan layer
+   tertentu, jalankan make fetch-all FAULT_LAYER_URL=URL. Gunakan
    make fetch-all FETCH_ARGS=--skip-faults hanya bila sengaja membangun
    poligon tanpa sesar.
 4. Jalankan make tiles-all. Hasilnya data/out/all/all.pmtiles.
