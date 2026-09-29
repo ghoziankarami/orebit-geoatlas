@@ -40,16 +40,3 @@ jobs:
             if [ -f "$file" ]; then wc -l "$file"; fi
           done
           ls -lh data/out/all/*.pmtiles 2>/dev/null || true
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: geoatlas-national-build
-          path: |
-            data/raw/all/esdm/*manifest.json
-            data/out/all/qa_report.csv
-            data/out/all/all.pmtiles
-            reference/crosswalk.csv
-            reference/units.csv
-            reference/sources.csv
-          if-no-files-found: warn
-          retention-days: 7
