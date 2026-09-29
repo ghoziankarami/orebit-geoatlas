@@ -1,10 +1,11 @@
 REGION ?= babel
 PY ?= python3
+FETCH_ARGS ?=
 
 .PHONY: setup fetch-esdm fetch-all inventory tiles app dev validate clean combine tiles-all
 
 fetch-esdm:       ## Tarik poligon Peta Geologi dari layanan ArcGIS ESDM → data/raw/$(REGION)/esdm/
-	cd pipeline && $(PY) 00_fetch_esdm.py $(REGION) $(if $(FAULT_LAYER_URL),--fault-layer-url "$(FAULT_LAYER_URL)",)
+	cd pipeline && $(PY) 00_fetch_esdm.py $(REGION) $(if $(FAULT_LAYER_URL),--fault-layer-url "$(FAULT_LAYER_URL)",) $(FETCH_ARGS)
 
 fetch-all:         ## Tarik seluruh ID layer nasional; FAULT_LAYER_URL untuk garis sesar
 	$(MAKE) fetch-esdm REGION=all FAULT_LAYER_URL="$(FAULT_LAYER_URL)"

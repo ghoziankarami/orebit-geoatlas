@@ -12,6 +12,18 @@ jobs:
       - run: pip install pandas
       - run: python pipeline/validate_reference.py
       - run: python -m unittest discover -s pipeline -p 'test_*.py'
+      - name: Probe ESDM metadata availability
+        continue-on-error: true
+        run: |
+          for url in \
+            'https://geoportal.esdm.go.id/gis4/rest/services/BGS_PM/Geologi_Litologi/MapServer/0?f=pjson' \
+            'https://geoportal.esdm.go.id/gis4/rest/services/bgl_bgs_pm/Geologi_Geostruktur/MapServer?f=pjson'; do
+            echo "Checking $url"
+            curl --location --silent --show-error --max-time 20 \
+              --output /tmp/esdm-response --write-out 'HTTP %{http_code}\n' "$url" || true
+            head -c 400 /tmp/esdm-response || true
+            echo
+          done
   app:
     runs-on: ubuntu-latest
     defaults: { run: { working-directory: app } }
