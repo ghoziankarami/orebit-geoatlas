@@ -12,40 +12,6 @@ jobs:
       - run: pip install pandas
       - run: python pipeline/validate_reference.py
       - run: python -m unittest discover -s pipeline -p 'test_*.py'
-      - name: Probe ESDM metadata availability
-        continue-on-error: true
-        run: |
-          python - <<'PY'
-          import json, urllib.parse, urllib.request
-          root = "https://geoportal.esdm.go.id/gis4/rest/services/"
-          paths = [
-              "BGS_PM?f=pjson",
-              "BGS_PM/Geologi_Litologi/MapServer?f=pjson",
-              "BGS_PM/Geologi_Geostruktur/MapServer?f=pjson",
-              "BGS_PM/Patahan_Aktif_Skala_Besar/MapServer?f=pjson",
-              "BGS_PM/Patahan_Aktif_Skala_Kecil/MapServer?f=pjson",
-              "BGS_PM/Patahan_Aktif_Skala_Besar/MapServer/0?f=pjson",
-              "BGS_PM/Patahan_Aktif_Skala_Kecil/MapServer/0?f=pjson",
-              "BGS_PM/Patahan_Aktif_Skala_Besar/MapServer/0/query?"
-              + urllib.parse.urlencode({"where": "1=1", "returnCountOnly": "true", "f": "json"}),
-              "BGS_PM/Patahan_Aktif_Skala_Kecil/MapServer/0/query?"
-              + urllib.parse.urlencode({"where": "1=1", "returnCountOnly": "true", "f": "json"}),
-              "BGS_PM/Geologi_Litologi/MapServer/0/query?"
-              + urllib.parse.urlencode({"where": "1=1", "returnCountOnly": "true", "f": "json"}),
-          ]
-          for path in paths:
-              try:
-                  with urllib.request.urlopen(root + path, timeout=25) as response:
-                      data = json.load(response)
-                  print(path, json.dumps({
-                      "error": data.get("error"), "services": data.get("services"),
-                      "layers": data.get("layers"), "count": data.get("count"),
-                      "geometryType": data.get("geometryType"),
-                      "fields": [f.get("name") for f in data.get("fields", [])],
-                  }, ensure_ascii=False)[:2500])
-              except Exception as exc:
-                  print(path, type(exc).__name__, str(exc))
-          PY
   app:
     runs-on: ubuntu-latest
     defaults: { run: { working-directory: app } }
@@ -55,3 +21,35 @@ jobs:
         with: { node-version: 22, cache: npm, cache-dependency-path: app/package-lock.json }
       - run: npm ci
       - run: npm run build
+  national-data:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'codex/national-esdm-pipeline-ui-sources'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: sudo apt-get update && sudo apt-get install -y tippecanoe
+      - run: python -m pip install -r pipeline/requirements.txt
+      - run: make fetch-all
+      - run: make tiles-all
+      - name: Count and preserve build evidence
+        if: always()
+        run: |
+          for file in data/out/all/units.geojsonl data/out/all/lines.geojsonl; do
+            if [ -f "$file" ]; then wc -l "$file"; fi
+          done
+          ls -lh data/out/all/*.pmtiles 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: geoatlas-national-build
+          path: |
+            data/raw/all/esdm/*manifest.json
+            data/out/all/qa_report.csv
+            data/out/all/all.pmtiles
+            reference/crosswalk.csv
+            reference/units.csv
+            reference/sources.csv
+          if-no-files-found: warn
+          retention-days: 7

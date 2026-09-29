@@ -33,7 +33,10 @@ try:
     ln["type"] = pd.Series("contact", index=ln.index).mask(t.str.contains("sesar|fault"), "fault").mask(
         t.str.contains("antiklin|anticline"), "anticline").mask(t.str.contains("sinklin|syncline"), "syncline")
     ln["certainty"] = t.str.contains("duga|inferred|diperkirakan").map({True: "inferred", False: "certain"})
-    ln[["source_id", "type", "certainty", "geometry"]].to_file(od / "lines.geojsonl", driver="GeoJSONSeq")
+    if "fault_scale" not in ln:
+        ln["fault_scale"] = ""
+    ln[["source_id", "fault_scale", "type", "certainty", "geometry"]].to_file(
+        od / "lines.geojsonl", driver="GeoJSONSeq")
     print(f"lines.geojsonl: {len(ln):,} fitur")
 except FileNotFoundError:
     pass

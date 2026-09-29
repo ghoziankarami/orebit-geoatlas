@@ -46,14 +46,25 @@ class FetchIntegrityTest(unittest.TestCase):
                         fetch.main()
             self.assertFalse((Path(directory) / "all" / "esdm" / "esdm_litologi.geojson").exists())
 
-    def test_fault_discovery_requires_unique_polyline_candidate(self):
-        def metadata(url, params, post=False):
-            if url.endswith("/MapServer"):
-                return {"layers": [{"id": 0, "name": "Litologi"}, {"id": 1, "name": "Sesar"}]}
-            return {"geometryType": "esriGeometryPolyline" if url.endswith("/1") else "esriGeometryPolygon"}
-        with patch.object(fetch, "request", metadata):
-            self.assertEqual(fetch.discover_fault_layer("https://example.test/MapServer"),
-                             "https://example.test/MapServer/1")
+    def test_national_fetch_writes_both_fault_scales(self):
+        def response(url, params, post=False):
+            is_fault = "Patahan_Aktif_" in url
+            if url.endswith("/query"):
+                if params.get("returnIdsOnly"):
+                    return {"objectIds": [10] if is_fault else [1, 2]}
+                ids = [10] if is_fault else [1, 2]
+                return {"features": [{"type": "Feature", "properties": {"objectid_1": i},
+                    "geometry": {"type": "LineString" if is_fault else "Polygon", "coordinates": []}}
+                    for i in ids]}
+            return {**self.META, "geometryType": "esriGeometryPolyline" if is_fault else "esriGeometryPolygon"}
+        with tempfile.TemporaryDirectory() as directory, patch.object(fetch, "request", response), \
+             patch.object(fetch.time, "sleep"), patch.object(fetch, "RAW", Path(directory)), \
+             patch.object(sys, "argv", ["fetch", "all"]):
+            fetch.main()
+            output = Path(directory) / "all" / "esdm"
+            for scale in ("overview", "detail"):
+                self.assertEqual(json.loads((output / f"esdm_faults_{scale}_manifest.json").read_text())["count"], 1)
+                self.assertTrue((output / f"esdm_faults_{scale}.geojson").exists())
 
 
 if __name__ == "__main__":
