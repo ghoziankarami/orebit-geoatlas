@@ -66,6 +66,16 @@ class FetchIntegrityTest(unittest.TestCase):
                 self.assertEqual(json.loads((output / f"esdm_faults_{scale}_manifest.json").read_text())["count"], 1)
                 self.assertTrue((output / f"esdm_faults_{scale}.geojson").exists())
 
+    def test_server_500_splits_batch_without_losing_ids(self):
+        def overloaded(url, params, post=False):
+            ids = [int(value) for value in params["objectIds"].split(",")]
+            if len(ids) > 1:
+                raise SystemExit("HTTP Error 500: Internal Server Error")
+            return {"features": [{"properties": {"objectid_1": ids[0]}}]}
+        with patch.object(fetch, "request", overloaded), patch.object(fetch.time, "sleep"):
+            found = fetch.query_features("https://example.test/MapServer/0", [1, 2, 3])
+        self.assertEqual([f["properties"]["objectid_1"] for f in found], [1, 2, 3])
+
 
 if __name__ == "__main__":
     unittest.main()

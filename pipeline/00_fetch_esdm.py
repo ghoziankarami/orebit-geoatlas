@@ -68,6 +68,28 @@ def request(url: str, params: dict, post: bool = False) -> dict:
     raise SystemExit(f"Berhenti: permintaan ke {url} gagal {RETRIES}x ({last}).")
 
 
+def query_features(layer_url: str, ids: list[int]) -> list[dict]:
+    """Retry an overloaded ArcGIS batch in halves without omitting any ID."""
+    time.sleep(PAUSE_S)
+    try:
+        response = request(f"{layer_url}/query", {
+            "objectIds": ",".join(map(str, ids)), "outFields": "*", "outSR": 4326,
+            "returnGeometry": "true", "f": "geojson",
+        }, post=True)
+        if response.get("exceededTransferLimit"):
+            raise RuntimeError("ArcGIS transfer limit")
+        return response.get("features", [])
+    except (SystemExit, RuntimeError) as error:
+        # Permission/URL errors will not improve with a smaller batch.
+        if isinstance(error, SystemExit) and "HTTP Error 500" not in str(error):
+            raise
+        if len(ids) == 1:
+            raise SystemExit(f"Object ID {ids[0]} gagal diambil dari {layer_url}: {error}")
+        mid = len(ids) // 2
+        print(f"  batch {len(ids)} gagal; coba {mid}+{len(ids)-mid} ID")
+        return query_features(layer_url, ids[:mid]) + query_features(layer_url, ids[mid:])
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("region")
@@ -115,14 +137,7 @@ def main() -> None:
     features: dict[int, dict] = {}
     for i in range(0, len(ids), chunk):
         part = ids[i:i + chunk]
-        time.sleep(PAUSE_S)
-        fc = request(f"{layer_url}/query", {
-            "objectIds": ",".join(map(str, part)), "outFields": "*", "outSR": 4326,
-            "returnGeometry": "true", "f": "geojson",
-        }, post=True)
-        if fc.get("exceededTransferLimit"):
-            raise SystemExit("Batas transfer ArcGIS tercapai; hasil tidak ditulis.")
-        got = fc.get("features", [])
+        got = query_features(layer_url, part)
         for feature in got:
             props = feature.get("properties") or {}
             fid = props.get(oid_field, props.get(oid_field.lower(), feature.get("id")))
@@ -181,12 +196,7 @@ def main() -> None:
         fault_chunk = min(CHUNK, int(fault_meta.get("maxRecordCount") or 1000))
         fault_features = {}
         for i in range(0, len(fault_ids), fault_chunk):
-            time.sleep(PAUSE_S)
-            fc = request(f"{fault_url}/query", {"objectIds": ",".join(map(str, fault_ids[i:i+fault_chunk])),
-                "outFields": "*", "outSR": 4326, "returnGeometry": "true", "f": "geojson"}, post=True)
-            if fc.get("exceededTransferLimit"):
-                raise SystemExit("Batas transfer patahan tercapai; output tidak ditulis.")
-            for ft in fc.get("features", []):
+            for ft in query_features(fault_url, fault_ids[i:i+fault_chunk]):
                 p = ft.get("properties") or {}
                 fid = p.get(fault_oid, p.get(fault_oid.lower(), ft.get("id")))
                 if fid is None or int(fid) in fault_features:
