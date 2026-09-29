@@ -44,9 +44,10 @@ tandai sambungan bermasalah) → `05_export` (GeoJSONSeq) → `06_tile.sh` (PMTi
 ## Deploy
 
 Untuk satu build nasional dari layanan ESDM, lihat
-[panduan build nasional](docs/national-build.md). Kode penarikan dan kurasi
-otomatis tersedia; hasil 36.078 poligon dan garis sesar belum dapat dinyatakan
-selesai sebelum manifest, QA, dan PMTiles asli diverifikasi.
+[panduan build nasional](docs/national-build.md). Uji GitHub Actions telah
+membangun 36.078 poligon dan 2.226 garis patahan menjadi PMTiles. Hasil
+sementara runner tidak tersedia untuk deploy; jalankan ulang pada VPS dan
+periksa build_report.json sebelum menayangkannya.
 
 - **App**: Vercel atau Cloudflare Pages, root directory `app`, build `npm run build`, output `dist`,
   env `VITE_TILES_URL`. Domain yang disarankan: `atlas.orebit.id` (CNAME di DNS orebit.id).

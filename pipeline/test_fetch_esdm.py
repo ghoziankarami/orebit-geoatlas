@@ -76,6 +76,15 @@ class FetchIntegrityTest(unittest.TestCase):
             found = fetch.query_features("https://example.test/MapServer/0", [1, 2, 3])
         self.assertEqual([f["properties"]["objectid_1"] for f in found], [1, 2, 3])
 
+    def test_verified_batch_resumes_without_another_request(self):
+        features = [{"properties": {"objectid_1": i}} for i in (1, 2)]
+        with tempfile.TemporaryDirectory() as directory, patch.object(fetch, "query_features",
+                return_value=features) as query:
+            a = fetch.cached_features("https://example.test/0", [1, 2], "objectid_1", Path(directory))
+            b = fetch.cached_features("https://example.test/0", [1, 2], "objectid_1", Path(directory))
+            self.assertEqual(a, b)
+            query.assert_called_once()
+
 
 if __name__ == "__main__":
     unittest.main()

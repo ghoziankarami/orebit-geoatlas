@@ -43,7 +43,8 @@ def read_csv(name: str) -> pd.DataFrame:
     """Baca CSV referensi; baris yang diawali '#' adalah komentar (warna hex di dalam sel tetap aman)."""
     text = (REF / name).read_text(encoding="utf-8").splitlines()
     body = "\n".join(line for line in text if not line.startswith("#"))
-    return pd.read_csv(io.StringIO(body), dtype=str).fillna("")
+    # "na" is a real ESDM map symbol; pandas' default NA tokens must not erase it.
+    return pd.read_csv(io.StringIO(body), dtype=str, keep_default_na=False)
 
 
 def pick_field(columns: list[str], candidates: list[str]) -> str | None:

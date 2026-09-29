@@ -2,7 +2,7 @@ REGION ?= babel
 PY ?= python3
 FETCH_ARGS ?=
 
-.PHONY: setup fetch-esdm fetch-all inventory tiles app dev validate clean combine tiles-all
+.PHONY: setup fetch-esdm fetch-all inventory tiles app dev validate clean combine tiles-all verify-all
 
 fetch-esdm:       ## Tarik poligon Peta Geologi dari layanan ArcGIS ESDM → data/raw/$(REGION)/esdm/
 	cd pipeline && $(PY) 00_fetch_esdm.py $(REGION) $(if $(FAULT_LAYER_URL),--fault-layer-url "$(FAULT_LAYER_URL)",) $(FETCH_ARGS)
@@ -45,6 +45,10 @@ tiles-all:         ## Bangun dari data/raw/all/esdm tanpa overlap bbox
 	cd pipeline && $(PY) auto_crosswalk.py all
 	$(MAKE) validate
 	$(MAKE) tiles REGION=all
+	$(MAKE) verify-all
+
+verify-all:        ## Bandingkan manifest, QA, GeoJSONSeq, dan header PMTiles nasional
+	$(PY) pipeline/verify_national.py
 
 validate:         ## Cek konsistensi CSV referensi
 	$(PY) pipeline/validate_reference.py
