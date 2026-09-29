@@ -4,6 +4,7 @@ import sys
 from common import read_csv
 
 errors = []
+warnings = []
 units = read_csv("units.csv")
 liths = set(read_csv("lithology.csv").lith_class)
 cw = read_csv("crosswalk.csv")
@@ -12,7 +13,10 @@ if units.unit_id.duplicated().any():
     errors.append(f"unit_id ganda: {units.unit_id[units.unit_id.duplicated()].tolist()}")
 for _, r in units.iterrows():
     if not r.age_top_ma or not r.age_base_ma:
-        errors.append(f"{r.unit_id}: umur belum diisi")
+        if r.description.startswith("[AUTO]"):
+            warnings.append(f"{r.unit_id}: umur otomatis belum diketahui")
+        else:
+            errors.append(f"{r.unit_id}: umur belum diisi")
     elif float(r.age_top_ma) > float(r.age_base_ma):
         errors.append(f"{r.unit_id}: age_top_ma > age_base_ma")
     if r.lith_class not in liths:
@@ -24,6 +28,8 @@ for _, r in bad.iterrows():
 
 todo = (cw.unit_id == "").sum()
 print(f"units: {len(units)}, crosswalk: {len(cw)} baris ({todo} belum dikurasi)")
+if warnings:
+    print(f"Perlu review geolog: {len(warnings)} unit [AUTO] tanpa umur.")
 if errors:
     print("\n".join(f"✗ {e}" for e in errors))
     sys.exit(1)

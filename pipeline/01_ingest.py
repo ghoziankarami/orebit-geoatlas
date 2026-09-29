@@ -5,6 +5,8 @@ Masukan : data/raw/<wilayah>/**/*.shp|*.geojson|*.gpkg
 Keluaran: data/out/<wilayah>/01_units.parquet, 01_lines.parquet
           reference/sources.csv diperbarui bila ada file baru
 """
+import json
+
 import geopandas as gpd
 import pandas as pd
 import pyogrio
@@ -31,15 +33,21 @@ for f in files:
     if key not in known:
         known[key] = str(next_id)
         is_esdm = f.parent.name == "esdm"
+        manifest = f.with_name(f"{f.stem}_manifest.json")
+        if f.stem == "esdm_litologi":
+            manifest = f.with_name("esdm_manifest.json")
+        source_url = json.loads(manifest.read_text()).get("layer_url", ESDM_URL) if manifest.exists() else ESDM_URL
+        is_fault = f.stem.startswith("esdm_faults")
         new_rows.append({
             "source_id": str(next_id), "file_key": key,
-            "sheet_name": "Peta Geologi (layanan Geologi Litologi ESDM, status Mei 2018)" if is_esdm
+            "sheet_name": ("Patahan Aktif ESDM " + f.stem.removeprefix("esdm_faults_")) if is_fault else
+                          "Peta Geologi (layanan Geologi Litologi ESDM, status Mei 2018)" if is_esdm
                           else f.relative_to(RAW / region).with_suffix("").as_posix(),
             "scale": "" if is_esdm else "100000",
             "year": "2018" if is_esdm else "", "authors": "",
             "publisher": "Pusat Survei Geologi, Badan Geologi",
             "license": "Lisensi Terbuka PSG (atribusi, tidak diperjualbelikan)",
-            "url": ESDM_URL if is_esdm else "https://geologi.esdm.go.id/geomap"})
+            "url": source_url if is_esdm else "https://geologi.esdm.go.id/geomap"})
         next_id += 1
     sid = known[key]
 
@@ -62,6 +70,9 @@ for f in files:
                 else pd.Series("", index=gdf.index))
         units.append(gpd.GeoDataFrame({
             "source_id": sid,
+            "object_id": (gdf[next(c for c in cols if c.lower() in ("objectid_1", "objectid", "fid"))]
+                          .astype(str).values if any(c.lower() in ("objectid_1", "objectid", "fid") for c in cols)
+                          else ["" for _ in range(len(gdf))]),
             "symbol_orig": clean(gdf[sym]) if sym else "",
             "name_orig": clean(gdf[name]) if name else "",
             "desc_orig": desc,
@@ -70,7 +81,9 @@ for f in files:
         typ = pick_field(cols, LINE_TYPE_FIELDS)
         lines.append(gpd.GeoDataFrame({
             "source_id": sid,
-            "type_orig": gdf[typ].astype(str).str.strip() if typ else pd.Series("", index=gdf.index),
+            "fault_scale": "overview" if f.stem.endswith("overview") else
+                           "detail" if f.stem.endswith("detail") else "",
+            "type_orig": gdf[typ].astype(str).str.strip() if typ else pd.Series("fault", index=gdf.index),
         }, geometry=gdf.geometry, crs=4326))
     else:
         print(f"[LEWATI] {key}: tipe geometri {geom_types}")

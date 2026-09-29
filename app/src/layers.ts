@@ -50,7 +50,12 @@ export function addGeologyLayers(map: maplibregl.Map) {
       paint: { "fill-color": ["coalesce", ["get", "color_hex"], "#D9DEE1"], "fill-opacity": 0.85 } }, before);
     map.addLayer({ id: "ob-units-edge", type: "line", source: OB, "source-layer": "units", minzoom: CONFIG.orebitMinZoom,
       paint: { "line-color": "#1F2B33", "line-opacity": 0.3, "line-width": 0.5 } }, before);
-    map.addLayer({ id: "ob-lines", type: "line", source: OB, "source-layer": "lines", minzoom: CONFIG.orebitMinZoom,
+    map.addLayer({ id: "ob-lines-overview", type: "line", source: OB, "source-layer": "lines",
+      minzoom: CONFIG.orebitMinZoom, maxzoom: 9,
+      filter: ["!=", ["get", "fault_scale"], "detail"],
+      paint: { "line-color": "#933E3E", "line-width": 0.9, "line-opacity": 0.8 } }, before);
+    map.addLayer({ id: "ob-lines", type: "line", source: OB, "source-layer": "lines", minzoom: 9,
+      filter: ["!=", ["get", "fault_scale"], "overview"],
       paint: {
         "line-color": "#1F2B33",
         "line-width": ["interpolate", ["linear"], ["zoom"], 8, 0.8, 14, 2],
@@ -100,7 +105,7 @@ export function setAgeFilter(map: maplibregl.Map, min: number, max: number) {
 }
 
 export function setLinesVisible(map: maplibregl.Map, visible: boolean) {
-  for (const id of ["ms-lines", "ob-lines"]) {
+  for (const id of ["ms-lines", "ob-lines-overview", "ob-lines"]) {
     if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", visible ? "visible" : "none");
   }
 }

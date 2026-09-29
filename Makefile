@@ -1,10 +1,14 @@
 REGION ?= babel
 PY ?= python3
+FETCH_ARGS ?=
 
-.PHONY: setup fetch-esdm inventory tiles app dev validate clean combine tiles-all
+.PHONY: setup fetch-esdm fetch-all inventory tiles app dev validate clean combine tiles-all verify-all
 
 fetch-esdm:       ## Tarik poligon Peta Geologi dari layanan ArcGIS ESDM → data/raw/$(REGION)/esdm/
-	cd pipeline && $(PY) 00_fetch_esdm.py $(REGION)
+	cd pipeline && $(PY) 00_fetch_esdm.py $(REGION) $(if $(FAULT_LAYER_URL),--fault-layer-url "$(FAULT_LAYER_URL)",) $(FETCH_ARGS)
+
+fetch-all:         ## Tarik seluruh ID layer nasional; FAULT_LAYER_URL untuk garis sesar
+	$(MAKE) fetch-esdm REGION=all FAULT_LAYER_URL="$(FAULT_LAYER_URL)"
 
 setup:            ## Pasang dependensi pipeline & app
 	$(PY) -m pip install -r pipeline/requirements.txt
@@ -36,8 +40,15 @@ combine:          ## Gabung units/lines semua region yang sudah dibangun → dat
 	for d in data/out/*/; do r=$$(basename "$$d"); if [ "$$r" != "all" ] && [ -f "$$d/units.geojsonl" ]; then regions="$$regions $$r"; fi; done; \
 	echo "Digabung: $$n fitur unit dari region:$$regions"
 
-tiles-all: combine ## Bangun data/out/all/all.pmtiles dari semua region tergabung (jalankan `make tiles REGION=<x>` untuk tiap region dulu)
-	cd pipeline && ./06_tile.sh all
+tiles-all:         ## Bangun dari data/raw/all/esdm tanpa overlap bbox
+	$(MAKE) inventory REGION=all
+	cd pipeline && $(PY) auto_crosswalk.py all
+	$(MAKE) validate
+	$(MAKE) tiles REGION=all
+	$(MAKE) verify-all
+
+verify-all:        ## Bandingkan manifest, QA, GeoJSONSeq, dan header PMTiles nasional
+	$(PY) pipeline/verify_national.py
 
 validate:         ## Cek konsistensi CSV referensi
 	$(PY) pipeline/validate_reference.py

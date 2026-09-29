@@ -16,6 +16,7 @@ Sopan terhadap server: permintaan berurutan, jeda 1 detik, berhenti bila error b
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import time
 import urllib.error
@@ -27,11 +28,21 @@ from pathlib import Path
 from common import RAW
 
 DEFAULT_LAYER = "https://geoportal.esdm.go.id/gis4/rest/services/BGS_PM/Geologi_Litologi/MapServer/0"
+DEFAULT_FAULT_LAYERS = {
+    "overview": "https://geoportal.esdm.go.id/gis4/rest/services/BGS_PM/Patahan_Aktif_Skala_Besar/MapServer/0",
+    "detail": "https://geoportal.esdm.go.id/gis4/rest/services/BGS_PM/Patahan_Aktif_Skala_Kecil/MapServer/0",
+}
 REGION_BBOX = {
     # lon_min, lat_min, lon_max, lat_max (EPSG:4326)
     "babel": (105.0, -3.6, 109.0, -1.3),
-    # Timur dibatasi pas di 105.0 (batas barat babel) supaya tidak tumpang-tindih poligon.
-    "sumatra": (95.0, -6.5, 105.0, 6.5),
+    # Bbox regional sengaja overlap; gunakan "all" untuk build nasional tanpa duplikasi.
+    "sumatra": (94.0, -7.0, 110.0, 7.0),  # termasuk Kepri, Natuna, Lampung
+    "jawa": (104.0, -9.5, 115.0, -5.0),
+    "bali_nusra": (114.0, -12.0, 126.0, -7.0),
+    "kalimantan": (108.0, -5.0, 120.0, 8.0),
+    "sulawesi": (118.0, -7.0, 126.0, 3.0),
+    "maluku": (124.0, -9.0, 135.0, 3.0),
+    "papua": (130.0, -11.0, 142.0, 2.0),
 }
 CHUNK = 250          # objectId per permintaan (di bawah maxRecordCount, URL/POST tetap kecil)
 PAUSE_S = 1.0
@@ -58,17 +69,67 @@ def request(url: str, params: dict, post: bool = False) -> dict:
     raise SystemExit(f"Berhenti: permintaan ke {url} gagal {RETRIES}x ({last}).")
 
 
+def query_features(layer_url: str, ids: list[int]) -> list[dict]:
+    """Retry an overloaded ArcGIS batch in halves without omitting any ID."""
+    time.sleep(PAUSE_S)
+    try:
+        response = request(f"{layer_url}/query", {
+            "objectIds": ",".join(map(str, ids)), "outFields": "*", "outSR": 4326,
+            "returnGeometry": "true", "f": "geojson",
+        }, post=True)
+        if response.get("exceededTransferLimit"):
+            raise RuntimeError("ArcGIS transfer limit")
+        return response.get("features", [])
+    except (SystemExit, RuntimeError) as error:
+        # Permission/URL errors will not improve with a smaller batch.
+        if isinstance(error, SystemExit) and "HTTP Error 500" not in str(error):
+            raise
+        if len(ids) == 1:
+            raise SystemExit(f"Object ID {ids[0]} gagal diambil dari {layer_url}: {error}")
+        mid = len(ids) // 2
+        print(f"  batch {len(ids)} gagal; coba {mid}+{len(ids)-mid} ID")
+        return query_features(layer_url, ids[:mid]) + query_features(layer_url, ids[mid:])
+
+
+def cached_features(layer_url: str, ids: list[int], oid: str, directory: Path) -> list[dict]:
+    """Persist a verified batch so a later run on the same machine can resume."""
+    directory.mkdir(parents=True, exist_ok=True)
+    target = directory / f"{ids[0]}-{ids[-1]}.json"
+    if target.exists():
+        try:
+            saved = json.loads(target.read_text(encoding="utf-8"))
+            got = saved["features"]
+            returned = [int((f.get("properties") or {}).get(
+                oid, (f.get("properties") or {}).get(oid.lower(), f.get("id")))) for f in got]
+            if saved["ids"] == ids and len(returned) == len(ids) and set(returned) == set(ids):
+                return got
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError):
+            pass
+        target.unlink()
+    got = query_features(layer_url, ids)
+    returned = [int((f.get("properties") or {}).get(
+        oid, (f.get("properties") or {}).get(oid.lower(), f.get("id")))) for f in got]
+    if len(returned) != len(ids) or set(returned) != set(ids):
+        raise SystemExit(f"Batch {ids[0]}–{ids[-1]} tidak lengkap; checkpoint tidak ditulis.")
+    tmp = target.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps({"ids": ids, "features": got}, ensure_ascii=False), encoding="utf-8")
+    tmp.replace(target)
+    return got
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("region")
     ap.add_argument("--bbox", help="lon_min,lat_min,lon_max,lat_max")
     ap.add_argument("--layer-url", default=DEFAULT_LAYER)
+    ap.add_argument("--fault-layer-url", help="URL layer ArcGIS polyline sesar yang sudah diverifikasi")
+    ap.add_argument("--skip-faults", action="store_true", help="Bangun poligon saja secara eksplisit")
     args = ap.parse_args()
 
     if args.bbox:
         bbox = tuple(float(v) for v in args.bbox.split(","))
-    elif args.region in REGION_BBOX:
-        bbox = REGION_BBOX[args.region]
+    elif args.region in REGION_BBOX or args.region == "all":
+        bbox = REGION_BBOX.get(args.region)
     else:
         raise SystemExit(f"Wilayah '{args.region}' belum punya bbox bawaan; beri --bbox.")
 
@@ -86,34 +147,46 @@ def main() -> None:
     print(f"Layer: {meta.get('name')} | geometri {meta.get('geometryType')} | OID {oid_field} | maxRecordCount {max_rec}")
 
     # 2. Semua objectId di dalam bbox
-    spatial = {
-        "geometry": ",".join(str(v) for v in bbox), "geometryType": "esriGeometryEnvelope",
-        "inSR": 4326, "spatialRel": "esriSpatialRelIntersects", "where": "1=1",
-    }
+    spatial = {"where": "1=1"}
+    if bbox is not None:
+        spatial.update({"geometry": ",".join(str(v) for v in bbox), "geometryType": "esriGeometryEnvelope",
+                        "inSR": 4326, "spatialRel": "esriSpatialRelIntersects"})
     time.sleep(PAUSE_S)
     ids = request(f"{layer_url}/query", {**spatial, "returnIdsOnly": "true", "f": "json"}).get("objectIds") or []
+    if len(set(ids)) != len(ids):
+        raise SystemExit("Inventaris ArcGIS mengandung object ID duplikat.")
     ids = sorted(ids)
     print(f"Fitur di bbox {bbox}: {len(ids)}")
     if not ids:
         raise SystemExit("Tidak ada fitur. Periksa bbox atau URL layer.")
 
     # 3. Ambil per potongan objectId sebagai GeoJSON (tidak bergantung dukungan paging)
-    features: list[dict] = []
+    features: dict[int, dict] = {}
+    inventory_hash = hashlib.sha256(json.dumps([layer_url, ids]).encode()).hexdigest()[:16]
+    cache_dir = out / "parts" / inventory_hash
     for i in range(0, len(ids), chunk):
         part = ids[i:i + chunk]
-        time.sleep(PAUSE_S)
-        fc = request(f"{layer_url}/query", {
-            "objectIds": ",".join(map(str, part)), "outFields": "*", "outSR": 4326,
-            "returnGeometry": "true", "f": "geojson",
-        }, post=True)
-        got = fc.get("features", [])
-        features.extend(got)
+        got = cached_features(layer_url, part, oid_field, cache_dir)
+        for feature in got:
+            props = feature.get("properties") or {}
+            fid = props.get(oid_field, props.get(oid_field.lower(), feature.get("id")))
+            if fid is None or int(fid) in features:
+                raise SystemExit(f"Object ID hilang atau duplikat dalam respons: {fid}")
+            features[int(fid)] = feature
         print(f"  {min(i + chunk, len(ids))}/{len(ids)} (+{len(got)})")
 
-    if len(features) != len(ids):
-        print(f"[PERINGATAN] diminta {len(ids)} fitur, diterima {len(features)}.")
-    geo = {"type": "FeatureCollection", "features": features}
-    (out / "esdm_litologi.geojson").write_text(json.dumps(geo, ensure_ascii=False), encoding="utf-8")
+    missing, extra = set(ids) - features.keys(), features.keys() - set(ids)
+    if missing or extra:
+        raise SystemExit(f"Penarikan belum lengkap: {len(missing)} hilang, {len(extra)} tak diminta. Output tidak ditulis.")
+    geo = {"type": "FeatureCollection", "features": [features[i] for i in ids]}
+    target = out / "esdm_litologi.geojson"
+    temporary = target.with_suffix(".geojson.tmp")
+    temporary.write_text(json.dumps(geo, ensure_ascii=False), encoding="utf-8")
+    temporary.replace(target)
+    (out / "esdm_manifest.json").write_text(json.dumps({
+        "layer_url": layer_url, "oid_field": oid_field, "count": len(ids),
+        "min_id": ids[0], "max_id": ids[-1], "bbox": bbox,
+    }, indent=2), encoding="utf-8")
 
     # 4. Laporan: kolom + nilai teratas, untuk menyusun crosswalk
     lines = [f"Sumber: {layer_url}", f"Hak cipta: Pusat Survei Geologi (status data Mei 2018)",
@@ -124,7 +197,7 @@ def main() -> None:
     for f in meta.get("fields", []):
         if f.get("type") != "esriFieldTypeString":
             continue
-        c = Counter(str((ft.get("properties") or {}).get(f["name"], "")).strip() for ft in features)
+        c = Counter(str((ft.get("properties") or {}).get(f["name"], "")).strip() for ft in features.values())
         lines.append(f"\n[{f['name']}] {len(c)} nilai unik")
         for v, n in c.most_common(40):
             lines.append(f"  {n:>5}  {v[:160]}")
@@ -132,6 +205,48 @@ def main() -> None:
     (out / "laporan.txt").write_text(report, encoding="utf-8")
     print(f"\nTersimpan di {out}\n")
     print(report)
+    fault_layers = (
+        {} if args.skip_faults else
+        {"custom": args.fault_layer_url} if args.fault_layer_url else
+        DEFAULT_FAULT_LAYERS if args.region == "all" else {}
+    )
+    for fault_name, fault_url in fault_layers.items():
+        fault_url = fault_url.rstrip("/")
+        fault_meta = request(fault_url, {"f": "json"})
+        if fault_meta.get("geometryType") != "esriGeometryPolyline":
+            raise SystemExit("Layer patahan harus berupa esriGeometryPolyline.")
+        fault_oid = fault_meta.get("objectIdField") or next(
+            (f["name"] for f in fault_meta.get("fields", []) if f.get("type") == "esriFieldTypeOID"), "OBJECTID")
+        fault_ids = request(f"{fault_url}/query", {**spatial, "returnIdsOnly": "true", "f": "json"}).get("objectIds") or []
+        if len(set(fault_ids)) != len(fault_ids):
+            raise SystemExit("Inventaris patahan berisi ID duplikat.")
+        if not fault_ids:
+            raise SystemExit("Inventaris patahan kosong; cek layer dan jangan klaim cakupan lengkap.")
+        fault_ids = sorted(fault_ids)
+        fault_chunk = min(CHUNK, int(fault_meta.get("maxRecordCount") or 1000))
+        fault_hash = hashlib.sha256(json.dumps([fault_url, sorted(fault_ids)]).encode()).hexdigest()[:16]
+        fault_features = {}
+        for i in range(0, len(fault_ids), fault_chunk):
+            for ft in cached_features(fault_url, fault_ids[i:i+fault_chunk], fault_oid,
+                                      out / "parts" / fault_hash):
+                p = ft.get("properties") or {}
+                fid = p.get(fault_oid, p.get(fault_oid.lower(), ft.get("id")))
+                if fid is None or int(fid) in fault_features:
+                    raise SystemExit(f"ID patahan hilang atau duplikat: {fid}")
+                fault_features[int(fid)] = ft
+        if set(fault_features) != set(fault_ids):
+            raise SystemExit("Penarikan patahan belum lengkap.")
+        tmp = out / f"esdm_faults_{fault_name}.geojson.tmp"
+        tmp.write_text(json.dumps({"type": "FeatureCollection",
+            "features": [fault_features[i] for i in sorted(fault_ids)]}, ensure_ascii=False), encoding="utf-8")
+        tmp.replace(out / f"esdm_faults_{fault_name}.geojson")
+        (out / f"esdm_faults_{fault_name}_layer.json").write_text(
+            json.dumps(fault_meta, ensure_ascii=False, indent=1), encoding="utf-8")
+        (out / f"esdm_faults_{fault_name}_manifest.json").write_text(json.dumps({
+            "layer_url": fault_url, "oid_field": fault_oid, "count": len(fault_ids),
+            "bbox": bbox,
+        }, indent=2), encoding="utf-8")
+        print(f"Patahan {fault_name}: {len(fault_ids):,} garis terverifikasi.")
 
 
 if __name__ == "__main__":

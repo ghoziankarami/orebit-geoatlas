@@ -11,6 +11,7 @@ jobs:
         with: { python-version: "3.11" }
       - run: pip install pandas
       - run: python pipeline/validate_reference.py
+      - run: python -m unittest discover -s pipeline -p 'test_*.py'
   app:
     runs-on: ubuntu-latest
     defaults: { run: { working-directory: app } }
@@ -20,3 +21,22 @@ jobs:
         with: { node-version: 22, cache: npm, cache-dependency-path: app/package-lock.json }
       - run: npm ci
       - run: npm run build
+  national-data:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'codex/national-esdm-pipeline-ui-sources'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: sudo apt-get update && sudo apt-get install -y tippecanoe
+      - run: python -m pip install -r pipeline/requirements.txt
+      - run: make fetch-all
+      - run: make tiles-all
+      - name: Count and preserve build evidence
+        if: always()
+        run: |
+          for file in data/out/all/units.geojsonl data/out/all/lines.geojsonl; do
+            if [ -f "$file" ]; then wc -l "$file"; fi
+          done
+          ls -lh data/out/all/*.pmtiles 2>/dev/null || true
