@@ -24,6 +24,12 @@ jobs:
               "BGS_PM/Geologi_Geostruktur/MapServer?f=pjson",
               "BGS_PM/Patahan_Aktif_Skala_Besar/MapServer?f=pjson",
               "BGS_PM/Patahan_Aktif_Skala_Kecil/MapServer?f=pjson",
+              "BGS_PM/Patahan_Aktif_Skala_Besar/MapServer/0?f=pjson",
+              "BGS_PM/Patahan_Aktif_Skala_Kecil/MapServer/0?f=pjson",
+              "BGS_PM/Patahan_Aktif_Skala_Besar/MapServer/0/query?"
+              + urllib.parse.urlencode({"where": "1=1", "returnCountOnly": "true", "f": "json"}),
+              "BGS_PM/Patahan_Aktif_Skala_Kecil/MapServer/0/query?"
+              + urllib.parse.urlencode({"where": "1=1", "returnCountOnly": "true", "f": "json"}),
               "BGS_PM/Geologi_Litologi/MapServer/0/query?"
               + urllib.parse.urlencode({"where": "1=1", "returnCountOnly": "true", "f": "json"}),
           ]
@@ -34,6 +40,8 @@ jobs:
                   print(path, json.dumps({
                       "error": data.get("error"), "services": data.get("services"),
                       "layers": data.get("layers"), "count": data.get("count"),
+                      "geometryType": data.get("geometryType"),
+                      "fields": [f.get("name") for f in data.get("fields", [])],
                   }, ensure_ascii=False)[:2500])
               except Exception as exc:
                   print(path, type(exc).__name__, str(exc))
