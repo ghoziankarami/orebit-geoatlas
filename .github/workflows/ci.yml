@@ -15,15 +15,28 @@ jobs:
       - name: Probe ESDM metadata availability
         continue-on-error: true
         run: |
-          for url in \
-            'https://geoportal.esdm.go.id/gis4/rest/services/BGS_PM/Geologi_Litologi/MapServer/0?f=pjson' \
-            'https://geoportal.esdm.go.id/gis4/rest/services/bgl_bgs_pm/Geologi_Geostruktur/MapServer?f=pjson'; do
-            echo "Checking $url"
-            curl --location --silent --show-error --max-time 20 \
-              --output /tmp/esdm-response --write-out 'HTTP %{http_code}\n' "$url" || true
-            head -c 400 /tmp/esdm-response || true
-            echo
-          done
+          python - <<'PY'
+          import json, urllib.parse, urllib.request
+          root = "https://geoportal.esdm.go.id/gis4/rest/services/"
+          paths = [
+              "BGS_PM?f=pjson",
+              "BGS_PM/Geologi_Litologi/MapServer?f=pjson",
+              "BGS_PM/Geologi_Geostruktur/MapServer?f=pjson",
+              "bgl_bgs_pm/Geologi_Geostruktur/MapServer?f=pjson",
+              "BGS_PM/Geologi_Litologi/MapServer/0/query?"
+              + urllib.parse.urlencode({"where": "1=1", "returnCountOnly": "true", "f": "json"}),
+          ]
+          for path in paths:
+              try:
+                  with urllib.request.urlopen(root + path, timeout=25) as response:
+                      data = json.load(response)
+                  print(path, json.dumps({
+                      "error": data.get("error"), "services": data.get("services"),
+                      "layers": data.get("layers"), "count": data.get("count"),
+                  }, ensure_ascii=False)[:2500])
+              except Exception as exc:
+                  print(path, type(exc).__name__, str(exc))
+          PY
   app:
     runs-on: ubuntu-latest
     defaults: { run: { working-directory: app } }
