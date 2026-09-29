@@ -16,6 +16,7 @@ Sopan terhadap server: permintaan berurutan, jeda 1 detik, berhenti bila error b
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import time
 import urllib.error
@@ -90,6 +91,32 @@ def query_features(layer_url: str, ids: list[int]) -> list[dict]:
         return query_features(layer_url, ids[:mid]) + query_features(layer_url, ids[mid:])
 
 
+def cached_features(layer_url: str, ids: list[int], oid: str, directory: Path) -> list[dict]:
+    """Persist a verified batch so a later run on the same machine can resume."""
+    directory.mkdir(parents=True, exist_ok=True)
+    target = directory / f"{ids[0]}-{ids[-1]}.json"
+    if target.exists():
+        try:
+            saved = json.loads(target.read_text(encoding="utf-8"))
+            got = saved["features"]
+            returned = [int((f.get("properties") or {}).get(
+                oid, (f.get("properties") or {}).get(oid.lower(), f.get("id")))) for f in got]
+            if saved["ids"] == ids and len(returned) == len(ids) and set(returned) == set(ids):
+                return got
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError):
+            pass
+        target.unlink()
+    got = query_features(layer_url, ids)
+    returned = [int((f.get("properties") or {}).get(
+        oid, (f.get("properties") or {}).get(oid.lower(), f.get("id")))) for f in got]
+    if len(returned) != len(ids) or set(returned) != set(ids):
+        raise SystemExit(f"Batch {ids[0]}–{ids[-1]} tidak lengkap; checkpoint tidak ditulis.")
+    tmp = target.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps({"ids": ids, "features": got}, ensure_ascii=False), encoding="utf-8")
+    tmp.replace(target)
+    return got
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("region")
@@ -135,9 +162,11 @@ def main() -> None:
 
     # 3. Ambil per potongan objectId sebagai GeoJSON (tidak bergantung dukungan paging)
     features: dict[int, dict] = {}
+    inventory_hash = hashlib.sha256(json.dumps([layer_url, ids]).encode()).hexdigest()[:16]
+    cache_dir = out / "parts" / inventory_hash
     for i in range(0, len(ids), chunk):
         part = ids[i:i + chunk]
-        got = query_features(layer_url, part)
+        got = cached_features(layer_url, part, oid_field, cache_dir)
         for feature in got:
             props = feature.get("properties") or {}
             fid = props.get(oid_field, props.get(oid_field.lower(), feature.get("id")))
@@ -193,10 +222,13 @@ def main() -> None:
             raise SystemExit("Inventaris patahan berisi ID duplikat.")
         if not fault_ids:
             raise SystemExit("Inventaris patahan kosong; cek layer dan jangan klaim cakupan lengkap.")
+        fault_ids = sorted(fault_ids)
         fault_chunk = min(CHUNK, int(fault_meta.get("maxRecordCount") or 1000))
+        fault_hash = hashlib.sha256(json.dumps([fault_url, sorted(fault_ids)]).encode()).hexdigest()[:16]
         fault_features = {}
         for i in range(0, len(fault_ids), fault_chunk):
-            for ft in query_features(fault_url, fault_ids[i:i+fault_chunk]):
+            for ft in cached_features(fault_url, fault_ids[i:i+fault_chunk], fault_oid,
+                                      out / "parts" / fault_hash):
                 p = ft.get("properties") or {}
                 fid = p.get(fault_oid, p.get(fault_oid.lower(), ft.get("id")))
                 if fid is None or int(fid) in fault_features:
