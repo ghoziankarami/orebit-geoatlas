@@ -9,7 +9,7 @@ disajikan sebagai vector tiles statis (PMTiles) yang dirender dengan MapLibre GL
 | Zoom | Sumber | Lisensi |
 | --- | --- | --- |
 | 0–14 (dasar) | Tile Macrostrat `carto` (untuk Indonesia: peta global GSC/Chorlton 2007) | CC-BY 4.0 |
-| 8–14 (di atasnya) | PMTiles Orebit dari SHP GeoMap PSG 1:100k yang sudah diharmonisasi | Lisensi Terbuka PSG: atribusi, dilarang dijual |
+| 6–14 (di atasnya) | PMTiles Orebit dari layer ESDM PSG yang sudah diharmonisasi | Lisensi Terbuka PSG: atribusi, dilarang dijual |
 
 Area yang belum punya PMTiles Orebit tetap tampil dari Macrostrat.
 
@@ -43,6 +43,11 @@ tandai sambungan bermasalah) → `05_export` (GeoJSONSeq) → `06_tile.sh` (PMTi
 
 ## Deploy
 
+Untuk satu build nasional dari layanan ESDM, lihat
+[panduan build nasional](docs/national-build.md). Kode penarikan dan kurasi
+otomatis tersedia; hasil 36.078 poligon dan garis sesar belum dapat dinyatakan
+selesai sebelum manifest, QA, dan PMTiles asli diverifikasi.
+
 - **App**: Vercel atau Cloudflare Pages, root directory `app`, build `npm run build`, output `dist`,
   env `VITE_TILES_URL`. Domain yang disarankan: `atlas.orebit.id` (CNAME di DNS orebit.id).
 - **Tile**: unggah `*.pmtiles` ke Cloudflare R2 (mis. `tiles.orebit.id`), aktifkan CORS untuk
@@ -58,4 +63,4 @@ Data mentah GeoMap tidak disimpan di repo ini.
 
 ## Status
 
-MVP dalam pengembangan (M0 scaffold selesai). PRD: [docs/PRD.md](docs/PRD.md) · [versi lengkap](https://claude.ai/code/artifact/ad4fc269-8236-42dc-9846-63c9516de477) · [desain UI](https://claude.ai/artifact/6bmHZNaq7XYGdZ8T8E6CHn)
+MVP dalam pengembangan. PRD: [docs/PRD.md](docs/PRD.md).

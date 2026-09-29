@@ -62,6 +62,9 @@ for f in files:
                 else pd.Series("", index=gdf.index))
         units.append(gpd.GeoDataFrame({
             "source_id": sid,
+            "object_id": (gdf[next(c for c in cols if c.lower() in ("objectid_1", "objectid", "fid"))]
+                          .astype(str).values if any(c.lower() in ("objectid_1", "objectid", "fid") for c in cols)
+                          else ["" for _ in range(len(gdf))]),
             "symbol_orig": clean(gdf[sym]) if sym else "",
             "name_orig": clean(gdf[name]) if name else "",
             "desc_orig": desc,
@@ -70,7 +73,7 @@ for f in files:
         typ = pick_field(cols, LINE_TYPE_FIELDS)
         lines.append(gpd.GeoDataFrame({
             "source_id": sid,
-            "type_orig": gdf[typ].astype(str).str.strip() if typ else pd.Series("", index=gdf.index),
+            "type_orig": gdf[typ].astype(str).str.strip() if typ else pd.Series("fault", index=gdf.index),
         }, geometry=gdf.geometry, crs=4326))
     else:
         print(f"[LEWATI] {key}: tipe geometri {geom_types}")

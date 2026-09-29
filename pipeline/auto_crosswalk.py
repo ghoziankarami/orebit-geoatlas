@@ -46,12 +46,43 @@ AGE_MAP: dict[str, tuple[float, float]] = {
     "perm": (251.902, 298.9),
     "permian": (251.902, 298.9),
     "karbon": (298.9, 358.9),
+    "devon": (358.9, 419.62),
+    "silur": (419.62, 443.1),
+    "ordovisium": (443.1, 486.85),
+    "kambrium": (486.85, 538.8),
+    "holosen": (0, 0.0117),
+    "plistosen": (0.0117, 2.58),
+    "pleistosen": (0.0117, 2.58),
+    "pliosen": (2.58, 5.333),
+    "miosen": (5.333, 23.03),
+    "oligosen": (23.03, 33.9),
+    "eosen": (33.9, 56.0),
+    "paleosen": (56.0, 66.0),
+    "tersier": (2.58, 66.0),
+    "prakambrium": (538.8, 4567),
     "permo karbon": (251.902, 358.9),
     "mesozoikum": (66.0, 251.902),          # Trias-Kapur
     "paleozoikum": (251.902, 538.8),        # Kambrium-Perm
     "meso - paleo": (66.0, 538.8),          # Mesozoikum + Paleozoikum
     "pra tersier": (66.0, 538.8),           # kabur di sumber; direntang selebar mungkin
 }
+
+# Prefix notasi dipakai hanya bila umur eksplisit sumber tidak dikenal.
+# Kode campuran mempertahankan rentang lebar agar tidak memberi presisi palsu.
+CODE_AGES = {
+    "Qh": (0, 0.0117), "Qp": (0.0117, 2.58), "Q": (0, 2.58),
+    "Tmp": (2.58, 23.03), "Tm": (5.333, 23.03),
+    "Tom": (5.333, 33.9), "To": (23.03, 33.9),
+    "Te": (33.9, 56), "Tp": (56, 66), "T": (2.58, 66),
+    "K": (66, 143.1), "J": (143.1, 201.4), "Tr": (201.4, 251.902),
+}
+
+
+def age_from_symbol(symbol: str) -> tuple[float | None, float | None]:
+    for code in sorted(CODE_AGES, key=len, reverse=True):
+        if symbol.startswith(code):
+            return CODE_AGES[code]
+    return None, None
 
 
 def age_for(term: str | None) -> tuple[float | None, float | None]:
@@ -83,7 +114,23 @@ def lith_for(text: str) -> str:
 
 
 def sanitize_id(s: str) -> str:
-    return re.sub(r"[^A-Z0-9_]", "", s.upper().replace(" ", "_").replace("-", "_"))
+    return re.sub(r"[^A-Z0-9_]", "", s.upper().replace(" ", "_").replace("-", "_")) or "UNIT"
+
+
+def clean_formation(name: str, remark: str, symbol: str) -> str:
+    for candidate in (name, remark):
+        candidate = re.sub(r"\s+", " ", str(candidate)).strip(" .;,-")
+        if candidate and candidate.lower() not in {"-", "none", "null", "tidak diketahui", symbol.lower()}:
+            match = re.search(r"(?:formasi|formation|kompleks|complex)\s+[\w .-]+", candidate, re.I)
+            if match:
+                return match.group().strip(" .;,-")
+            if candidate == name and len(candidate) < 90:
+                return candidate
+    return f"Unit {symbol}"
+
+
+def lith_detail_for(remark: str) -> str:
+    return re.sub(r"\s+", " ", remark).strip(" .;,-")[:240]
 
 
 def main() -> None:
@@ -140,13 +187,17 @@ def main() -> None:
             age_term = by_symbol_age.get(sym, Counter()).most_common(1)
             age_term = age_term[0][0] if age_term else None
             top_ma, base_ma = age_for(age_term)
+            age_origin = "umurobj"
+            if top_ma is None:
+                top_ma, base_ma = age_from_symbol(sym)
+                age_origin = "simobj" if top_ma is not None else "unknown"
             lith = lith_for(f"{name} {remark}")
             new_unit_rows.append({
-                "unit_id": uid, "formation": name, "symbol_std": sym, "lith_class": lith,
-                "lith_detail": "", "age_top_ma": top_ma if top_ma is not None else "",
+                "unit_id": uid, "formation": clean_formation(name, remark, sym), "symbol_std": sym, "lith_class": lith,
+                "lith_detail": lith_detail_for(remark), "age_top_ma": top_ma if top_ma is not None else "",
                 "age_base_ma": base_ma if base_ma is not None else "",
                 "interval_top": age_term or "", "interval_base": age_term or "",
-                "color_hex": "", "description": f"[AUTO] {remark or name} — umur sumber: {age_term or 'tidak diketahui'}",
+                "color_hex": "", "description": f"[AUTO] {remark or name} — umur: {age_term or sym} ({age_origin})",
             })
             assigned += 1
 

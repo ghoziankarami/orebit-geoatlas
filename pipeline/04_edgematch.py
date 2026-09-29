@@ -13,10 +13,26 @@ SNAP_M = 25  # toleransi celah antar-lembar (meter)
 region = region_arg()
 od = out_dir(region)
 u = gpd.read_parquet(od / "03_units.parquet")
-utm = u.estimate_utm_crs()
-u = u.to_crs(utm)
+if u.empty:
+    raise SystemExit("Tidak ada poligon untuk edge-match.")
 u["unit_key"] = u.unit_id.fillna("").where(u.unit_id.fillna("") != "", "RAW:" + u.source_id + ":" + u.symbol_orig)
 
+# A national ESDM layer is already seamless. Keep its original polygons and
+# object IDs: a global dissolve would erase 36k individual click targets.
+if u.source_id.nunique() == 1:
+    if "object_id" in u and u.object_id.ne("").all():
+        if u.object_id.duplicated().any():
+            raise SystemExit("Object ID duplikat pada satu sumber; build dihentikan.")
+        u["poly_id"] = u.source_id.astype(str) + "-" + u.object_id.astype(str)
+    else:
+        u["poly_id"] = [f"{region}-{i:06d}" for i in range(len(u))]
+    u.to_parquet(od / "04_units.parquet")
+    print(f"Poligon sumber seamless dipertahankan: {len(u):,}.")
+    raise SystemExit(0)
+
+# Equal-area metre CRS spans the archipelago; one estimated UTM zone does not.
+utm = "EPSG:6933"
+u = u.to_crs(utm)
 # Tutup celah kecil di sambungan lembar dengan buffer +/-
 u["geometry"] = u.buffer(SNAP_M / 2).buffer(-SNAP_M / 2)
 
