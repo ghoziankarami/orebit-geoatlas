@@ -1,6 +1,6 @@
 # Orebit GeoAtlas
 
-Peta geologi Indonesia yang mulus dan ringan di browser, dari skala global sampai 1:100.000.
+Peta geologi multi-sumber Indonesia yang ringan di browser. Skala dan kelengkapan mengikuti sumber data yang tersedia.
 Terinspirasi dari [Macrostrat](https://macrostrat.org): legenda diharmonisasi antar-lembar, lalu
 disajikan sebagai vector tiles statis (PMTiles) yang dirender dengan MapLibre GL JS. Tanpa server peta.
 
@@ -9,9 +9,13 @@ disajikan sebagai vector tiles statis (PMTiles) yang dirender dengan MapLibre GL
 | Zoom | Sumber | Lisensi |
 | --- | --- | --- |
 | 0–14 (dasar) | Tile Macrostrat `carto` (untuk Indonesia: peta global GSC/Chorlton 2007) | CC-BY 4.0 |
-| 8–14 (di atasnya) | PMTiles Orebit dari SHP GeoMap PSG 1:100k yang sudah diharmonisasi | Lisensi Terbuka PSG: atribusi, dilarang dijual |
+| 8+ (di atasnya) | PMTiles Orebit dari layanan Geologi Litologi ESDM (status Mei 2018); saat ini cakupan Bangka-Belitung dan Sumatra | Lisensi Terbuka PSG: atribusi, dilarang dijual |
+| Hillshade dan medan 3D | Tile elevasi Mapterhorn, Terrarium | Lihat [atribusi sumber terrain](https://mapterhorn.com/attribution) |
 
-Area yang belum punya PMTiles Orebit tetap tampil dari Macrostrat.
+Layanan ESDM yang dipakai tidak menyatakan skala pada metadata pipeline ini; jangan anggap lapisan Orebit saat ini sebagai peta 1:100.000. Area lain, termasuk Jawa, Kalimantan, Sulawesi, dan Papua, tampil dari Macrostrat sampai data rinci tersedia.
+Tombol **Topografi** menambahkan hillshade. Tombol **3D** memiringkan kamera dan menampilkan elevasi; **2D** kembali ke tampak atas.
+
+Crosswalk Bangka-Belitung berisi 22 simbol tanpa unit otomatis. Di Sumatra, 470 dari 479 baris unit memakai pemetaan otomatis berbasis istilah umur sumber dan kata kunci nama/deskripsi litologi; hasilnya belum ditelaah geolog secara independen. Geometri yang lolos pipeline bukan bukti bahwa interpretasi umur dan litologinya sudah benar.
 
 ## Menjalankan aplikasi
 
@@ -21,8 +25,7 @@ npm install
 npm run dev          # http://localhost:5173 — langsung jalan dengan data Macrostrat
 ```
 
-Untuk menampilkan data Orebit, salin `app/.env.example` ke `app/.env` dan isi `VITE_TILES_URL`
-dengan URL PMTiles (lokal atau R2).
+Untuk menampilkan data Orebit, salin `app/.env.example` ke `app/.env`. Nilai awalnya menunjuk ke tile nasional di `https://atlas.orebit.id/tiles/all.pmtiles`; ganti dengan URL PMTiles milikmu jika memakai tile lain.
 
 ## Membangun data satu wilayah
 
@@ -30,8 +33,8 @@ Butuh Python 3.11+ dan [tippecanoe](https://github.com/felt/tippecanoe) ≥ 2.17
 
 ```bash
 pip install -r pipeline/requirements.txt
-# 1. Unduh SHP kabupaten dari https://geologi.esdm.go.id/geomap ke data/raw/babel/<nama-lembar>/
-make inventory REGION=babel     # daftar simbol baru → reference/crosswalk.csv
+# Ambil data layanan ESDM untuk wilayah yang didukung pipeline
+make inventory REGION=babel     # daftar simbol → reference/crosswalk.csv
 # 2. Kurasi crosswalk.csv & units.csv (lihat docs/kurasi-crosswalk.md)
 make validate
 make tiles REGION=babel         # → data/out/babel/babel.pmtiles
@@ -52,7 +55,7 @@ tandai sambungan bermasalah) → `05_export` (GeoJSONSeq) → `06_tile.sh` (PMTi
 
 ## Atribusi & disclaimer
 
-Bukan peta resmi. Data 1:100k © Pusat Survei Geologi, Badan Geologi, diolah Orebit.
+Bukan peta resmi. Data layanan Geologi Litologi ESDM (status Mei 2018), cakupan Bangka-Belitung dan Sumatra, © Pusat Survei Geologi, Badan Geologi, diolah Orebit. Skala sumber tidak dinyatakan pada metadata pipeline.
 Tile dasar © Macrostrat (CC-BY 4.0) dan penyedia data aslinya. Basemap © OpenStreetMap contributors, OpenFreeMap.
 Data mentah GeoMap tidak disimpan di repo ini.
 
