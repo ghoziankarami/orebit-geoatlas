@@ -25,15 +25,17 @@
         <p class="sheet-hint" id="sheetHint"></p>
         <a class="brand-credit" href="https://orebit.id" target="_blank" rel="noopener">orebit.id <span aria-hidden="true">↗</span></a>
       </div>
-      <button class="lang" id="langBtn" type="button"></button>
+      <div class="brand-actions">
+        <button id="panelToggle" class="panel-toggle" type="button" aria-expanded="true" aria-controls="panelControls" title="Minimize control panel">
+          <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M11 3 L5 9 L11 15 M5 9 H16" /></svg>
+        </button>
+        <button class="lang" id="langBtn" type="button"></button>
+      </div>
     </header>
 
     <form class="search" id="searchForm" role="search">
       <label class="sr-only" for="searchInput" id="t-searchLabel"></label>
       <input id="searchInput" type="search" autocomplete="off" enterkeyhint="search" />
-      <button id="panelToggle" class="panel-toggle" type="button" aria-expanded="true" aria-controls="panelControls">
-        <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 4 H15 M3 9 H15 M3 14 H15" /></svg>
-      </button>
       <div id="searchResults" class="search-results" hidden></div>
     </form>
 
@@ -87,7 +89,7 @@
     </div>
   </aside>
 
-  <div class="map-ctrls" aria-label="Navigasi peta">
+  <div class="map-ctrls" id="mapControls" aria-label="Navigasi peta">
     <div class="ctrl-group">
       <button type="button" id="zoomIn" class="ctrl">
         <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2 V14 M2 8 H14" /></svg>
@@ -110,11 +112,16 @@
       <button type="button" id="rotateRight" aria-label="Putar peta ke kanan" title="Rotate right">↻</button>
       <button type="button" id="tiltDown" aria-label="Kurangi kemiringan kamera" title="Tilt down">∨</button>
     </div>
-    <button type="button" id="topographyToggle" class="ctrl topo-toggle" aria-pressed="false"></button>
-    <div class="export-group" role="group" aria-label="Export peta">
-      <button type="button" id="exportPNG" class="export-btn">PNG</button>
-      <button type="button" id="exportPDF" class="export-btn">PDF</button>
-    </div>
+    <details class="tools-menu" id="toolsMenu">
+      <summary id="toolsSummary" aria-label="Terrain and export tools">Tools</summary>
+      <div class="tools-popover">
+        <button type="button" id="topographyToggle" class="ctrl topo-toggle" aria-pressed="false"></button>
+        <div class="export-group" role="group" aria-label="Export peta">
+          <button type="button" id="exportPNG" class="export-btn">PNG</button>
+          <button type="button" id="exportPDF" class="export-btn">PDF</button>
+        </div>
+      </div>
+    </details>
   </div>
 
   <div class="map-foot">
