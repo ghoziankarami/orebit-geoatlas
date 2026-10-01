@@ -37,13 +37,23 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
 /* ---------- Panel kiri ---------- */
 .panel {
   position: absolute; top: 12px; left: 12px; bottom: 12px; width: 320px; z-index: 2;
-  background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius);
+  background: rgba(255,255,255,.97); border: 1px solid rgba(214,221,225,.9); border-radius: 12px;
+  box-shadow: 0 12px 36px rgba(21,39,48,.16), 0 2px 8px rgba(21,39,48,.06);
   padding: 18px 18px 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px;
 }
 .sheet-handle { display: none; }
+.panel-controls { display: flex; flex: 1; flex-direction: column; gap: 18px; }
+.panel-toggle { position: absolute; top: 1px; right: 1px; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-left: 1px solid var(--line); border-radius: 0 7px 7px 0; cursor: pointer; }
+.panel-toggle:hover { background: var(--tin-soft); }
+@media (min-width: 641px) {
+  .panel.compact { bottom: auto; overflow: visible; }
+  .panel.compact .panel-controls, .panel.compact .tagline { display: none; }
+}
 .brand { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .brand h1 { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
 .brand p { margin: 2px 0 0; color: var(--ink-soft); font-size: 14px; max-width: 26ch; }
+.brand-credit { display: inline-flex; gap: 3px; align-items: center; margin-top: 5px; color: var(--tin-dark); font-size: 11px; font-weight: 700; letter-spacing: .02em; text-decoration: none; }
+.brand-credit:hover { text-decoration: underline; }
 .sheet-hint { display: none; }
 .lang {
   flex: none; margin-top: 2px; border: 1px solid var(--line); background: var(--paper);
@@ -54,7 +64,7 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
 
 .search { position: relative; margin: 0; }
 .search input {
-  width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--field); font-size: 14px;
+  width: 100%; padding: 10px 50px 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--field); font-size: 14px;
 }
 .search input:focus { border-color: var(--tin); background: var(--paper); outline: none; }
 .search-results {
@@ -86,6 +96,11 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
 .age-readout { margin: 2px 0 0; font-variant-numeric: tabular-nums; font-size: 14px; }
 .toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; }
 .toggle input { accent-color: var(--tin); width: 16px; height: 16px; margin: 0; }
+.control-heading { display: flex; justify-content: space-between; align-items: center; }
+.control-heading h2 { margin-bottom: 0; }
+.control-heading output { color: var(--tin-dark); font-size: 12px; font-variant-numeric: tabular-nums; font-weight: 700; }
+.opacity-block input[type="range"] { display: block; width: 100%; margin: 11px 0 0; accent-color: var(--tin); cursor: pointer; }
+.opacity-hint { margin: 4px 0 0; color: var(--ink-soft); font-size: 11px; }
 
 /* Legenda umur digambar sebagai kolom stratigrafi: pita bertumpuk dengan batas umur di kiri. */
 .timescale { list-style: none; margin: 0; padding: 0 0 0 44px; }
@@ -118,19 +133,39 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
 .detail dl { margin: 14px 0 0; display: grid; gap: 12px; }
 .detail dt { font-size: 12px; font-weight: 600; color: var(--ink-soft); }
 .detail dd { margin: 2px 0 0; font-size: 14px; max-width: 60ch; overflow-wrap: anywhere; }
-.detail-actions { display: none; }
+.detail-actions { display: flex; gap: 8px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+.detail-actions .btn { flex: 1; font-size: 13px; padding: 0 8px; }
+.detail-actions [hidden] { display: none; }
 .muted { color: var(--ink-soft); font-size: 13px; }
 
 /* ---------- Kontrol peta ---------- */
-.map-ctrls { position: absolute; top: 12px; right: 12px; z-index: 2; display: flex; flex-direction: column; gap: 8px; }
-.ctrl-group { display: flex; flex-direction: column; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.map-ctrls { position: absolute; top: 14px; right: 14px; z-index: 2; display: flex; flex-direction: column; gap: 9px; }
+.ctrl-group { display: flex; flex-direction: column; background: rgba(255,255,255,.94); border: 1px solid rgba(214,221,225,.9); border-radius: 12px; overflow: hidden; box-shadow: 0 5px 18px rgba(21,39,48,.15); backdrop-filter: blur(10px); }
 .ctrl {
-  width: 40px; height: 40px; border: 0; background: var(--paper); cursor: pointer;
+  width: 42px; height: 42px; border: 0; background: transparent; cursor: pointer;
   display: flex; align-items: center; justify-content: center; color: var(--ink);
+  transition: background-color .18s ease, color .18s ease;
 }
 .ctrl-group .ctrl + .ctrl { border-top: 1px solid var(--line); }
 .ctrl:hover { background: var(--field); }
-.ctrl.solo { width: 42px; height: 42px; border: 1px solid var(--line); border-radius: 8px; }
+.ctrl.solo { width: 44px; height: 44px; border: 1px solid rgba(214,221,225,.9); border-radius: 12px; background: rgba(255,255,255,.94); box-shadow: 0 5px 18px rgba(21,39,48,.15); backdrop-filter: blur(10px); }
+.view-group { display: flex; gap: 3px; padding: 3px; background: rgba(255,255,255,.94); border: 1px solid rgba(214,221,225,.9); border-radius: 13px; overflow: hidden; box-shadow: 0 5px 18px rgba(21,39,48,.15); backdrop-filter: blur(10px); }
+.view-group button { flex: 1; height: 34px; min-width: 40px; border: 0; border-radius: 9px; background: transparent; cursor: pointer; font-size: 12px; font-weight: 700; color: var(--ink-soft); transition: background-color .2s ease, color .2s ease, transform .2s ease; }
+.view-group button:hover { background: var(--tin-soft); color: var(--tin-dark); }
+.view-group button[aria-pressed="true"] { background: linear-gradient(145deg, #347e9a, #205a74); color: white; box-shadow: 0 2px 5px rgba(20,64,83,.24); }
+.topo-toggle { width: auto; min-width: 92px; height: 40px; padding: 0 13px; border: 1px solid rgba(214,221,225,.9); border-radius: 12px; background: rgba(255,255,255,.94); box-shadow: 0 5px 18px rgba(21,39,48,.15); backdrop-filter: blur(10px); font-size: 12px; font-weight: 650; transition: background-color .2s ease, color .2s ease, box-shadow .2s ease; }
+.topo-toggle[aria-pressed="true"] { background: #1f4c61; color: white; border-color: #1f4c61; box-shadow: 0 5px 18px rgba(31,76,97,.3); }
+.export-group { display: flex; overflow: hidden; border: 1px solid rgba(214,221,225,.9); border-radius: 12px; background: rgba(255,255,255,.94); box-shadow: 0 5px 18px rgba(21,39,48,.15); backdrop-filter: blur(10px); }
+.export-btn { border: 0; padding: 0 12px; min-height: 38px; background: transparent; color: var(--ink); font-size: 11px; font-weight: 700; cursor: pointer; }
+.export-btn + .export-btn { border-left: 1px solid var(--line); }
+.export-btn:hover { color: #fff; background: #205a74; }
+.export-btn:disabled { opacity: .55; cursor: progress; }
+.rotation-group { display: grid; grid-template-columns: repeat(5, 34px); gap: 2px; padding: 3px; border: 1px solid rgba(214,221,225,.9); border-radius: 12px; background: rgba(255,255,255,.94); box-shadow: 0 5px 18px rgba(21,39,48,.15); backdrop-filter: blur(10px); }
+.rotation-group button { width: 34px; height: 34px; border: 0; border-radius: 8px; background: transparent; color: var(--ink); font-size: 17px; line-height: 1; cursor: pointer; }
+.rotation-group button:hover:not(:disabled) { background: var(--tin-soft); color: var(--tin-dark); }
+.rotation-group button:disabled { opacity: .36; cursor: not-allowed; }
+.hover-tip { position: absolute; z-index: 4; max-width: 260px; padding: 8px 11px; border: 1px solid rgba(214,221,225,.85); border-radius: 9px; background: rgba(255,255,255,.96); color: var(--ink); box-shadow: 0 8px 22px rgba(21,39,48,.18); backdrop-filter: blur(8px); font-size: 12px; font-weight: 600; line-height: 1.4; white-space: pre-line; pointer-events: none; }
+.hover-tip[hidden] { display: none; }
 .me-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--tin); border: 3px solid #fff; box-shadow: 0 0 0 1px var(--tin); }
 
 .map-foot { position: absolute; right: 12px; bottom: 12px; z-index: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: none; }
@@ -139,7 +174,7 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
   background: rgba(255,255,255,.85); border: 1px solid var(--ink-soft); border-top: 0; color: var(--ink);
   font-size: 11px; padding: 2px 6px; margin: 0; box-sizing: border-box;
 }
-.attrib { margin: 0; background: rgba(255,255,255,.85); padding: 3px 8px; border-radius: 6px; font-size: 11px; color: #3B4A53; max-width: 60vw; text-align: right; }
+.attrib { margin: 0; background: rgba(255,255,255,.88); padding: 4px 9px; border: 1px solid rgba(214,221,225,.72); border-radius: 8px; box-shadow: 0 3px 10px rgba(21,39,48,.08); backdrop-filter: blur(8px); font-size: 10px; color: #3B4A53; max-width: 60vw; text-align: right; }
 .attrib a { color: inherit; }
 
 .toast {
@@ -166,6 +201,9 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
 
 /* ---------- Seluler: panel jadi bottom sheet ---------- */
 @media (max-width: 640px) {
+  .panel-controls { gap: 12px; }
+  .panel-toggle { display: none; }
+  .search input { padding-right: 12px; }
   .panel {
     top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 78vh;
     border-radius: 14px 14px 0 0; border-bottom: 0; padding: 8px 16px calc(16px + env(safe-area-inset-bottom, 0px)); gap: 12px;
@@ -185,12 +223,26 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
   .brand .sheet-hint { display: block; margin: 0; color: var(--ink-soft); font-size: 13px; max-width: none; }
   .lang { min-width: 44px; height: 32px; }
   .search input { height: 44px; font-size: 16px; }
-  .panel > .block:first-of-type { margin-top: 6px; }
+  .panel-controls > .block:first-of-type { margin-top: 6px; }
 
-  .map-ctrls { right: 10px; top: 14px; }
+  .map-ctrls {
+    top: max(12px, env(safe-area-inset-top, 0px)); right: 10px; width: min(234px, calc(100vw - 20px));
+    display: grid; grid-template-columns: 46px 46px minmax(0, 1fr);
+    grid-template-areas: "zoom locate view" "zoom topo export";
+    gap: 8px; align-items: start; transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
+  }
+  .panel:not(.collapsed) ~ .map-ctrls { opacity: 0; transform: translateY(-6px); visibility: hidden; pointer-events: none; }
+  .map-ctrls > .ctrl-group { grid-area: zoom; width: 46px; }
   .ctrl-group { border-radius: 10px; }
   .ctrl { width: 44px; height: 44px; }
-  .ctrl.solo { width: 46px; height: 46px; border-radius: 10px; }
+  .ctrl.solo { grid-area: locate; width: 46px; height: 46px; border-radius: 10px; }
+  .view-group { grid-area: view; width: 100%; min-width: 0; border-radius: 10px; }
+  .view-group button { min-width: 0; }
+  /* Two-finger gestures rotate and pitch 3D; keep manual camera controls on desktop. */
+  .rotation-group { display: none; }
+  .topo-toggle { grid-area: topo; width: 100%; min-width: 0; height: 40px; padding: 0 8px; }
+  .export-group { grid-area: export; width: 100%; min-width: 0; }
+  .export-btn { flex: 1; min-width: 0; padding: 0 6px; }
   .map-foot { right: auto; left: 10px; bottom: calc(var(--peek, 196px) + 12px); align-items: flex-start; }
   .map-foot .attrib { text-align: left; max-width: calc(100vw - 80px); }
 

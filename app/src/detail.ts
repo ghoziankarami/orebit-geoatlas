@@ -61,7 +61,7 @@ let currentToken = 0;
 function setSourceButton(url?: string) {
   const a = document.getElementById("detailSource") as HTMLAnchorElement;
   a.textContent = t("openSource");
-  if (url) { a.href = url; a.hidden = false; } else { a.removeAttribute("href"); a.hidden = true; }
+  if (url && /^https?:\/\//.test(url)) { a.href = url; a.hidden = false; } else { a.removeAttribute("href"); a.hidden = true; }
 }
 
 async function loadMacrostratSource(id: number, token: number) {
@@ -70,11 +70,11 @@ async function loadMacrostratSource(id: number, token: number) {
       const res = await fetch(CONFIG.macrostratSourcesApi + id);
       const d = (await res.json())?.success?.data?.[0] ?? {};
       const ref = [d.authors, d.ref_year && `(${d.ref_year})`, d.ref_title].filter(Boolean).join(" ");
-      const url = typeof d.url === "string" && /^https?:\/\//.test(d.url) ? d.url : undefined;
+      const url = typeof d.url === "string" && /^https?:\/\//.test(d.url) ? d.url : "https://macrostrat.org/map/sources";
       const link = url ? `<br><a class="inline-src" href="${esc(url)}" target="_blank" rel="noopener">${esc(t("openSource"))}</a>` : "";
       sourceCache.set(id, { html: `${esc(ref || d.name || `Macrostrat source ${id}`)}<br><span class="muted">via Macrostrat</span>${link}`, url });
     } catch {
-      sourceCache.set(id, { html: `Macrostrat source ${id}` });
+      sourceCache.set(id, { html: `Macrostrat source ${id}`, url: "https://macrostrat.org/map/sources" });
     }
   }
   if (token !== currentToken) return; // pengguna sudah memilih unit lain
@@ -91,7 +91,8 @@ export function showDetail(f: maplibregl.MapGeoJSONFeature) {
   const p = f.properties as Record<string, unknown>;
   const isOrebit = f.source === "orebit";
   body.innerHTML = isOrebit ? renderOrebit(p) : renderMacrostrat(p);
-  setSourceButton(isOrebit && typeof p.source_url === "string" ? p.source_url : undefined);
+  setSourceButton(isOrebit && typeof p.source_url === "string" ? p.source_url :
+    !isOrebit ? "https://macrostrat.org/map/sources" : undefined);
   panel.hidden = false;
   if (!isOrebit && p.source_id !== undefined) void loadMacrostratSource(Number(p.source_id), token);
 }
