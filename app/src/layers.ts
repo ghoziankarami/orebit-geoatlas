@@ -10,6 +10,7 @@ export type ColorMode = "age" | "lith";
  * ini rinci karena pengguna sudah fokus ke satu area. */
 export const FINE_ZOOM = 11;
 export const isFineZoom = (zoom: number): boolean => zoom >= FINE_ZOOM;
+const obZoomFade: ExpressionSpecification = ["interpolate", ["linear"], ["zoom"], 7.5, 0, 8.8, 0.85] as unknown as ExpressionSpecification;
 
 const MS = "macrostrat";
 const OB = "orebit";
@@ -33,7 +34,8 @@ export function addGeologyLayers(map: maplibregl.Map) {
   });
 
   map.addLayer({ id: "ms-units", type: "fill", source: MS, "source-layer": "units",
-    paint: { "fill-color": ["coalesce", ["get", "color"], "#D9DEE1"], "fill-opacity": 0.78 } }, before);
+    paint: { "fill-color": ["coalesce", ["get", "color"], "#D9DEE1"], "fill-opacity": 0.78,
+      "fill-color-transition": { duration: 420, delay: 0 } } }, before);
   map.addLayer({ id: "ms-units-edge", type: "line", source: MS, "source-layer": "units", minzoom: 6,
     paint: { "line-color": "#1F2B33", "line-opacity": 0.18, "line-width": 0.4 } }, before);
   map.addLayer({ id: "ms-lines", type: "line", source: MS, "source-layer": "lines",
@@ -44,17 +46,19 @@ export function addGeologyLayers(map: maplibregl.Map) {
       type: "vector",
       url: `pmtiles://${CONFIG.orebitTiles}`,
       attribution:
-        'Peta geologi 1:100.000 © <a href="https://geologi.esdm.go.id/geomap" target="_blank" rel="noopener">Pusat Survei Geologi, Badan Geologi</a>; diolah oleh Orebit',
+        'Data layanan Geologi Litologi ESDM (status Mei 2018) © <a href="https://geoportal.esdm.go.id/gis4/rest/services/BGS_PM/Geologi_Litologi/MapServer" target="_blank" rel="noopener">Pusat Survei Geologi, Badan Geologi</a>; diolah oleh Orebit',
     });
-    map.addLayer({ id: "ob-units", type: "fill", source: OB, "source-layer": "units", minzoom: CONFIG.orebitMinZoom,
-      paint: { "fill-color": ["coalesce", ["get", "color_hex"], "#D9DEE1"], "fill-opacity": 0.85 } }, before);
+    map.addLayer({ id: "ob-units", type: "fill", source: OB, "source-layer": "units", minzoom: 7.5,
+      paint: { "fill-color": ["coalesce", ["get", "color_hex"], "#D9DEE1"], "fill-opacity": obZoomFade,
+        "fill-color-transition": { duration: 420, delay: 0 } } }, before);
     map.addLayer({ id: "ob-units-edge", type: "line", source: OB, "source-layer": "units", minzoom: CONFIG.orebitMinZoom,
-      paint: { "line-color": "#1F2B33", "line-opacity": 0.3, "line-width": 0.5 } }, before);
+      paint: { "line-color": "#1F2B33", "line-opacity": ["interpolate", ["linear"], ["zoom"], 8, 0, 9, 0.3], "line-width": 0.5 } }, before);
     map.addLayer({ id: "ob-lines", type: "line", source: OB, "source-layer": "lines", minzoom: CONFIG.orebitMinZoom,
       paint: {
         "line-color": "#1F2B33",
         "line-width": ["interpolate", ["linear"], ["zoom"], 8, 0.8, 14, 2],
         "line-dasharray": ["case", ["==", ["get", "certainty"], "inferred"], ["literal", [3, 2]], ["literal", [1, 0]]],
+        "line-opacity": ["interpolate", ["linear"], ["zoom"], 8, 0, 9, 1],
       } }, before);
   }
 
@@ -68,13 +72,12 @@ export function addGeologyLayers(map: maplibregl.Map) {
 }
 
 const msAgeColor: ExpressionSpecification = ["coalesce", ["get", "color"], "#D9DEE1"];
-const obAgeColor: ExpressionSpecification = ["step", ["zoom"],
-  ["coalesce", ["get", "color_hex_coarse"], ["get", "color_hex"], "#D9DEE1"],
-  FINE_ZOOM,
-  ["coalesce", ["get", "color_hex"], "#D9DEE1"],
+const obAgeColor: ExpressionSpecification = ["interpolate", ["linear"], ["zoom"],
+  FINE_ZOOM - 0.5, ["coalesce", ["get", "color_hex_coarse"], ["get", "color_hex"], "#D9DEE1"],
+  FINE_ZOOM + 0.5, ["coalesce", ["get", "color_hex"], "#D9DEE1"],
 ] as unknown as ExpressionSpecification;
-const msLithColor: ExpressionSpecification = ["step", ["zoom"], macrostratLithColorCoarse, FINE_ZOOM, macrostratLithColor] as unknown as ExpressionSpecification;
-const obLithColor: ExpressionSpecification = ["step", ["zoom"], orebitLithColorCoarse, FINE_ZOOM, orebitLithColor] as unknown as ExpressionSpecification;
+const msLithColor: ExpressionSpecification = ["interpolate", ["linear"], ["zoom"], FINE_ZOOM - 0.5, macrostratLithColorCoarse, FINE_ZOOM + 0.5, macrostratLithColor] as unknown as ExpressionSpecification;
+const obLithColor: ExpressionSpecification = ["interpolate", ["linear"], ["zoom"], FINE_ZOOM - 0.5, orebitLithColorCoarse, FINE_ZOOM + 0.5, orebitLithColor] as unknown as ExpressionSpecification;
 
 export function setColorMode(map: maplibregl.Map, mode: ColorMode) {
   map.setPaintProperty("ms-units", "fill-color", mode === "age" ? msAgeColor : msLithColor);
@@ -83,19 +86,21 @@ export function setColorMode(map: maplibregl.Map, mode: ColorMode) {
   }
 }
 
-function ageOpacity(topField: string, baseField: string, min: number, max: number, on: number): ExpressionSpecification {
+function ageOpacity(topField: string, baseField: string, min: number, max: number, on: number, fadeWithZoom = false, scale = 1): ExpressionSpecification {
   // Unit tampil penuh bila rentang umurnya beririsan dengan [min, max].
+  const visible = fadeWithZoom ? ["*", obZoomFade, scale] : on * scale;
+  const dimmed = fadeWithZoom ? ["*", obZoomFade, 0.1, scale] : 0.1 * scale;
   return ["case",
     ["all",
       [">=", ["to-number", ["coalesce", ["get", baseField], 9999]], min],
       ["<=", ["to-number", ["coalesce", ["get", topField], 0]], max]],
-    on, 0.1];
+    visible, dimmed] as unknown as ExpressionSpecification;
 }
 
-export function setAgeFilter(map: maplibregl.Map, min: number, max: number) {
-  map.setPaintProperty("ms-units", "fill-opacity", ageOpacity("best_t_age", "best_b_age", min, max, 0.78));
+export function setAgeFilter(map: maplibregl.Map, min: number, max: number, opacity = 1) {
+  map.setPaintProperty("ms-units", "fill-opacity", ageOpacity("best_t_age", "best_b_age", min, max, 0.78, false, opacity));
   if (map.getLayer("ob-units")) {
-    map.setPaintProperty("ob-units", "fill-opacity", ageOpacity("age_top_ma", "age_base_ma", min, max, 0.85));
+    map.setPaintProperty("ob-units", "fill-opacity", ageOpacity("age_top_ma", "age_base_ma", min, max, 1, true, opacity));
   }
 }
 

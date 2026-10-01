@@ -9,7 +9,7 @@ Desain UI: https://claude.ai/artifact/6bmHZNaq7XYGdZ8T8E6CHn
 3. Ringan di laptop dan HP kelas menengah (4G).
 4. Kode terbuka, data siap dikontribusikan ke Macrostrat.
 
-Non-tujuan: bukan peta resmi; tanpa editing/3D; tidak dijual (lisensi GeoMap).
+Non-tujuan: bukan peta resmi; tanpa editing; tidak dijual (lisensi GeoMap).
 
 ## Metrik MVP
 | Metrik | Target |
@@ -27,10 +27,13 @@ Non-tujuan: bukan peta resmi; tanpa editing/3D; tidak dijual (lisensi GeoMap).
 | GeoMap PSG, SHP 1:100k per kab/kota | 8–14 | atribusi PSG, dilarang dijual |
 | GLiM | referensi litologi | cek CCGM |
 
+**Catatan cakupan saat ini:** tile Orebit yang dipakai aplikasi berasal dari layanan Geologi Litologi ESDM berstatus Mei 2018 untuk Bangka-Belitung dan Sumatra; metadata pipeline tidak menyebut skala. Sumatra masih memakai pemetaan otomatis untuk 470/479 unit, sehingga belum memenuhi sasaran kurasi lintas lembar. Jawa, Kalimantan, Sulawesi, dan Papua saat ini memakai lapisan dasar Macrostrat, bukan data rinci Orebit. Target 1:100.000 di atas adalah sasaran produk dan memerlukan lembar GeoMap terverifikasi.
+
 ## Fitur MVP
 F1 peta multi-skala · F2 popup unit (formasi, umur, litologi, sumber) · F3 mode warna umur/litologi ·
 F4 filter umur (Ma) · F5 layer sesar/kontak · F6 pencarian lokasi · F7 URL bisa dibagikan ·
-F8 responsif (bottom sheet < 640 px) · F9 ID/EN · F10 halaman Tentang & Sumber.
+F8 responsif (bottom sheet < 640 px) · F9 ID/EN · F10 halaman Tentang & Sumber ·
+F11 hillshade/topografi · F12 tampilan terrain 3D dengan tombol kembali ke plan view 2D.
 
 Fase 2: overlay fosil PBDB, kolom stratigrafi per cekungan, ekspor PNG/GeoJSON, ukur, laporan koreksi.
 
