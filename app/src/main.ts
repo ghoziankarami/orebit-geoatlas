@@ -141,6 +141,7 @@ $("terrainView").addEventListener("click", () => set3D(true));
 function syncOrientationControls() {
   $<HTMLButtonElement>("tiltUp").disabled = !state.view3d;
   $<HTMLButtonElement>("tiltDown").disabled = !state.view3d;
+  $("mapControls").classList.toggle("is-3d", state.view3d);
 }
 const rotateBy = (degrees: number) => map.easeTo({ bearing: map.getBearing() + degrees, duration: 420, essential: true });
 $("rotateLeft").addEventListener("click", () => rotateBy(-30));
@@ -159,6 +160,17 @@ $("topographyToggle").addEventListener("click", () => {
   state.topo = !state.topo;
   setTopography(state.topo);
   writeState(state);
+  $("toolsMenu").removeAttribute("open");
+});
+const toolsMenu = $<HTMLDetailsElement>("toolsMenu");
+document.addEventListener("pointerdown", (event) => {
+  if (toolsMenu.open && !toolsMenu.contains(event.target as Node)) toolsMenu.open = false;
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && toolsMenu.open) {
+    toolsMenu.open = false;
+    $("toolsSummary").focus();
+  }
 });
 
 let toastTimer: number | undefined;
@@ -321,6 +333,7 @@ async function pdfFromCanvas(canvas: HTMLCanvasElement): Promise<Blob> {
 for (const format of ["png", "pdf"] as const) {
   const button = $<HTMLButtonElement>(`export${format.toUpperCase()}`);
   button.addEventListener("click", async () => {
+    toolsMenu.open = false;
     button.disabled = true;
     toast(t("exportWorking"));
     try {
@@ -366,7 +379,7 @@ const TEXT_IDS: Record<string, Key> = {
 };
 const LABEL_IDS: Record<string, Key> = {
   zoomIn: "zoomIn", zoomOut: "zoomOut", locateBtn: "locate", detailClose: "closeDetail",
-  sheetHandle: "togglePanel", panelToggle: "togglePanel", langBtn: "switchLang",
+  sheetHandle: "togglePanel", langBtn: "switchLang",
   planView: "planView", terrainView: "terrainView", topographyToggle: "topography",
   rotateLeft: "rotateLeft", rotateRight: "rotateRight", resetNorth: "resetNorth",
   tiltUp: "tiltUp", tiltDown: "tiltDown",
@@ -377,6 +390,10 @@ function applyText() {
   $<HTMLInputElement>("searchInput").placeholder = t("searchPlaceholder");
   $("langBtn").textContent = getLang() === "id" ? "EN" : "ID";
   $("topographyToggle").textContent = getLang() === "id" ? "Topografi" : "Terrain";
+  $("toolsSummary").textContent = getLang() === "id" ? "Alat" : "Tools";
+  $("toolsSummary").setAttribute("aria-label", getLang() === "id" ? "Lapisan terrain dan ekspor" : "Terrain and export tools");
+  $("toolsSummary").title = getLang() === "id" ? "Lapisan dan ekspor" : "Layers and export";
+  updatePanelToggleLabel();
   $("opacityLabel").textContent = t("opacity");
   $("opacityHint").textContent = t("opacityHint");
   renderLegend(state.mode, isFineZoom(map.getZoom()));
@@ -387,17 +404,7 @@ function applyText() {
 
 function updateSheetHint() {
   $("sheetHint").textContent = t(state.mode === "age" ? "sheetHintAge" : "sheetHintLith");
-  updatePeek();
 }
-
-/** Tinggi bottom sheet saat tertutup: sampai bawah kolom pencarian, supaya pencarian selalu terlihat. */
-function updatePeek() {
-  if (!isMobile()) return;
-  const form = $("searchForm");
-  const peek = form.offsetTop + form.offsetHeight + 16;
-  document.documentElement.style.setProperty("--peek", `${peek}px`);
-}
-window.addEventListener("resize", updatePeek);
 
 // ---------- Filter umur ----------
 const ageMin = $<HTMLInputElement>("ageMin");
@@ -483,9 +490,18 @@ $("langBtn").addEventListener("click", () => {
 
 // ---------- Panel seluler (bottom sheet) ----------
 const panel = $("panel");
+function updatePanelToggleLabel() {
+  const collapsed = $("panelToggle").getAttribute("aria-expanded") !== "true";
+  const label = getLang() === "id"
+    ? (collapsed ? "Tampilkan panel kontrol" : "Minimalkan panel kontrol")
+    : (collapsed ? "Restore control panel" : "Minimize control panel");
+  $("panelToggle").setAttribute("aria-label", label);
+  $("panelToggle").title = label;
+}
 $("panelToggle").addEventListener("click", () => {
   const collapsed = panel.classList.toggle("compact");
   $("panelToggle").setAttribute("aria-expanded", String(!collapsed));
+  updatePanelToggleLabel();
 });
 function setSheet(open: boolean) {
   panel.classList.toggle("collapsed", !open);
@@ -576,4 +592,3 @@ initSearch(map, {
 applyText();
 applyMode();
 if (isMobile()) setSheet(false);
-void document.fonts?.ready.then(updatePeek);
