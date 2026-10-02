@@ -5,7 +5,8 @@ const CONTENT = {
   id: `
     <h2 id="aboutTitle">Tentang GeoAtlas</h2>
     <p>GeoAtlas adalah peta geologi multi-sumber Indonesia. Skala dan kelengkapan mengikuti sumber yang tersedia.
-    Proyek gratis dari <a href="https://orebit.id" target="_blank" rel="noopener">Orebit</a>, terinspirasi dari Macrostrat.</p>
+    Proyek gratis dari <a href="https://orebit.id" target="_blank" rel="noopener">Orebit</a>, terinspirasi dari Macrostrat.
+    <a href="https://github.com/ghoziankarami/orebit-geoatlas" target="_blank" rel="noopener">Lihat kode sumber dan README di GitHub ↗</a>.</p>
 
     <h3>Sumber data</h3>
     <table>
@@ -33,7 +34,8 @@ const CONTENT = {
   en: `
     <h2 id="aboutTitle">About GeoAtlas</h2>
     <p>GeoAtlas is a multi-source geologic map of Indonesia. Scale and completeness depend on the available sources.
-    A free project by <a href="https://orebit.id" target="_blank" rel="noopener">Orebit</a>, inspired by Macrostrat.</p>
+    A free project by <a href="https://orebit.id" target="_blank" rel="noopener">Orebit</a>, inspired by Macrostrat.
+    <a href="https://github.com/ghoziankarami/orebit-geoatlas" target="_blank" rel="noopener">View the source code and README on GitHub ↗</a>.</p>
 
     <h3>Data sources</h3>
     <table>

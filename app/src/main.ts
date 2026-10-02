@@ -375,6 +375,7 @@ const TEXT_IDS: Record<string, Key> = {
   "t-tagline": "tagline", "t-searchLabel": "searchLabel", "t-colorBy": "colorBy",
   "t-modeAge": "modeAge", "t-modeLith": "modeLith", "t-ageFilter": "ageFilter",
   "t-lines": "lines", "t-disclaimer": "disclaimer", aboutBtn: "about", aboutClose: "close",
+  githubLink: "github",
   detailCopy: "copyLink", detailFocus: "focusFeature",
 };
 const LABEL_IDS: Record<string, Key> = {
