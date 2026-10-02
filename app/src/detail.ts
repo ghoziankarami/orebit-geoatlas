@@ -82,7 +82,7 @@ function renderOrebit(p: Record<string, unknown>, lines?: NearbyStructure[]) {
       ${row(t("lith"), esc([lithLabel, p.lith_detail].filter(Boolean).join(" — ") || t("notInSource")))}
       ${row(t("unitCode"), esc(p.unit_id))}
       ${row(t("description"), esc(description || t("notInSource")))}
-      ${row(t("source"), `${esc(p.sheet_name)}<br><span class="muted">Pusat Survei Geologi, Badan Geologi; diolah Orebit</span>${p.source_url ? `<br><a class="inline-src" href="${esc(p.source_url)}" target="_blank" rel="noopener">${esc(t("openSourceService"))}</a>` : ""}`)}
+      ${row(t("source"), `${esc(p.sheet_name)}<br><span class="muted">Pusat Survei Geologi · Badan Geologi</span>${p.source_url ? `<br><a class="inline-src" href="${esc(p.source_url)}" target="_blank" rel="noopener">${esc(t("openSourceService"))}</a>` : ""}`)}
     </dl>
     ${structures(lines)}
     ${references(name)}`;
