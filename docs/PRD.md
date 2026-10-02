@@ -32,7 +32,7 @@ Non-tujuan: bukan peta resmi; tanpa editing; tidak dijual (lisensi GeoMap).
 ## Fitur MVP
 F1 peta multi-skala · F2 popup unit (formasi, umur, litologi, sumber) · F3 mode warna umur/litologi ·
 F4 filter umur (Ma) · F5 layer sesar/kontak · F6 pencarian lokasi · F7 URL bisa dibagikan ·
-F8 responsif (bottom sheet < 640 px) · F9 ID/EN · F10 halaman Tentang & Sumber ·
+F8 responsif (bottom sheet ≤ 760 px) · F9 ID/EN · F10 halaman Tentang & Sumber ·
 F11 hillshade/topografi · F12 tampilan terrain 3D dengan tombol kembali ke plan view 2D.
 
 Fase 2: overlay fosil PBDB, kolom stratigrafi per cekungan, ekspor PNG/GeoJSON, ukur, laporan koreksi.
