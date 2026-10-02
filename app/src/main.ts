@@ -17,7 +17,7 @@ setLang(state.lang ?? getLang());
 maplibregl.addProtocol("pmtiles", new Protocol().tile);
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
-const isMobile = () => matchMedia("(max-width: 640px)").matches;
+const isMobile = () => matchMedia("(max-width: 760px)").matches;
 
 const map = new maplibregl.Map({
   container: "map",
@@ -507,7 +507,27 @@ function setSheet(open: boolean) {
   panel.classList.toggle("collapsed", !open);
   $("sheetHandle").setAttribute("aria-expanded", String(open));
 }
-$("sheetHandle").addEventListener("click", () => setSheet(panel.classList.contains("collapsed")));
+const sheetHandle = $("sheetHandle");
+let sheetPointerStart: number | undefined;
+let skipSheetClick = false;
+sheetHandle.addEventListener("pointerdown", (event) => {
+  sheetHandle.setPointerCapture(event.pointerId);
+  sheetPointerStart = event.clientY;
+  skipSheetClick = false;
+});
+sheetHandle.addEventListener("pointerup", (event) => {
+  if (sheetPointerStart === undefined) return;
+  const distance = event.clientY - sheetPointerStart;
+  sheetPointerStart = undefined;
+  if (Math.abs(distance) < 28) return;
+  skipSheetClick = true;
+  setSheet(distance < 0);
+});
+sheetHandle.addEventListener("pointercancel", () => { sheetPointerStart = undefined; });
+sheetHandle.addEventListener("click", () => {
+  if (skipSheetClick) { skipSheetClick = false; return; }
+  setSheet(panel.classList.contains("collapsed"));
+});
 
 // ---------- Detail unit ----------
 function selectFeature(f: maplibregl.MapGeoJSONFeature) {
