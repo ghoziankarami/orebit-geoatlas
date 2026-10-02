@@ -375,7 +375,7 @@ const TEXT_IDS: Record<string, Key> = {
   "t-tagline": "tagline", "t-searchLabel": "searchLabel", "t-colorBy": "colorBy",
   "t-modeAge": "modeAge", "t-modeLith": "modeLith", "t-ageFilter": "ageFilter",
   "t-lines": "lines", "t-disclaimer": "disclaimer", aboutBtn: "about", aboutClose: "close",
-  detailCopy: "copyLink",
+  detailCopy: "copyLink", detailFocus: "focusFeature",
 };
 const LABEL_IDS: Record<string, Key> = {
   zoomIn: "zoomIn", zoomOut: "zoomOut", locateBtn: "locate", detailClose: "closeDetail",
@@ -400,6 +400,7 @@ function applyText() {
   renderAbout();
   updateSheetHint();
   updateAgeReadout();
+  if (activeFeature && !$<HTMLElement>("detail").hidden) selectFeature(activeFeature, activeNearbyLines);
 }
 
 function updateSheetHint() {
@@ -530,12 +531,42 @@ sheetHandle.addEventListener("click", () => {
 });
 
 // ---------- Detail unit ----------
-function selectFeature(f: maplibregl.MapGeoJSONFeature) {
+let activeFeature: maplibregl.MapGeoJSONFeature | null = null;
+let activeNearbyLines: maplibregl.MapGeoJSONFeature[] | undefined;
+
+function selectFeature(f: maplibregl.MapGeoJSONFeature, nearbyLines?: maplibregl.MapGeoJSONFeature[]) {
+  activeFeature = f;
+  activeNearbyLines = nearbyLines;
   highlight(map, f);
-  showDetail(f);
+  showDetail(f, nearbyLines?.map((line) => ({
+    type: line.properties?.type,
+    certainty: line.properties?.certainty,
+    source: line.source,
+  })));
   if (isMobile()) setSheet(false);
 }
-$("detailClose").addEventListener("click", () => { hideDetail(); highlight(map, null); });
+$("detailClose").addEventListener("click", () => { hideDetail(); highlight(map, null); activeFeature = null; activeNearbyLines = undefined; });
+$("detailFocus").addEventListener("click", () => {
+  if (!activeFeature) return;
+  const points: [number, number][] = [];
+  const visit = (value: unknown) => {
+    if (!Array.isArray(value)) return;
+    if (value.length >= 2 && typeof value[0] === "number" && typeof value[1] === "number") {
+      if (Number.isFinite(value[0]) && Number.isFinite(value[1])) points.push([value[0], value[1]]);
+      return;
+    }
+    value.forEach(visit);
+  };
+  visit((activeFeature.geometry as { coordinates?: unknown }).coordinates);
+  if (!points.length) return;
+  const bounds = new maplibregl.LngLatBounds();
+  points.forEach((point) => bounds.extend(point));
+  map.fitBounds(bounds, {
+    padding: isMobile() ? { top: 250, right: 28, bottom: 80, left: 28 } : { top: 48, right: 380, bottom: 48, left: 380 },
+    maxZoom: 12.5,
+    duration: 800,
+  });
+});
 $("detailCopy").addEventListener("click", async () => {
   try {
     await navigator.clipboard.writeText(location.href);
@@ -582,8 +613,12 @@ map.on("zoom", () => {
 const queryLayers = () => QUERY_LAYERS.filter((id) => map.getLayer(id));
 map.on("click", (e) => {
   const f = map.queryRenderedFeatures(e.point, { layers: queryLayers() })[0];
-  if (!f) { hideDetail(); highlight(map, null); return; }
-  selectFeature(f);
+  if (!f) { hideDetail(); highlight(map, null); activeFeature = null; activeNearbyLines = undefined; return; }
+  const lineLayers = ["ob-lines", "ms-lines"].filter((id) => map.getLayer(id));
+  const nearbyLines = lineLayers.length
+    ? map.queryRenderedFeatures([[e.point.x - 14, e.point.y - 14], [e.point.x + 14, e.point.y + 14]], { layers: lineLayers })
+    : [];
+  selectFeature(f, nearbyLines);
 });
 const hoverTip = $<HTMLDivElement>("hoverTip");
 map.on("mousemove", (e) => {
