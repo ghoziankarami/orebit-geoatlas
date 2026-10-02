@@ -1,10 +1,17 @@
 # Orebit GeoAtlas
 
-Peta geologi multi-sumber Indonesia yang ringan di browser. Skala dan kelengkapan mengikuti sumber data yang tersedia.
-Terinspirasi dari [Macrostrat](https://macrostrat.org): legenda diharmonisasi antar-lembar, lalu
-disajikan sebagai vector tiles statis (PMTiles) yang dirender dengan MapLibre GL JS. Tanpa server peta.
+[![Buka atlas.orebit.id](https://img.shields.io/badge/Live-atlas.orebit.id-167f77?style=for-the-badge)](https://atlas.orebit.id)
+[![Lisensi kode: MIT](https://img.shields.io/badge/Code-MIT-52616b?style=flat-square)](LICENSE)
 
-## Cara kerja singkat
+Atlas geologi interaktif Indonesia untuk menjelajahi umur batuan, litologi, formasi, dan relief medan dalam tampilan 2D maupun 3D.
+
+![Preview Orebit GeoAtlas](app/public/og-geoatlas.png)
+
+**[Buka atlas](https://atlas.orebit.id) · [Lihat kode](https://github.com/ghoziankarami/orebit-geoatlas) · [Laporkan masalah](https://github.com/ghoziankarami/orebit-geoatlas/issues)**
+
+Peta dirender di browser menggunakan MapLibre GL JS dan PMTiles. Legenda/harmonisasi menyatukan sumber yang berbeda; cakupan, skala, atribut, dan tingkat verifikasi tetap mengikuti tiap sumber. Ini bukan peta geologi resmi.
+
+## Cakupan dan sumber data
 
 | Zoom | Sumber | Lisensi |
 | --- | --- | --- |
@@ -13,19 +20,27 @@ disajikan sebagai vector tiles statis (PMTiles) yang dirender dengan MapLibre GL
 | Hillshade dan medan 3D | Tile elevasi Mapterhorn, Terrarium | Lihat [atribusi sumber terrain](https://mapterhorn.com/attribution) |
 
 Layanan ESDM yang dipakai tidak menyatakan skala pada metadata pipeline ini; jangan anggap lapisan Orebit saat ini sebagai peta 1:100.000. Area lain, termasuk Jawa, Kalimantan, Sulawesi, dan Papua, tampil dari Macrostrat sampai data rinci tersedia.
-Tombol **Topografi** menambahkan hillshade. Tombol **3D** memiringkan kamera dan menampilkan elevasi; **2D** kembali ke tampak atas.
+Topografi hillshade dan tampilan medan 3D menggunakan elevasi Mapterhorn. Kontrol 2D/3D, opasitas geologi, pencarian satuan/lokasi, detail unit, dan ekspor PNG/PDF tersedia di aplikasi.
 
 Crosswalk Bangka-Belitung berisi 22 simbol tanpa unit otomatis. Di Sumatra, 470 dari 479 baris unit memakai pemetaan otomatis berbasis istilah umur sumber dan kata kunci nama/deskripsi litologi; hasilnya belum ditelaah geolog secara independen. Geometri yang lolos pipeline bukan bukti bahwa interpretasi umur dan litologinya sudah benar.
 
-## Menjalankan aplikasi
+## Pengembangan lokal
 
 ```bash
 cd app
 npm install
-npm run dev          # http://localhost:5173 — langsung jalan dengan data Macrostrat
+npm run dev          # http://localhost:5173
 ```
 
-Untuk menampilkan data Orebit, salin `app/.env.example` ke `app/.env`. Nilai awalnya menunjuk ke tile nasional di `https://atlas.orebit.id/tiles/all.pmtiles`; ganti dengan URL PMTiles milikmu jika memakai tile lain.
+Server pengembangan memakai sumber konfigurasi aplikasi. Untuk mengarahkan overlay PMTiles ke tile lain, salin `app/.env.example` ke `app/.env` dan atur `VITE_TILES_URL`.
+
+Build produksi:
+
+```bash
+cd app
+npm run build          # hasil statis di app/dist
+npm run preview        # cek build lokal
+```
 
 ## Membangun data satu wilayah
 
@@ -44,21 +59,21 @@ Tahapan pipeline: `01_ingest` (baca & reproyeksi) → `02_validate` (perbaiki ge
 `03_harmonize` (crosswalk → unit baku, umur Ma, warna ICS) → `04_edgematch` (gabung lintas lembar,
 tandai sambungan bermasalah) → `05_export` (GeoJSONSeq) → `06_tile.sh` (PMTiles).
 
-## Deploy
+## Publikasi dan data
 
-- **App**: Vercel atau Cloudflare Pages, root directory `app`, build `npm run build`, output `dist`,
-  env `VITE_TILES_URL`. Domain yang disarankan: `atlas.orebit.id` (CNAME di DNS orebit.id).
-- **Tile**: unggah `*.pmtiles` ke Cloudflare R2 (mis. `tiles.orebit.id`), aktifkan CORS untuk
-  `GET, HEAD` dengan header `Range` dari origin `https://atlas.orebit.id`.
-- **Situs Quarto orebit.id**: tautkan dari menu, atau embed:
+- Aplikasi produksi tersedia di **[atlas.orebit.id](https://atlas.orebit.id)**; build web statis berada di `app/dist`.
+- Tile geologi PMTiles dapat di-host sebagai berkas statis yang mendukung HTTP Range. Saat mengganti host, atur `VITE_TILES_URL` dan pastikan CORS mengizinkan origin aplikasi.
+- Situs Quarto orebit.id dapat menautkan atau menyematkan atlas:
   `<iframe src="https://atlas.orebit.id" width="100%" height="640" style="border:0"></iframe>`
 
 ## Atribusi & disclaimer
 
-Bukan peta resmi. Data layanan Geologi Litologi ESDM (status Mei 2018), cakupan Bangka-Belitung dan Sumatra, © Pusat Survei Geologi, Badan Geologi, diolah Orebit. Skala sumber tidak dinyatakan pada metadata pipeline.
-Tile dasar © Macrostrat (CC-BY 4.0) dan penyedia data aslinya. Basemap © OpenStreetMap contributors, OpenFreeMap.
-Data mentah GeoMap tidak disimpan di repo ini.
+Peta ini bukan peta resmi dan tidak dimaksudkan untuk keputusan teknis tanpa pemeriksaan lembar asli. Data layanan Geologi Litologi ESDM berstatus Mei 2018; cakupan rinci saat ini Bangka-Belitung dan Sumatra. Skala layanan tidak dinyatakan dalam metadata pipeline. Atribusi lengkap dan catatan pemrosesan tersedia di **Tentang & sumber** pada aplikasi. Data mentah GeoMap tidak disimpan di repo ini.
 
-## Status
+Tile Macrostrat berlisensi CC-BY 4.0 dan dapat mengandung sumber asli dengan ketentuan atribusinya sendiri. Basemap menggunakan OpenStreetMap/OpenFreeMap/OpenMapTiles; terrain mengikuti atribusi Mapterhorn. Lisensi MIT pada repo ini hanya berlaku untuk kode, bukan data pihak ketiga.
 
-MVP dalam pengembangan (M0 scaffold selesai). PRD: [docs/PRD.md](docs/PRD.md) · [versi lengkap](https://claude.ai/code/artifact/ad4fc269-8236-42dc-9846-63c9516de477) · [desain UI](https://claude.ai/artifact/6bmHZNaq7XYGdZ8T8E6CHn)
+## Kontribusi
+
+Bug report dan saran dapat dikirim lewat [GitHub Issues](https://github.com/ghoziankarami/orebit-geoatlas/issues). Untuk perubahan kode, buka pull request dengan ringkasan perubahan dan langkah uji. Jangan mengirim data geologi berlisensi tanpa memastikan izin dan atribusinya.
+
+Konteks produk dan keputusan desain: [PRD](docs/PRD.md) · [desain UI](https://claude.ai/artifact/6bmHZNaq7XYGdZ8T8E6CHn).

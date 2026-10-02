@@ -118,6 +118,8 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
 
 .panel-foot { margin-top: auto; font-size: 12px; color: var(--ink-soft); display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
 .panel-foot p { margin: 0; }
+.foot-links { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
+.foot-links .link-btn { font: inherit; font-size: 12px; }
 
 /* ---------- Panel detail ---------- */
 .detail {
@@ -159,6 +161,13 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
 .reference-links { display: grid; gap: 6px; padding-bottom: 4px; }
 .reference-links a { display: flex; justify-content: space-between; align-items: center; min-height: 38px; padding: 0 10px; border: 1px solid var(--line); border-radius: 7px; color: var(--ink); text-decoration: none; font-size: 12px; }
 .reference-links a:hover, .reference-links a:focus-visible { background: var(--field); border-color: #8daebb; }
+.reference-caveat, .reference-source, .reference-meta { color: var(--ink-soft); font-size: 11px; line-height: 1.4; }
+.reference-results ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.reference-results li { display: grid; gap: 2px; padding: 8px 9px; background: var(--field); border-radius: 7px; }
+.reference-results li a { color: var(--ink); font-size: 12px; line-height: 1.4; text-decoration: underline; text-decoration-color: #93aab2; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.reference-results li a:hover { color: var(--tin-dark); }
+.reference-meta { padding-left: 1px; }
+.reference-source { margin-bottom: 0; }
 
 /* ---------- Kontrol peta ---------- */
 .map-ctrls { position: absolute; top: 14px; right: 14px; z-index: 2; display: grid; grid-template-columns: 74px 40px 104px 48px; grid-template-areas: "zoom locate view tools" ". . orient tools"; gap: 6px; align-items: start; }
