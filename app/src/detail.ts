@@ -25,18 +25,66 @@ function swatch(color: unknown) {
 
 function references(name: unknown) {
   const title = String(name || t("unnamed"));
-  const exactName = `"${title}"`;
-  const q = encodeURIComponent(`${exactName} geology Indonesia`);
-  const officialQ = encodeURIComponent(`${exactName} site:geologi.esdm.go.id OR site:psg.geologi.esdm.go.id`);
+  const q = encodeURIComponent(`${title} geology Indonesia`);
+  const officialQ = encodeURIComponent(`"${title}" site:geologi.esdm.go.id OR site:psg.geologi.esdm.go.id`);
   return `<details class="detail-more">
-    <summary>${esc(t("moreReferences"))}</summary>
-    <p>${esc(t("referenceSearchNote"))}</p>
+    <summary data-reference-name="${esc(title)}">${esc(t("moreReferences"))}</summary>
+    <p class="reference-caveat">${esc(t("referenceSearchNote"))}</p>
+    <div class="reference-results" aria-live="polite"><p class="muted">${esc(t("referencesLoading"))}</p></div>
     <div class="reference-links">
       <a href="https://scholar.google.com/scholar?q=${q}" target="_blank" rel="noopener">${esc(t("searchScholar"))}<span aria-hidden="true">↗</span></a>
-      <a href="https://search.crossref.org/?q=${q}" target="_blank" rel="noopener">${esc(t("searchCrossref"))}<span aria-hidden="true">↗</span></a>
       <a href="https://www.google.com/search?q=${officialQ}" target="_blank" rel="noopener">${esc(t("searchOfficial"))}<span aria-hidden="true">↗</span></a>
     </div>
   </details>`;
+}
+
+const referenceCache = new Map<string, Promise<string>>();
+function loadReferences(name: string): Promise<string> {
+  const nameKey = name.trim().toLowerCase();
+  const cacheKey = `${getLang()}:${nameKey}`;
+  if (!referenceCache.has(cacheKey)) {
+    const request = fetch(`https://api.crossref.org/works?query.title=${encodeURIComponent(name)}&query.bibliographic=${encodeURIComponent(`${name} geology Indonesia`)}&rows=12&select=title,author,published-print,published-online,DOI,URL`)
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`Crossref ${response.status}`);
+        const works = (await response.json())?.message?.items ?? [];
+        const nameWords = nameKey.split(/[^\p{L}\p{N}]+/u).filter((word) => word.length > 2 && !["formation", "group", "member", "complex", "granite", "volcanics"].includes(word));
+        const entries = works.map((work: Record<string, unknown>) => {
+          const titles = Array.isArray(work.title) ? work.title : [];
+          const title = String(titles[0] ?? "").trim();
+          const normalizedTitle = title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+          const titleWords = normalizedTitle.split(/[^\p{L}\p{N}]+/u);
+          const hasUnitName = nameWords.length > 0 && nameWords.every((word) => titleWords.includes(word));
+          const hasGeologyContext = /\b(geolog|formation|stratigraph|litholog|tecton|volcan|sediment|basin)\w*/i.test(title);
+          if (!title || !hasUnitName || !hasGeologyContext) return "";
+          const authors = Array.isArray(work.author) ? work.author : [];
+          const firstAuthor = authors[0] as Record<string, unknown> | undefined;
+          const authorName = firstAuthor ? [firstAuthor.given, firstAuthor.family].filter(Boolean).join(" ") : "";
+          const date = (work["published-print"] ?? work["published-online"]) as Record<string, unknown> | undefined;
+          const dateParts = date?.["date-parts"] as unknown[][] | undefined;
+          const year = dateParts?.[0]?.[0] ? String(dateParts[0][0]) : "";
+          const doi = typeof work.DOI === "string" ? work.DOI : "";
+          const href = doi ? `https://doi.org/${encodeURIComponent(doi)}` : typeof work.URL === "string" ? work.URL : "";
+          if (!href || !/^https:\/\//.test(href)) return "";
+          return `<li><a href="${esc(href)}" target="_blank" rel="noopener">${esc(title)} <span aria-hidden="true">↗</span></a><span class="reference-meta">${esc([authorName, year].filter(Boolean).join(" · ") || "Crossref")}</span></li>`;
+        }).filter(Boolean).slice(0, 2);
+        return entries.length ? `<ul>${entries.join("")}</ul><p class="reference-source">${esc(t("referencesCaveat"))} · <a href="https://www.crossref.org/" target="_blank" rel="noopener">Crossref</a></p>` : `<p class="muted">${esc(t("referencesEmpty"))}</p>`;
+      })
+      .catch(() => `<p class="muted">${esc(t("referencesError"))}</p>`);
+    referenceCache.set(cacheKey, request);
+  }
+  return referenceCache.get(cacheKey)!;
+}
+
+function wireReferences() {
+  document.querySelectorAll<HTMLDetailsElement>(".detail-more").forEach((details) => {
+    details.addEventListener("toggle", () => {
+      if (!details.open || details.dataset.loaded === "true") return;
+      details.dataset.loaded = "true";
+      const name = details.querySelector<HTMLElement>("summary")?.dataset.referenceName || "";
+      const results = details.querySelector<HTMLElement>(".reference-results");
+      if (results) void loadReferences(name).then((html) => { results.innerHTML = html; });
+    });
+  });
 }
 
 function nameKind(name: unknown) {
@@ -143,6 +191,7 @@ export function showDetail(f: maplibregl.MapGeoJSONFeature, nearbyLines?: Nearby
   const p = f.properties as Record<string, unknown>;
   const isOrebit = f.source === "orebit";
   body.innerHTML = isOrebit ? renderOrebit(p, nearbyLines) : renderMacrostrat(p, nearbyLines);
+  wireReferences();
   panel.scrollTop = 0;
   setSourceButton(
     isOrebit && typeof p.source_url === "string" ? p.source_url : !isOrebit ? "https://macrostrat.org/map/sources" : undefined,
