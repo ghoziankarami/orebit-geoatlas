@@ -26,9 +26,12 @@ Crosswalk Bangka-Belitung berisi 22 simbol tanpa unit otomatis. Di Sumatra, 470 
 
 ## Pengembangan lokal
 
+Persyaratan: Node.js 22+ dan npm.
+
 ```bash
-cd app
-npm install
+git clone https://github.com/ghoziankarami/orebit-geoatlas.git
+cd orebit-geoatlas/app
+npm ci
 npm run dev          # http://localhost:5173
 ```
 
@@ -47,8 +50,10 @@ npm run preview        # cek build lokal
 Butuh Python 3.11+ dan [tippecanoe](https://github.com/felt/tippecanoe) ≥ 2.17.
 
 ```bash
-pip install -r pipeline/requirements.txt
-# Ambil data layanan ESDM untuk wilayah yang didukung pipeline
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r pipeline/requirements.txt
+make fetch-esdm REGION=babel
 make inventory REGION=babel     # daftar simbol → reference/crosswalk.csv
 # 2. Kurasi crosswalk.csv & units.csv (lihat docs/kurasi-crosswalk.md)
 make validate
@@ -76,4 +81,4 @@ Tile Macrostrat berlisensi CC-BY 4.0 dan dapat mengandung sumber asli dengan ket
 
 Bug report dan saran dapat dikirim lewat [GitHub Issues](https://github.com/ghoziankarami/orebit-geoatlas/issues). Untuk perubahan kode, buka pull request dengan ringkasan perubahan dan langkah uji. Jangan mengirim data geologi berlisensi tanpa memastikan izin dan atribusinya.
 
-Konteks produk dan keputusan desain: [PRD](docs/PRD.md) · [desain UI](https://claude.ai/artifact/6bmHZNaq7XYGdZ8T8E6CHn).
+Panduan: [pengembangan](docs/DEVELOPMENT.md) · [kontribusi](CONTRIBUTING.md) · [PRD](docs/PRD.md).
