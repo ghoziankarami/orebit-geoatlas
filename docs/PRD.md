@@ -1,7 +1,8 @@
 # PRD ringkas: Orebit GeoAtlas
 
-Versi lengkap dan terbaru: https://claude.ai/code/artifact/ad4fc269-8236-42dc-9846-63c9516de477
-Desain UI: https://claude.ai/artifact/6bmHZNaq7XYGdZ8T8E6CHn
+Dokumen ini mencatat sasaran produk. Cakupan dan batasan yang tersedia
+dijelaskan di [README](../README.md); langkah kerja ada di
+[panduan pengembangan](DEVELOPMENT.md).
 
 ## Tujuan
 1. Peta geologi Indonesia mulus dari zoom 0 sampai 1:100k (zoom ~14), tanpa batas lembar terlihat.
