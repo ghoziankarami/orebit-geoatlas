@@ -9,8 +9,8 @@ import geopandas as gpd
 import pandas as pd
 import pyogrio
 
-from common import (DESC_FIELDS, LINE_TYPE_FIELDS, NAME_FIELDS, RAW, REF, REGION_RAW_FILES, SYMBOL_FIELDS,
-                    VECTOR_GLOBS, out_dir, pick_field, pick_fields, read_csv, region_arg)
+from common import (BABEL_SHEET_NUMBERS, DESC_FIELDS, LINE_TYPE_FIELDS, NAME_FIELDS, RAW, REF, REGION_RAW_FILES,
+                    SYMBOL_FIELDS, VECTOR_GLOBS, out_dir, pick_field, pick_fields, read_csv, region_arg)
 
 ESDM_URL = "https://geoportal.esdm.go.id/gis4/rest/services/BGS_PM/Geologi_Litologi/MapServer"
 EXCLUDE_SYMBOLS = {"air", "danau", "laut", "water", "lake", "sea", "pulau", "waduk", "rawa", "sungai", "na"}
@@ -74,6 +74,9 @@ for f in files:
     cols = list(gdf.columns)
 
     if geom_types & {"Polygon", "MultiPolygon"}:
+        if "NO_LEMBAR" in gdf.columns and f.name == "Lito Sumatera.TAB":
+            is_babel = gdf["NO_LEMBAR"].isin(BABEL_SHEET_NUMBERS)
+            gdf = gdf.loc[is_babel if region == "babel" else ~is_babel].copy()
         sym, name = pick_field(cols, SYMBOL_FIELDS), pick_field(cols, NAME_FIELDS)
         descs = [c for c in pick_fields(cols, DESC_FIELDS) if c not in (sym, name)]
         print(f"{key}: simbol={sym} nama={name} keterangan={descs}")
@@ -88,7 +91,7 @@ for f in files:
         desc = (gdf_u[descs].apply(lambda r: " | ".join(v for v in clean(r) if v), axis=1) if descs
                 else pd.Series("", index=gdf_u.index))
         units.append(gpd.GeoDataFrame({
-            "source_id": sid,
+            "source_id": "1" if region == "babel" else sid,
             "symbol_orig": sym_series.loc[keep_mask],
             "name_orig": clean(gdf_u[name]) if name else "",
             "desc_orig": desc,
@@ -116,6 +119,24 @@ if units:
     u = pd.concat(units, ignore_index=True)
     u.to_parquet(od / "01_units.parquet")
     print(f"Poligon: {len(u):,} dari {len(units)} file")
+    if not lines and region == "babel":
+        # Ekstrak batas kontak geologi & intrusi antar-formasi di Bangka-Belitung
+        dissolved = u.dissolve(by="symbol_orig").reset_index()
+        contact_geoms = []
+        contact_types = []
+        for i in range(len(dissolved)):
+            for j in range(i + 1, len(dissolved)):
+                inter = dissolved.loc[i, "geometry"].boundary.intersection(dissolved.loc[j, "geometry"].boundary)
+                if not inter.is_empty and inter.geom_type in ("LineString", "MultiLineString"):
+                    s_a, s_b = dissolved.loc[i, "symbol_orig"], dissolved.loc[j, "symbol_orig"]
+                    is_intrusive = any(s in ("TRJkg", "Trtg", "Jma", "Kbg", "Kbd", "PTrd") for s in (s_a, s_b))
+                    contact_geoms.append(inter)
+                    contact_types.append("Kontak Intrusi / Sesar" if is_intrusive else "Kontak Formasi")
+        if contact_geoms:
+            lines.append(gpd.GeoDataFrame({
+                "source_id": "1",
+                "type_orig": contact_types,
+            }, geometry=contact_geoms, crs=4326))
 if lines:
     ln = pd.concat(lines, ignore_index=True)
     ln.to_parquet(od / "01_lines.parquet")

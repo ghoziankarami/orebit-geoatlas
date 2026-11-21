@@ -2,25 +2,25 @@ unit_id,formation,symbol_std,lith_class,lith_detail,age_top_ma,age_base_ma,inter
 QA,Aluvium,Qa,unconsolidated,"kerakal, kerikil, pasir, lanau, lempung",0,2.58,Kuarter,Kuarter,,curated,Endapan sungai dan pantai
 QAV,Endapan Rawa,Qav,unconsolidated,"lumpur, gambut",0,2.58,Kuarter,Kuarter,,curated,Endapan rawa Kuarter
 QS,Endapan Rawa,Qs,unconsolidated,"lumpur, gambut",0,2.58,Kuarter,Kuarter,,curated,Endapan rawa Kuarter
-QAK,Pasir Kuarsa,Qak,unconsolidated,pasir kuarsa lepas,0,2.58,Kuarter,Kuarter,,curated,Endapan pasir kuarsa Kuarter
+QAK,Pasir Kuarsa,Qak,unconsolidated,"pasir kuarsa lepas putih–kekuningan, kerikil, lanau, endapan undak",0.0,2.58,Kuarter,Kuarter,,curated,"Endapan pasir kuarsa undak dan dataran pantai Kuarter di Bangka–Belitung (Baharuddin & Sidarto, 1995)."
 QPK,Formasi Kutacane,Qpk,unconsolidated,,0,2.58,Kuarter,Kuarter,,curated,Endapan Kuarter (nama formasi dari data ESDM)
 QTK,Formasi Kasai,QTk,siliciclastic,"batupasir, batulempung",0,2.58,Kuarter,Kuarter,,curated,Formasi klastik Kuarter
 TMPM1,Formasi Muara Enim,Tmpm1,siliciclastic,"batupasir, batulempung, batubara",2.58,23.03,Neogen,Neogen,,curated,Formasi pembawa batubara Neogen
 TMA,Formasi Air Benakat,Tma,siliciclastic,"batupasir, batulempung",2.58,23.03,Neogen,Neogen,,curated,Formasi klastik Neogen
-TQR,Formasi Ranggam,TQr,siliciclastic,"konglomerat, batupasir",2.58,23.03,Neogen,Neogen,,curated,Formasi klastik Neogen
+TQR,Formasi Ranggam,TQr,siliciclastic,"batupasir, batulempung, konglomerat tipis, lanau berkarbon pembawa timah plaser",0.0117,5.333,Pleistosen,Pliosen,,curated,"Endapan fluviatil–estuarin Plio-Plistosen di Pulau Bangka; horison pembawa cebakan timah plaser tua/kaksa (Margono dkk., 1995)."
 GR4,Granit Palu,Gr4,plutonic_felsic,granit,143.1,201.4,Jura,Jura,,curated,Batuan terobosan granit Jura
 JGR,Granit,Jgr,plutonic_felsic,granit,143.1,201.4,Jura,Jura,,curated,Batuan terobosan granit Jura
-TRJKG,Granit Klabat,TRJkg,plutonic_felsic,granit,143.1,251.902,Jura,Trias,,curated,Batuan terobosan granit Trias-Jura (dikoreksi dari Jura saja sesuai publikasi Badan Geologi)
-JMA,Adamelit Baginda,Jma,plutonic_felsic,adamelit,143.1,201.4,Jura,Jura,,curated,Batuan terobosan adamelit Jura
-KBD,Diorit Kuarsa Batubesi,Kbd,plutonic_felsic,diorit kuarsa,66.0,143.1,Kapur,Kapur,,curated,Batuan terobosan diorit kuarsa Kapur
-KBG,Granodiorit Burung Mandi,Kbg,plutonic_felsic,granodiorit,66.0,143.1,Kapur,Kapur,,curated,Batuan terobosan granodiorit Kapur
-TRT,Formasi Tanjunggenting,TRt,siliciclastic,"batupasir, serpih",201.4,251.902,Trias,Trias,,curated,Formasi klastik Trias
-TRTG,Granit Tanjung Pandang,Trtg,plutonic_felsic,granit,201.4,251.902,Trias,Trias,,curated,Batuan terobosan granit Trias
-PCTM,Formasi Tajam,PCTm,siliciclastic,"batupasir malih, batulanau, serpih, batuan gunungapi malih",251.902,358.9,Perm,Karbon,,curated,Permo-Karbon; batuan klastik dan metasedimen derajat rendah (dikoreksi dari simplifikasi filit/sekis)
-PCKS1,Formasi Kelapa Kampit,PCks1,siliciclastic,"batupasir malih, batusabak, batulumpur, serpih, batulanau tufaan, rijang",251.902,358.9,Perm,Karbon,,curated,Permo-Karbon; sedimen klastik hingga metasedimen derajat rendah (Leksikon Stratigrafi: Baharuddin & Sidarto 1995)
-PCSV,Formasi Siantu,PCsv,siliciclastic,"batupasir malih, batulanau, serpih, batuan gunungapi malih",251.902,358.9,Perm,Karbon,,curated,Permo-Karbon; batuan klastik dan metasedimen derajat rendah (dikoreksi dari simplifikasi filit/sekis)
-CPP,Komplek Malihan Pemali,CPp,metamorphic,,251.902,298.9,Perm,Perm,,curated,Komplek malihan (remark asli: Malihan)
-PTRD,Diabase Penyabung,PTrd,plutonic_mafic,diabase,251.902,538.8,Perm,Kambrium,,curated,"Umur Paleozoikum lebar di data asli (1 poligon, 1.1 km2)"
+TRJKG,Granit Klabat,TRJkg,plutonic_felsic,"granit biotit, granodiorit, adamelit, diorit kuarsa",143.1,251.902,Jura,Trias,,curated,"Batolit granitoid Sabuk Timah Utama Pulau Bangka; Trias Akhir–Jura Awal (201–228 Ma U-Pb/K-Ar; Cobbing dkk., 1992; Margono dkk., 1995)."
+JMA,Adamelit Baginda,Jma,plutonic_felsic,"adamelit (monzonit kuarsa), granodiorit",143.1,201.4,Jura,Jura,,curated,"Tubuh intrusi adamelit (monzonit kuarsa) berumur Jura di Belitung Selatan (Baharuddin & Sidarto, 1995)."
+KBD,Diorit Kuarsa Batubesi,Kbd,plutonic_felsic,"diorit kuarsa, granodiorit hornblenda-biotit",66.0,143.1,Kapur,Kapur,,curated,"Intrusi diorit kuarsa Kapur terkait mineralisasi skarn Fe-Sn di Belitung Timur (Baharuddin & Sidarto, 1995)."
+KBG,Granodiorit Burungmandi,Kbg,plutonic_felsic,"granodiorit, granit biotit-hornblenda",66.0,143.1,Kapur,Kapur,,curated,"Intrusi granodiorit tipe-I berumur Kapur di kawasan Gunung Burungmandi, Belitung Timur (Baharuddin & Sidarto, 1995)."
+TRT,Formasi Tanjunggenting,TRt,siliciclastic,"batupasir malihan, batupasir lempungan, batulempung, konglomerat, lensa batugamping",201.4,251.902,Trias,Trias,,curated,"Sedimen klastik laut dangkal Trias Awal–Tengah di Pulau Bangka; diterobos oleh Granit Klabat (Margono dkk., 1995)."
+TRTG,Granit Tanjungpandan,Trtg,plutonic_felsic,"granit biotit-muskovit porfiritik, adamelit",201.4,251.902,Trias,Trias,,curated,"Batolit granit tipe-S Trias Akhir (~215 Ma) pembawa mineralisasi timah utama di Pulau Belitung (Baharuddin & Sidarto, 1995)."
+PCTM,Formasi Tajam,PCTm,metamorphic,"kuarsit, batupasir kuarsa malihan, batulanau tersabakkan, hornfels",251.902,358.9,Perm,Karbon,,curated,"Satuan batupasir kuarsa malihan & kuarsit Permo-Karbon pembentuk punggungan Gunung Tajam di Pulau Belitung (Baharuddin & Sidarto, 1995)."
+PCKS1,Formasi Kelapa Kampit,PCks1,siliciclastic,"batupasir malihan, batulanau, serpih, batusabak, sisipan tuf dan rijang",251.902,358.9,Perm,Karbon,,curated,"Runtuhan turbidit/flis Permo-Karbon Pulau Belitung; batuan samping utama mineralisasi timah primer (Baharuddin & Sidarto, 1995)."
+PCSV,Formasi Siantu,PCsv,volcanic,"lava basal berstruktur bantal (pillow basalt), breksi gunungapi, sisipan rijang radiolaria",251.902,358.9,Perm,Karbon,,curated,"Batuan gunungapi bawah laut Permo-Karbon di Pulau Belitung; menjemari dengan Formasi Kelapa Kampit (Baharuddin & Sidarto, 1995)."
+CPP,Kompleks Malihan Pemali,CPp,metamorphic,"filit, sekis mika, kuarsit, lensa batugamping malihan",251.902,358.9,Perm,Karbon,,curated,"Batuan dasar malihan regional Pulau Bangka (Permo-Karbon); diterobos Diabas Penyabung dan Granit Klabat (Margono dkk., 1995)."
+PTRD,Diabas Penyabung,PTrd,plutonic_mafic,"diabas, mikrogabro",201.4,298.9,Trias,Perm,,curated,"Retas dan tubuh terobosan diabas Perm–Trias yang memotong Kompleks Malihan Pemali di Bangka Barat (Margono dkk., 1995)."
 QH,Younger Alluvium,Qh,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Alluvium — umur sumber: Kuarter
 QP,Older Alluvium,Qp,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Alluvium Tua — umur sumber: Kuarter
 QVT,Toba Tuff,Qvt,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Tufa Toba — umur sumber: Kuarter
@@ -91,7 +91,7 @@ QVP,Geureundeng Volcanic,Qvp,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Pus
 TPOK,Kikim Formation,Tpok,siliciclastic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Formasi Kikim — umur sumber: Neogen
 JS,Jurrasic Sediment,Js,siliciclastic,,143.1,201.4,Jura,Jura,,auto,[AUTO] Sedimen Jura — umur sumber: Jura
 QPI,Idi Formation,Qpi,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Formasi Idi — umur sumber: Kuarter
-QTL,Lampung Formation,QTl,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Formasi Lampung — umur sumber: Kuarter
+QTL,Lampung Formation,QTl,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Formasi Lampung — umur sumber: Kuarter
 QAT1,Andesite Of Gunung Talamau,Qat1,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Andesit Dari Gunung Talamau — umur sumber: Kuarter
 TLSB,Sibolga Formation,Tlsb,siliciclastic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Formasi Sibolga — umur sumber: Neogen
 QPS,Samosir Formation,Qps,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Formasi Samosir — umur sumber: Kuarter
@@ -122,7 +122,7 @@ QVEE,Georeudong Volcanic,Qvee,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Pu
 PCG,Gangsal Formation,PCg,siliciclastic,,251.902,358.9,Permo Karbon,Permo Karbon,,auto,[AUTO] Formasi Gangsal — umur sumber: Permo Karbon
 MUTLR,Teunom Limestone Formation,Mutlr,carbonate,,66.0,538.8,Pra Tersier,Pra Tersier,,auto,[AUTO] Formasi Batugamping Teunom — umur sumber: Pra Tersier
 PUKUL,Kuantan Formation,Pukul,siliciclastic,,201.4,251.902,Trias,Trias,,auto,[AUTO] Formasi Kuantan — umur sumber: Trias
-QVPS,Peuet Sague Unit,Qvps,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Satua Peuet Sague — umur sumber: Kuarter
+QVPS,Peuet Sague Unit,Qvps,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Satua Peuet Sague — umur sumber: Kuarter
 TRG,Granite,TRg,plutonic_felsic,,201.4,251.902,Triassic,Triassic,,auto,[AUTO] Granit — umur sumber: Triassic
 PCMP,Duabelas Bukit Quart,PCmp,metamorphic,,201.4,251.902,Trias,Trias,,auto,[AUTO] Kuarsit Bukit Duabelas — umur sumber: Trias
 TEOS,Sangkarewang Formation,Teos,siliciclastic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Formasi Sangkarewang — umur sumber: Neogen
@@ -149,7 +149,7 @@ TLS,Simelit Formation,Tls,siliciclastic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] F
 TMVH,Haranggaol Volcanic,Tmvh,volcanic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Formasi Gunungapi Haranggaol — umur sumber: Neogen
 KSS,Semarung Formation,Kss,siliciclastic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Formasi Semarung — umur sumber: Kapur
 QVB,Sibualbuali Volcanic,Qvb,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Pusat Gunungapi Sibualbuali — umur sumber: Kuarter
-QHVT,Hulusimpang Formation,Qhvt,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Formasi Hulusimpang — umur sumber: Kuarter
+QHVT,Hulusimpang Formation,Qhvt,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Formasi Hulusimpang — umur sumber: Kuarter
 TOTL,Tampur Limestone Formation,Totl,carbonate,,23.03,66.0,Paleogen,Paleogen,,auto,[AUTO] Formasi Batugamping Tampur — umur sumber: Paleogen
 QAR,Swamp Deposit,Qar,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Endapan Rawa — umur sumber: Kuarter
 TMPT1,Peutu Formation,Tmpt1,siliciclastic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Formasi Peutu — umur sumber: Neogen
@@ -168,7 +168,7 @@ TMITI,Timbahan Intrusive Rock,Tmiti,plutonic_felsic,,2.58,23.03,Neogen,Neogen,,a
 MPT,Tawar Formation,MPt,siliciclastic,,66.0,538.8,Pra Tersier,Pra Tersier,,auto,[AUTO] Formasi Tawar — umur sumber: Pra Tersier
 MURLR,Raba Limestone Formation,Murlr,carbonate,,66.0,538.8,Pra Tersier,Pra Tersier,,auto,[AUTO] Formasi Batugamping Raba — umur sumber: Pra Tersier
 TMVC,Calang Volcanic Formation,Tmvc,volcanic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Formasi Gunungapi Calang — umur sumber: Neogen
-QVBE,Bekulap Unit,Qvbe,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Satuan Bekulap — umur sumber: Kuarter
+QVBE,Bekulap Unit,Qvbe,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Satuan Bekulap — umur sumber: Kuarter
 TMOU,Ombilin Formation,Tmou,siliciclastic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Formasi Ombilin — umur sumber: Neogen
 MPISJ,Serbajadi Batolith,MPisj,siliciclastic,,66.0,538.8,Meso - Paleo,Meso - Paleo,,auto,[AUTO] Batolit Serbajadi — umur sumber: Meso - Paleo
 TOB1,Bruksah Formation,Tob1,siliciclastic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Formasi Bruksah — umur sumber: Neogen
@@ -187,7 +187,7 @@ PBL,Barisan Formation,Pbl,siliciclastic,,251.902,358.9,Permo Karbon,Permo Karbon
 TLVA,Akul Volcanic Formation,Tlva,volcanic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Formasi Gunungapi Akul — umur sumber: Neogen
 QVD,Quarternary Volcanic,Qvd,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Batuan Gunungapi Kuarter — umur sumber: Kuarter
 QYU,Undifferentiated Volcanic,Qyu,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Batuan Gunungapi Tak Terpisahkan — umur sumber: Kuarter
-QF,Piedmont Fan,Qf,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Kipas Aluvial — umur sumber: Kuarter
+QF,Piedmont Fan,Qf,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Kipas Aluvial — umur sumber: Kuarter
 TA,Andesite To Basalt,Ta,volcanic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Andesit - Basal — umur sumber: Neogen
 MPUL1,Undifferentiated Perm,MPul1,carbonate,,66.0,538.8,Pra Tersier,Pra Tersier,,auto,[AUTO] Batugamping Pre Tertiary Tak Terbedakan — umur sumber: Pra Tersier
 MURL,Raba Limestone Formation,Murl,carbonate,,66.0,538.8,Pra Tersier,Pra Tersier,,auto,[AUTO] Formasi Batugamping Raba — umur sumber: Pra Tersier
@@ -275,7 +275,7 @@ KJR,Rawas Formation,KJr,siliciclastic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Forma
 QTVL,Peuet Sague Volcanic,QTvl,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Pusat Gunungapi Peuet Sague — umur sumber: Kuarter
 MUJ,Jaleum Formation,Muj,siliciclastic,,66.0,538.8,Pra Tersier,Pra Tersier,,auto,[AUTO] Formasi Jaleum — umur sumber: Pra Tersier
 KTS,Tengkis Formation,Kts,siliciclastic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Formasi Tengkis — umur sumber: Kapur
-QVMK,Meukeub Unit,Qvmk,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Satuan Meukeub — umur sumber: Kuarter
+QVMK,Meukeub Unit,Qvmk,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Satuan Meukeub — umur sumber: Kuarter
 JT,Tabir Formation,Jt,siliciclastic,,143.1,201.4,Jura,Jura,,auto,[AUTO] Formasi Tabir — umur sumber: Jura
 TPEGD,Nagan Granodiorite,Tpegd,plutonic_felsic,,23.03,66.0,Paleogen,Paleogen,,auto,[AUTO] Granodiorit Nagan — umur sumber: Paleogen
 MULL,Lamno Limestone Formation,Mull,carbonate,,66.0,538.8,Pra Tersier,Pra Tersier,,auto,[AUTO] Formasi Batugamping Lamno — umur sumber: Pra Tersier
@@ -288,7 +288,7 @@ TMS1,Sigulai Formation,Tms1,siliciclastic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO]
 QVTL,Lam Teuba Volcanic,Qvtl,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Gunungapi Lam Teuba — umur sumber: Kuarter
 TLIU,Uluhalanggodan Granite,Tliu,plutonic_felsic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Granit Uluhalanggodan — umur sumber: Neogen
 PQ,Permian Rock,Pq,metamorphic,,251.902,538.8,Paleozoikum,Paleozoikum,,auto,[AUTO] Anggota Kuarsit Batuan Perem — umur sumber: Paleozoikum
-MUPU,Pasaman Ultramafic Complex,Mupu,metamorphic,,66.0,251.902,Mesozoikum,Mesozoikum,,auto,[AUTO] Komplek Ultramafik Pasaman — umur sumber: Mesozoikum
+MUPU,Pasaman Ultramafic Complex,Mupu,plutonic_mafic,,66.0,251.902,Mesozoikum,Mesozoikum,,auto,[AUTO] Komplek Ultramafik Pasaman — umur sumber: Mesozoikum
 QHPL1,Quarternary Volcanic,Qhpl1,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Batuan Gunungapi Kuarter — umur sumber: Kuarter
 TRJGT,Tantan Granodiorite,TRJgt,plutonic_felsic,,201.4,251.902,Triassic,Triassic,,auto,[AUTO] Granodiorit Tantan — umur sumber: Triassic
 TMBT,Baturaja Formation,Tmbt,siliciclastic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Formasi Baturaja — umur sumber: Neogen
@@ -326,9 +326,9 @@ TOMV,Oligocene-Miocene Volcanic,Tomv,volcanic,,2.58,23.03,Neogen,Neogen,,auto,[A
 MUM,Lam Minet Formation,Mum,siliciclastic,,66.0,251.902,Mesozoikum,Mesozoikum,,auto,[AUTO] Formasi Lam Minet — umur sumber: Mesozoikum
 TMVA,Auran Volcanic Formation,Tmva,volcanic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Formasi Gunungapi Auran — umur sumber: Neogen
 TMPN,Peuteu Formation,Tmpn,siliciclastic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Formasi Peutu — umur sumber: Neogen
-QHVPS1,Ranau Formation,Qhvps1,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Formasi Ranau — umur sumber: Kuarter
+QHVPS1,Ranau Formation,Qhvps1,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Formasi Ranau — umur sumber: Kuarter
 TRJG,Akar Granite,TRjg,plutonic_felsic,,201.4,251.902,Triassic,Triassic,,auto,[AUTO] Granit Akar — umur sumber: Triassic
-TMVP2,Dolerite Sills,Tmvp2,plutonic_felsic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Retas Dolerit — umur sumber: Neogen
+TMVP2,Dolerite Sills,Tmvp2,plutonic_mafic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Retas Dolerit — umur sumber: Neogen
 TMBB,Baong Formation,Tmbb,siliciclastic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Formasi Buluh — umur sumber: Neogen
 TLPBR,Bampo Formation,Tlpbr,siliciclastic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Formasi Bampo — umur sumber: Neogen
 TMGD,Granodiorite,Tmgd,plutonic_felsic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Granodiorit — umur sumber: Neogen
@@ -363,7 +363,7 @@ TOMG,Gading Formation,Tomg,siliciclastic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] 
 MTIMC,Merah Complex,Mtimc,metamorphic,,66.0,538.8,Pra Tersier,Pra Tersier,,auto,[AUTO] Komplek Merah — umur sumber: Pra Tersier
 TMBS,Baong Formation,Tmbs,siliciclastic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Formasi Baong — umur sumber: Neogen
 QHRD,Sekincau Volcanic,Qhrd,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Gunungapi Sekincau — umur sumber: Kuarter
-TUBC,Beatang Ultramafic Complex,Tubc,metamorphic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Komplek Ultramafik Beatang — umur sumber: Neogen
+TUBC,Beatang Ultramafic Complex,Tubc,plutonic_mafic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Komplek Ultramafik Beatang — umur sumber: Neogen
 TMIBS,Baso Intrusive Rock,TMibs,plutonic_felsic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Intrusi Baso — umur sumber: Neogen
 TMOL,Ombilin Formation,Tmol,siliciclastic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Formasi Ombilin — umur sumber: Neogen
 MPIDA,Daling Granite,MPida,plutonic_felsic,,66.0,251.902,Mesozoikum,Mesozoikum,,auto,[AUTO] Daling Granit — umur sumber: Mesozoikum
@@ -372,7 +372,7 @@ TPSI,Siap Formation,Tpsi,siliciclastic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Fo
 TMLS,Sigulai Formation,Tmls,siliciclastic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Formasi Sigulai — umur sumber: Neogen
 TMTS,Telisa Formation,Tmts,siliciclastic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Formasi Telisa — umur sumber: Neogen
 MPII,Inong Granite,MPii,plutonic_felsic,,66.0,251.902,Mesozoikum,Mesozoikum,,auto,[AUTO] Granit Inong — umur sumber: Mesozoikum
-D,"Diabas, Basalt",d,volcanic,,2.58,23.03,Neogen,Neogen,,auto,"[AUTO] Diabas, Basal — umur sumber: Neogen"
+D,"Diabas, Basalt",d,plutonic_mafic,,2.58,23.03,Neogen,Neogen,,auto,"[AUTO] Diabas, Basal — umur sumber: Neogen"
 MUBA,Babahrot Formation,Muba,siliciclastic,,66.0,538.8,Pra Tersier,Pra Tersier,,auto,[AUTO] Formasi Babahrot — umur sumber: Pra Tersier
 QVSB,Sembuang Volcanic,Qvsb,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Batuan Gunungapi Sembuang — umur sumber: Kuarter
 QTSE,Semung Formation,QTse,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Formasi Semung — umur sumber: Kuarter
@@ -395,15 +395,15 @@ PSL,Silungkang Formation,Psl,siliciclastic,,251.902,358.9,Permo Karbon,Permo Kar
 QTVE,Kota Alam Volcanic Formaton,QTve,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Formasi Gunungapi Kota Alam — umur sumber: Kuarter
 KUB,Ultrabasic,Kub,plutonic_mafic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Ultrabasa — umur sumber: Kapur
 KJG,Garba Formation,KJg,siliciclastic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Formasi Garba — umur sumber: Kapur
-QVTSU,Sibutan Unit Of Toba,Qvtsu,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Pusat Toba Unit Sibutan — umur sumber: Kuarter
+QVTSU,Sibutan Unit Of Toba,Qvtsu,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Pusat Toba Unit Sibutan — umur sumber: Kuarter
 QVTD,Tudeuk Volcanic Center,Qvtd,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Batuan Pusat Gunungapi Tudeuk — umur sumber: Kuarter
 KJGS,Garba Formation,KJgs,siliciclastic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Formasi Situlanglang — umur sumber: Kapur
 MUGM,Gume Formation,Mugm,siliciclastic,,66.0,251.902,Mesozoikum,Mesozoikum,,auto,[AUTO] Formasi Gume — umur sumber: Mesozoikum
 TLVK,Loser Formation,Tlvk,siliciclastic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Formasi Loser — umur sumber: Neogen
 QPB,Bukit Punjung Formation,Qpb,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Formasi Bukitpunjung — umur sumber: Kuarter
 MLTL,Telukkido Formation,Mltl,siliciclastic,,66.0,251.902,Mesozoikum,Mesozoikum,,auto,[AUTO] Formasi Telukkido — umur sumber: Mesozoikum
-QVMB,Pepanji Unit,Qvmb,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Satuan Pepanji — umur sumber: Kuarter
-QVBU,Pyroclastic Unit Of Bekulap,Qvbu,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Satuan Piroklatik Bekulap — umur sumber: Kuarter
+QVMB,Pepanji Unit,Qvmb,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Satuan Pepanji — umur sumber: Kuarter
+QVBU,Pyroclastic Unit Of Bekulap,Qvbu,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Satuan Piroklatik Bekulap — umur sumber: Kuarter
 MPIUK,Ketambe Atas Granite,MPiuk,plutonic_felsic,,66.0,538.8,Meso - Paleo,Meso - Paleo,,auto,[AUTO] Granit Ketambe Atas — umur sumber: Meso - Paleo
 MULLR,Lamno Limestone Formation,Mullr,carbonate,,66.0,251.902,Mesozoikum,Mesozoikum,,auto,[AUTO] Formasi Batugamping Lamno — umur sumber: Mesozoikum
 QTPSL,Seulimeum Formation,QTpsl,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Formasi Seulimeum — umur sumber: Kuarter
@@ -459,7 +459,7 @@ TUIM,Mangani Porphyry,Tuim,plutonic_felsic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO
 QB,Basaltic Lava,Qb,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Lava Basal — umur sumber: Kuarter
 QVSP,Simbolon Centre,Qvsp,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Pusat Simbolon — umur sumber: Kuarter
 KD_SUM2,Kuarsa Diorite,Kd,plutonic_felsic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Diorit — umur sumber: Kapur
-QHVPS2,Ranau Formation,Qhvps2,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Formasi Ranau — umur sumber: Kuarter
+QHVPS2,Ranau Formation,Qhvps2,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Formasi Ranau — umur sumber: Kuarter
 PCN,Ngaol Formation,Pcn,siliciclastic,,251.902,538.8,Paleozoikum,Paleozoikum,,auto,[AUTO] Formasi Ngaol — umur sumber: Paleozoikum
 MPIMR,Merah Intrusive Rock,MPimr,plutonic_felsic,,66.0,538.8,Meso - Paleo,Meso - Paleo,,auto,[AUTO] Intrusi Merah — umur sumber: Meso - Paleo
 KDI,Kuarsa Diorite,Kdi,plutonic_felsic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Diorite Kuarsa — umur sumber: Kapur
@@ -471,7 +471,7 @@ TLTV_SUM2,Tangla Formation,Tltv,siliciclastic,,2.58,23.03,Neogen,Neogen,,auto,[A
 PUKL,Kluet Formation,Pukl,siliciclastic,,201.4,251.902,Trias,Trias,,flagged,[AUTO][KONFLIK] Formasi Kluet — sumber ESDM: Trias; publikasi pembanding (Tapanuli Group/Metcalfe): Karbon-Perm
 MPIUS,Sempali Atas Granite,MPius,plutonic_felsic,,66.0,538.8,Meso - Paleo,Meso - Paleo,,auto,[AUTO] Granit Sempali Atas — umur sumber: Meso - Paleo
 MPIT,Telege Intrusive Rock,MPit,plutonic_felsic,,66.0,538.8,Meso - Paleo,Meso - Paleo,,auto,[AUTO] Intrusi Telege — umur sumber: Meso - Paleo
-QPV,Pasumah Formation,Qpv,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Formasi Pasumah — umur sumber: Kuarter
+QPV,Pasumah Formation,Qpv,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Formasi Pasumah — umur sumber: Kuarter
 TLIS,Sitaban Formation,Tlis,siliciclastic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Formasi Sitaban — umur sumber: Neogen
 QD,Batubesi Formation,qd,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Formasi Batubesi — umur sumber: Kuarter
 TMIGN,Gani Microdiorite,TMign,plutonic_felsic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Mikrodiorit Gani — umur sumber: Neogen
@@ -561,7 +561,7 @@ QHVMA,Gunungapi Masurai,Qhvma,volcanic,,0.0,0.0117,Holosen,Holosen,,auto,[AUTO] 
 TML4,Formasi Lelematua,Tml4,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Lelematua — umur sumber: Miosen
 QPT2,Tufa Batuapung dan Andesit (Basal),Qpt2,volcanic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Tufa Batuapung dan Andesit (Basal) — umur sumber: Pleistosen
 QTKE,Formasi Kerumutan,QTke,siliciclastic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] Formasi Kerumutan — umur sumber: Plio-Plistosen
-TPL,Anggota Bawah,Tpl,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Anggota Bawah — umur sumber: Pliosen
+TPL,Anggota Bawah,Tpl,carbonate,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Anggota Bawah — umur sumber: Pliosen
 QRT,Endapan Teras Sungai,Qrt,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Endapan Teras Sungai — umur sumber: Kuarter
 PASIR,Pasir,Pasir,siliciclastic,,251.902,298.9,Perm,Perm,,auto,[AUTO] Pasir — umur sumber: Perm
 QBS,Basal Sukadana,Qbs,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Basal Sukadana — umur sumber: Kuarter
@@ -571,7 +571,7 @@ QTGS,Formasi Gunung Sitoli,QTgs,siliciclastic,,0.0117,5.333,Plio-Plistosen,Plio-
 TMPB2,Formasi Batumonga,Tmpb2,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Batumonga — umur sumber: Miosen
 PCTM_SUM2,Tajam,PCTm,siliciclastic,,251.902,358.9,Karbon-Perm,Karbon-Perm,,auto,[AUTO] Tajam — umur sumber: Karbon-Perm
 SUNGA,Sunga,Sunga,siliciclastic,,419.62,443.1,Silur,Silur,,auto,[AUTO] Sunga — umur sumber: Silur
-TQR_SUM2,Ragam Formation,TQr,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Ragam Formation — umur sumber: Tersier
+TQR_SUM2,Ragam Formation,TQr,siliciclastic,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] Ragam Formation — umur sumber: Tersier
 TMPD1,Dusun Member,Tmpd1,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Dusun Member — umur sumber: Miosen
 TPM,Anggota Tengah,Tpm,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Anggota Tengah — umur sumber: Pliosen
 TMTU,Anggota Atas,Tmtu,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Anggota Atas — umur sumber: Miosen
@@ -580,14 +580,14 @@ QTLB,Formasi Labuhanhiyu,QTlb,siliciclastic,,0.0117,5.333,Plio-Plistosen,Plio-Pl
 QTRR,Formasi Rapa-Rapa,QTrr,siliciclastic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] Formasi Rapa-Rapa — umur sumber: Plio-Plistosen
 TMPT2,Formasi Tanjungkerotang,Tmpt2,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Tanjungkerotang — umur sumber: Miosen
 QHVRB,Gunungapi Rajabasa,Qhvrb,volcanic,,0.0,0.0117,Holosen,Holosen,,auto,[AUTO] Gunungapi Rajabasa — umur sumber: Holosen
-JMA_SUM2,Ademalit Baginda,Jma,siliciclastic,,143.1,201.4,Jura,Jura,,auto,[AUTO] Ademalit Baginda — umur sumber: Jura
+JMA_SUM2,Ademalit Baginda,Jma,plutonic_felsic,,143.1,201.4,Jura,Jura,,auto,[AUTO] Ademalit Baginda — umur sumber: Jura
 KGRG,Pluton Garba,Kgrg,siliciclastic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Pluton Garba — umur sumber: Kapur
 QAK_SUM2,Pasir Kuarsa,Qak,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Pasir Kuarsa — umur sumber: Kuarter
 KGRA,Granit Arai,Kgra,plutonic_felsic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Granit Arai — umur sumber: Kapur
 TOB2,Formasi Brani,Tob2,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Formasi Brani — umur sumber: Oligosen
 TMPU,Anggota Arlsane,Tmpu,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Anggota Arlsane — umur sumber: Miosen
 KGRP,Padean Monzo Granite,Kgrp,plutonic_felsic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Padean Monzo Granite — umur sumber: Kapur
-QVTG,Satuan Telong,Qvtg,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Satuan Telong — umur sumber: Kuarter
+QVTG,Satuan Telong,Qvtg,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Satuan Telong — umur sumber: Kuarter
 MTIKN,Granit Kundur,MTikn,plutonic_felsic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Granit Kundur — umur sumber: Miosen
 QSI,Formasi Simatobat,Qsi,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Formasi Simatobat — umur sumber: Kuarter
 TRGM_SUM2,Granit Muncung,Trgm,plutonic_felsic,,201.4,251.902,Trias,Trias,,auto,[AUTO] Granit Muncung — umur sumber: Trias
@@ -605,7 +605,7 @@ QTPE,Formasi Pengasih,QTpe,siliciclastic,,0.0117,5.333,Plio-Plistosen,Plio-Plist
 TPV,Andesit,Tpv,volcanic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Andesit — umur sumber: Pliosen
 QP1,Kuarsa Porphyry,Qp1,plutonic_felsic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Kuarsa Porphyry — umur sumber: Pleistosen
 PZGS,Sekis Way Galih,Pzgs,metamorphic,,251.902,298.9,Perm,Perm,,auto,[AUTO] Sekis Way Galih — umur sumber: Perm
-TMBAP,Anggota Parlampungan,Tmbap,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Anggota Parlampungan — umur sumber: Miosen
+TMBAP,Anggota Parlampungan,Tmbap,volcanic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Anggota Parlampungan — umur sumber: Miosen
 TPGDS,Granit Sungaipenuh,Tpgds,plutonic_felsic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Granit Sungaipenuh — umur sumber: Pliosen
 PS2,Formasi Silungkang,Ps2,siliciclastic,,251.902,298.9,Perm,Perm,,auto,[AUTO] Formasi Silungkang — umur sumber: Perm
 MUGR,Anggota Batugamping Reuengeuet,Mugr,carbonate,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Anggota Batugamping Reuengeuet — umur sumber: Miosen
@@ -617,7 +617,7 @@ TMBT1,L. Siberut (periksa),Tmbt1,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,
 TMI3,Granodiorit Tak Bernama,TMi3,plutonic_felsic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Granodiorit Tak Bernama — umur sumber: Tersier
 TMIB,Intrusi Beurieung,TMib,plutonic_felsic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Intrusi Beurieung — umur sumber: Tersier
 TMM2,Formasi Meurah Buya,Tmm2,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Meurah Buya — umur sumber: Miosen
-QHVSM,Pusat Sorik Merapi Resen,Qhvsm,siliciclastic,,0.0,0.0117,Holosen,Holosen,,auto,[AUTO] Pusat Sorik Merapi Resen — umur sumber: Holosen
+QHVSM,Pusat Sorik Merapi Resen,Qhvsm,volcanic,,0.0,0.0117,Holosen,Holosen,,auto,[AUTO] Pusat Sorik Merapi Resen — umur sumber: Holosen
 KBG_SUM2,Granodiorit Burung Mandi,Kbg,plutonic_felsic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Granodiorit Burung Mandi — umur sumber: Kapur
 QTTB,Lithic Crystal Tuff,QTtb,volcanic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] Lithic Crystal Tuff — umur sumber: Plio-Plistosen
 TMPL1,Anggota Batugamping,Tmpl1,carbonate,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Anggota Batugamping — umur sumber: Miosen
@@ -684,7 +684,7 @@ TIBM,Granodiorit Bale Meuko,Tibm,plutonic_felsic,,2.58,66.0,Tersier,Tersier,,aut
 TMSC,Anggota Cubadak,Tmsc,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Anggota Cubadak — umur sumber: Miosen
 KS,Formasi Siulak,Ks,siliciclastic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Formasi Siulak — umur sumber: Kapur
 QVI,Pusat Batuan Gunungapi Imum,Qvi,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Pusat Batuan Gunungapi Imum — umur sumber: Kuarter
-TPEB,Sumbat basal,Tpeb,volcanic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Sumbat basal — umur sumber: Pliosen
+TPEB,Sumbat basal,Tpeb,plutonic_mafic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Sumbat basal — umur sumber: Pliosen
 TOL,anggota Batugamping,Tol,carbonate,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] anggota Batugamping — umur sumber: Oligosen
 MIB,Granit Bakongan,Mib,plutonic_felsic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Granit Bakongan — umur sumber: Miosen
 KGK,Granit Kalimangan,Kgk,plutonic_felsic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Granit Kalimangan — umur sumber: Kapur
@@ -692,7 +692,7 @@ MPISE,Granit Semelit,MPise,plutonic_felsic,,5.333,23.03,Miosen,Miosen,,auto,[AUT
 MUSEH,Serpentinit Huraba,Museh,plutonic_mafic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Serpentinit Huraba — umur sumber: Miosen
 TMISI,Granodiorit Simatoir,Tmisi,plutonic_felsic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Granodiorit Simatoir — umur sumber: Miosen
 TPB,Basal,Tpb,volcanic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Basal — umur sumber: Pliosen
-JSY,Syenite,Jsy,siliciclastic,,143.1,201.4,Jura,Jura,,auto,[AUTO] Syenite — umur sumber: Jura
+JSY,Syenite,Jsy,plutonic_felsic,,143.1,201.4,Jura,Jura,,auto,[AUTO] Syenite — umur sumber: Jura
 TLIH,Granit Haporas,Tlih,plutonic_felsic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Granit Haporas — umur sumber: Tersier
 KM2,Komplek Melange,Km2,melange,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Komplek Melange — umur sumber: Kapur
 PPVP,Formasi Gunungapi Panti,Ppvp,volcanic,,251.902,298.9,Perm,Perm,,auto,[AUTO] Formasi Gunungapi Panti — umur sumber: Perm
@@ -723,18 +723,18 @@ QTPT,Formasi Tambakromo,QTpt,siliciclastic,,0.0117,5.333,Plio-Plistosen,Plio-Pli
 QPVK2,Batuan Gunungapi Kemuning,Qpvk2,volcanic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Batuan Gunungapi Kemuning — umur sumber: Pleistosen
 QAV3,Kipas Aluvial,Qav3,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Kipas Aluvial — umur sumber: Kuarter
 QPVB,Tufa Banten Atas,Qpvb,volcanic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Tufa Banten Atas — umur sumber: Pleistosen
-QVYU,Produk erupsi muda Ciremai,Qvyu,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Produk erupsi muda Ciremai — umur sumber: Kuarter
+QVYU,Produk erupsi muda Ciremai,Qvyu,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Produk erupsi muda Ciremai — umur sumber: Kuarter
 QVLH,Endapan Lahar,Qvlh,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Endapan Lahar — umur sumber: Kuarter
 TOMM2,Formasi Mandalika,Tomm2,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Formasi Mandalika — umur sumber: Oligosen
 QVT2,Batuan Gunungapi Tengger,Qvt2,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Batuan Gunungapi Tengger — umur sumber: Kuarter
 TPM2,Formasi Madura,Tpm2,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Formasi Madura — umur sumber: Pliosen
 QVTM_JAW2,Tufa Muria,Qvtm,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Tufa Muria — umur sumber: Kuarter
 QTVS_JAW2,Hasil Gunungapi Tua,QTvs,volcanic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] Hasil Gunungapi Tua — umur sumber: Plio-Plistosen
-QAV2,Batupasit Tuffaan dan Konglomerat,Qav2,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Batupasit Tuffaan dan Konglomerat — umur sumber: Kuarter
-QAV1,Unit batupasir,Qav1,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Unit batupasir — umur sumber: Kuarter
+QAV2,Batupasit Tuffaan dan Konglomerat,Qav2,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Batupasit Tuffaan dan Konglomerat — umur sumber: Kuarter
+QAV1,Unit batupasir,Qav1,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Unit batupasir — umur sumber: Kuarter
 QHV1,"Batuan Gunungapi Raung, Pendil",Qhv1,volcanic,,0.0,0.0117,Holosen,Holosen,,auto,"[AUTO] Batuan Gunungapi Raung, Pendil — umur sumber: Holosen"
 QVAT,Tuff Argopuro,Qvat,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Tuff Argopuro — umur sumber: Kuarter
-QAV_JAW2,Morfoset Argohalangan,Qav,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Morfoset Argohalangan — umur sumber: Kuarter
+QAV_JAW2,Morfoset Argohalangan,Qav,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Morfoset Argohalangan — umur sumber: Kuarter
 QYU_JAW2,Produk Gunungapi Muda,Qyu,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Produk Gunungapi Muda — umur sumber: Kuarter
 TOMM3,Formasi Mandalika,Tomm3,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Formasi Mandalika — umur sumber: Oligosen
 TPM1,Formasi Mundu,Tpm1,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Formasi Mundu — umur sumber: Pliosen
@@ -751,7 +751,7 @@ TOMA,Formasi Arjosari,Toma,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AU
 QVS2,Endapan Gunungapi Semeru,Qvs2,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Endapan Gunungapi Semeru — umur sumber: Kuarter
 QPP,Formasi Pamekasan,Qpp,siliciclastic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Formasi Pamekasan — umur sumber: Pleistosen
 QVAW,Batuan Gunungapi Arjuna-Welirang,Qvaw,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Batuan Gunungapi Arjuna-Welirang — umur sumber: Kuarter
-QTL_JAW2,Formasi Lidah,QTl,siliciclastic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] Formasi Lidah — umur sumber: Plio-Plistosen
+QTL_JAW2,Formasi Lidah,QTl,volcanic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] Formasi Lidah — umur sumber: Plio-Plistosen
 TPT,Formasi Tapak,Tpt,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Formasi Tapak — umur sumber: Pliosen
 TOMB1,Formasi Batuampar,Tomb1,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Formasi Batuampar — umur sumber: Oligosen
 QTP_JAW2,Formasi Pucangan,QTp,siliciclastic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] Formasi Pucangan — umur sumber: Plio-Plistosen
@@ -787,7 +787,7 @@ QVPO,Endapan Batuan Gunungapi Tua,Qvpo,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,
 TPG1,Formasi Genteng,Tpg1,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Formasi Genteng — umur sumber: Pliosen
 QLS1,Endapan Lahar G. Slamet,Qls1,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Endapan Lahar G. Slamet — umur sumber: Kuarter
 TMK2_JAW2,Formasi Koleberes,Tmk2,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Koleberes — umur sumber: Miosen
-QVB3,Breksi Tapos,Qvb3,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Breksi Tapos — umur sumber: Kuarter
+QVB3,Breksi Tapos,Qvb3,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Breksi Tapos — umur sumber: Kuarter
 QY,Batuan Gunungapi Muda,Qy,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Batuan Gunungapi Muda — umur sumber: Kuarter
 QTLB_JAW2,Anggota Breksi,QTlb,siliciclastic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] Anggota Breksi — umur sumber: Plio-Plistosen
 QVT1,Batuan gunungapi muda,Qvt1,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Batuan gunungapi muda — umur sumber: Kuarter
@@ -847,7 +847,7 @@ MDM,Anggota napal dan batupasir kuarsa,Mdm,carbonate,,5.333,23.03,Miosen,Miosen,
 QVL1,Lava gunungapi,Qvl1,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Lava gunungapi — umur sumber: Kuarter
 QTVK_JAW2,Hasil Gunungapi Tua,QTvk,volcanic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] Hasil Gunungapi Tua — umur sumber: Plio-Plistosen
 QV2,Lava dan Lahar G. Patuha,Qv2,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Lava dan Lahar G. Patuha — umur sumber: Kuarter
-QAS1,Morponit Sedudo,Qas1,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Morponit Sedudo — umur sumber: Kuarter
+QAS1,Morponit Sedudo,Qas1,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Morponit Sedudo — umur sumber: Kuarter
 QVB4,Breksi Gunungapi Galunggung,Qvb4,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Breksi Gunungapi Galunggung — umur sumber: Kuarter
 TMPB_JAW2,Anggota Breksi,Tmpb,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Anggota Breksi — umur sumber: Miosen
 QHG1,Batuan gunungapi Gajah mungkur,Qhg1,volcanic,,0.0,0.0117,Holosen,Holosen,,auto,[AUTO] Batuan gunungapi Gajah mungkur — umur sumber: Holosen
@@ -917,7 +917,7 @@ QHVI_JAW2,Batuan Gunungapi Muda Ijen,Qhvi,volcanic,,0.0,0.0117,Holosen,Holosen,,
 TECL,Formasi Ciletuh,Tecl,siliciclastic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Formasi Ciletuh — umur sumber: Eosen
 QG_JAW2,Gunungapi Gilipetung,Qg,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Gunungapi Gilipetung — umur sumber: Kuarter
 TEB,Anggota Konglomerat,Teb,siliciclastic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Anggota Konglomerat — umur sumber: Eosen
-QVJB,Breksi Jobolarangan,Qvjb,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Breksi Jobolarangan — umur sumber: Kuarter
+QVJB,Breksi Jobolarangan,Qvjb,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Breksi Jobolarangan — umur sumber: Kuarter
 TMPA_JAW2,Formasi Pamutuan,Tmpa,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Pamutuan — umur sumber: Miosen
 QSMO,Batuan gunungapi tua Sumbing,Qsmo,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Batuan gunungapi tua Sumbing — umur sumber: Kuarter
 QVL2,Lava hasil batuan gunungapi tua,Qvl2,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Lava hasil batuan gunungapi tua — umur sumber: Kuarter
@@ -958,16 +958,16 @@ PT,Formasi Cilanang,Pt,siliciclastic,,251.902,298.9,Perm,Perm,,auto,[AUTO] Forma
 TMN,Formasi Nyalindung,Tmn,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Nyalindung — umur sumber: Miosen
 QVSL,Lava Sidoramping,Qvsl,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Lava Sidoramping — umur sumber: Kuarter
 TOMI,BatuanTerobosan,Tomi,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] BatuanTerobosan — umur sumber: Oligosen
-QAS_JAW2,Swamp and River Deposits,Qas,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Swamp and River Deposits — umur sumber: Kuarter
+QAS_JAW2,Swamp and River Deposits,Qas,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Swamp and River Deposits — umur sumber: Kuarter
 TPC3,Formasi Cihoe,Tpc3,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Formasi Cihoe — umur sumber: Pliosen
 TPC1,Formasi Citalang,Tpc1,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Formasi Citalang — umur sumber: Pliosen
 TMHL,Anggota Bawah dari Formasi Halang,Tmhl,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Anggota Bawah dari Formasi Halang — umur sumber: Miosen
 PASIR_JAW2,pasir,pasir,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] pasir — umur sumber: tidak tercatat (estimasi Kuarter-Kuarter)
 TOMG1,Formasi Gabon,Tomg1,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Formasi Gabon — umur sumber: Oligosen
-TMI,Batuan Terobosan,Tmi,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batuan Terobosan — umur sumber: Miosen
+TMI,Batuan Terobosan,Tmi,plutonic_felsic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batuan Terobosan — umur sumber: Miosen
 TOMD,Formasi Dayakan,Tomd,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Formasi Dayakan — umur sumber: Oligosen
 TOMB_JAW2,Formasi Batuampar,Tomb,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Formasi Batuampar — umur sumber: Oligosen
-QPV2,Breksi Pandan,Qpv2,siliciclastic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Breksi Pandan — umur sumber: Pleistosen
+QPV2,Breksi Pandan,Qpv2,volcanic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Breksi Pandan — umur sumber: Pleistosen
 TMJ3,Formasi Jaten,Tmj3,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Jaten — umur sumber: Miosen
 MTTC,Anggota Batulempung,Mttc,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Anggota Batulempung — umur sumber: Miosen
 TPS_JAW2,Formasi Selorejo,Tps,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Formasi Selorejo — umur sumber: Pliosen
@@ -979,7 +979,7 @@ QVB2,Breksi Produk Batuan GunungapiTua,Qvb2,volcanic,,0.0,2.58,Kuarter,Kuarter,,
 QVT_JAW2,Batuan Gunungapi Tua,Qvt,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Batuan Gunungapi Tua — umur sumber: Kuarter
 QPL2,Formasi Linggopodo,Qpl2,siliciclastic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Formasi Linggopodo — umur sumber: Pleistosen
 TMSS,Formasi Sambipitu,Tmss,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Sambipitu — umur sumber: Miosen
-Q,Batuan Terobosan,Q,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Batuan Terobosan — umur sumber: Kuarter
+Q,Batuan Terobosan,Q,plutonic_felsic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Batuan Terobosan — umur sumber: Kuarter
 TPM_JAW2,Formasi Cimanceuri,Tpm,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Formasi Cimanceuri — umur sumber: Pliosen
 TPG2,Formasi Kaliglagah,Tpg2,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Formasi Kaliglagah — umur sumber: Pliosen
 TOMR,Formasi Rajamandala,Tomr,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Formasi Rajamandala — umur sumber: Oligosen
@@ -988,12 +988,12 @@ QJN,Morfonit Ngebel,Qjn,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Mor
 QVJL,Lava Jobolarangan,Qvjl,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Lava Jobolarangan — umur sumber: Kuarter
 TMS2_JAW2,Anggota Batulempung,Tms2,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Anggota Batulempung — umur sumber: Miosen
 QB1,Breksi Gunungapi,Qb1,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Breksi Gunungapi — umur sumber: Kuarter
-TOMI1,Batuan Terobosan,Tomi1,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Batuan Terobosan — umur sumber: Oligosen
-TML,Formasi Lengkong,Tml,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Lengkong — umur sumber: Miosen
+TOMI1,Batuan Terobosan,Tomi1,plutonic_felsic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Batuan Terobosan — umur sumber: Oligosen
+TML,Formasi Lengkong,Tml,carbonate,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Lengkong — umur sumber: Miosen
 QDM,Batuan Gunungapi Dieng,Qdm,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Batuan Gunungapi Dieng — umur sumber: Kuarter
 QPPL,Formasi Pucangan,Qppl,siliciclastic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Formasi Pucangan — umur sumber: Pleistosen
 TMA_JAW2,Andesit,Tma,volcanic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Andesit — umur sumber: Miosen
-QPVB1,Endapan G. api Buring,Qpvb1,unconsolidated,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Endapan G. api Buring — umur sumber: Pleistosen
+QPVB1,Endapan G. api Buring,Qpvb1,volcanic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Endapan G. api Buring — umur sumber: Pleistosen
 TM_JAW2,Batuan beku tak teruraikan,Tm,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batuan beku tak teruraikan — umur sumber: Miosen
 TMPB3,Formasi Brakas,Tmpb3,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Brakas — umur sumber: Miosen
 TMPT,Anggota tufa napalan,Tmpt,volcanic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Anggota tufa napalan — umur sumber: Miosen
@@ -1093,18 +1093,18 @@ QJK,Morphonit Klotok,Qjk,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Mo
 TOMG_JAW2,Granodiorit Cihara,Tomg,plutonic_felsic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Granodiorit Cihara — umur sumber: Oligosen
 QJMA,Batuan Gunungapi Jembangan,Qjma,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Batuan Gunungapi Jembangan — umur sumber: Kuarter
 HYA,Andesit Hipersten,hya,volcanic,,0.0,538.8,Holosen,Kambrium,,auto,[AUTO] Andesit Hipersten — umur sumber: tidak tercatat (estimasi Holosen-Kambrium)
-QVK1,Kompleks Breksi Kromong,Qvk1,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Kompleks Breksi Kromong — umur sumber: Kuarter
+QVK1,Kompleks Breksi Kromong,Qvk1,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Kompleks Breksi Kromong — umur sumber: Kuarter
 QDY,Batuan Gunungapi Dieng,Qdy,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Batuan Gunungapi Dieng — umur sumber: Kuarter
 QT,Teras Sungai,Qt,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Teras Sungai — umur sumber: Kuarter
 TMSL,Anggota Batugamping,Tmsl,carbonate,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Anggota Batugamping — umur sumber: Miosen
 QT4,Endapan Undak,Qt4,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Endapan Undak — umur sumber: Kuarter
 TET,Formasi Cicarucup,Tet,siliciclastic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Formasi Cicarucup — umur sumber: Eosen
-QAR_JAW2,Formasi Arjasa,Qar,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Formasi Arjasa — umur sumber: Kuarter
+QAR_JAW2,Formasi Arjasa,Qar,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Formasi Arjasa — umur sumber: Kuarter
 QTV1,Batuan gunungapi Payung,QTv1,volcanic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] Batuan gunungapi Payung — umur sumber: Plio-Plistosen
 TMPV,Formasi Parang,Tmpv,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Parang — umur sumber: Miosen
 TPK2,Formasi Klitik,Tpk2,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Formasi Klitik — umur sumber: Pliosen
 QK2,Formasi Kabuh,Qk2,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Formasi Kabuh — umur sumber: Kuarter
-TMI3_JAW2,"Andesit, Granodiorit",Tmi3,volcanic,,5.333,23.03,Miosen,Miosen,,auto,"[AUTO] Andesit, Granodiorit — umur sumber: Miosen"
+TMI3_JAW2,"Andesit, Granodiorit",Tmi3,plutonic_felsic,,5.333,23.03,Miosen,Miosen,,auto,"[AUTO] Andesit, Granodiorit — umur sumber: Miosen"
 TMKT,Tufa Cikasungka,Tmkt,volcanic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Tufa Cikasungka — umur sumber: Miosen
 QPTB,Tufa Banten bagian bawah,Qptb,volcanic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Tufa Banten bagian bawah — umur sumber: Pleistosen
 QPVP1,Batuan Gunungapi Barang dan Gedor,Qpvp1,volcanic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Batuan Gunungapi Barang dan Gedor — umur sumber: Pleistosen
@@ -1131,7 +1131,7 @@ TMBO,Formasi Bojonglopang,Tmbo,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[A
 QBP,Basal batuan gunungapi Pinang,Qbp,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Basal batuan gunungapi Pinang — umur sumber: Kuarter
 DA,Dasit,da,volcanic,,0.0,538.8,Holosen,Kambrium,,auto,[AUTO] Dasit — umur sumber: tidak tercatat (estimasi Holosen-Kambrium)
 QPM_JAW2,Formasi Mengger,Qpm,siliciclastic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Formasi Mengger — umur sumber: Pleistosen
-QPVK1,Formasi Kalibaru,Qpvk1,siliciclastic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Formasi Kalibaru — umur sumber: Pleistosen
+QPVK1,Formasi Kalibaru,Qpvk1,volcanic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Formasi Kalibaru — umur sumber: Pleistosen
 QHKL,Lava Muda Gunung Karang,Qhkl,volcanic,,0.0,0.0117,Holosen,Holosen,,auto,[AUTO] Lava Muda Gunung Karang — umur sumber: Holosen
 TPKS,Formasi Kumbang,Tpks,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Formasi Kumbang — umur sumber: Pliosen
 TMCD,Dasit Ciomas,Tmcd,volcanic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Dasit Ciomas — umur sumber: Miosen
@@ -1146,7 +1146,7 @@ TML2_JAW2,Formasi Lawak,Tml2,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUT
 TGD,Granodiorit,Tgd,plutonic_felsic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Granodiorit — umur sumber: Tersier
 TMRS1,Formasi Rengganis,Tmrs1,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Rengganis — umur sumber: Miosen
 TMBK1,Lapisan lempung Kadupandak,Tmbk1,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Lapisan lempung Kadupandak — umur sumber: Miosen
-TMID_JAW2,Batuan Terobosan,Tmi(d,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batuan Terobosan — umur sumber: Miosen
+TMID_JAW2,Batuan Terobosan,Tmi(d,plutonic_felsic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batuan Terobosan — umur sumber: Miosen
 TPCL,Formasi Cijulang,Tpcl,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Formasi Cijulang — umur sumber: Pliosen
 MDQ,Anggota Batupasir Kuarsa,Mdq,unconsolidated,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Anggota Batupasir Kuarsa — umur sumber: Miosen
 TMCS2,Anggota Cendono,Tmcs2,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Anggota Cendono — umur sumber: Miosen
@@ -1202,7 +1202,7 @@ QD1,Diorit Kuarsa,qd1,plutonic_felsic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Dio
 QVR_JAW2,Produk gunungapi muda Careme,Qvr,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Produk gunungapi muda Careme — umur sumber: Kuarter
 TMDA1,Dasit,Tmda1,volcanic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Dasit — umur sumber: Miosen
 TOML1,Batugamping Gelam,Toml1,carbonate,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Batugamping Gelam — umur sumber: Oligosen
-TMIM_JAW2,Batuan Terobosan,Tmi(m,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batuan Terobosan — umur sumber: Miosen
+TMIM_JAW2,Batuan Terobosan,Tmi(m,plutonic_felsic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batuan Terobosan — umur sumber: Miosen
 MD,Formasi Jampang,Md,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Jampang — umur sumber: Miosen
 QJD,Morfonit Dangean,Qjd,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Morfonit Dangean — umur sumber: Kuarter
 TMW2,Formasi Waturondo,Tmw2,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Waturondo — umur sumber: Miosen
@@ -1241,9 +1241,9 @@ QK,Kolovial,Qk,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Kolovial —
 TMP5,Formasi Rambatan,Tmp5,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Rambatan — umur sumber: Miosen
 TEBL,Anggota Batugamping,Tebl,carbonate,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Anggota Batugamping — umur sumber: Eosen
 TEW,Formasi Wungkal,Tew,siliciclastic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Formasi Wungkal — umur sumber: Eosen
-QVL_JAW2,Endapan Lawu,Qvl,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Endapan Lawu — umur sumber: Kuarter
+QVL_JAW2,Endapan Lawu,Qvl,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Endapan Lawu — umur sumber: Kuarter
 TMC2,Formasi Cimandiri,Tmc2,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Cimandiri — umur sumber: Miosen
-TMID_JAW3,Batuan Terobosan,Tmid,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batuan Terobosan — umur sumber: Miosen
+TMID_JAW3,Batuan Terobosan,Tmid,plutonic_felsic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batuan Terobosan — umur sumber: Miosen
 TMDI1,Diorit,Tmdi1,plutonic_felsic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Diorit — umur sumber: Miosen
 TBA,Andesit bat.gunungapi Cabe dan Angsana,Tba,volcanic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Andesit bat.gunungapi Cabe dan Angsana — umur sumber: Tersier
 TMPS1_JAW2,Batupasir Kepongan,Tmps1,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batupasir Kepongan — umur sumber: Miosen
@@ -1271,7 +1271,7 @@ QVK_JAW2,Karangduren Vulkanik dune,Qvk,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,
 MN,Formasi Nyalindung,Mn,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Nyalindung — umur sumber: Miosen
 TEOL_JAW2,Reefal Limestone,Teol,carbonate,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Reefal Limestone — umur sumber: Eosen
 QHVR_JAW2,Batuan Vulkanik Raung,Qhvr,volcanic,,0.0,0.0117,Holosen,Holosen,,auto,[AUTO] Batuan Vulkanik Raung — umur sumber: Holosen
-TMI1_JAW2,Batuan beku terobosan,Tmi1,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batuan beku terobosan — umur sumber: Miosen
+TMI1_JAW2,Batuan beku terobosan,Tmi1,plutonic_felsic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batuan beku terobosan — umur sumber: Miosen
 QTVR,Hasil Gunungapi Tua,QTvr,volcanic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] Hasil Gunungapi Tua — umur sumber: Plio-Plistosen
 TMB_BAL2,Formasi Bari (ATAMBUA),Tmb,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Bari (ATAMBUA) — umur sumber: Miosen
 QTV2_BAL2,Produk Batuan Gunungapi Tua,QTv2,volcanic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] Produk Batuan Gunungapi Tua — umur sumber: Plio-Plistosen
@@ -1283,7 +1283,7 @@ QL_BAL2,Batugamping Koral,Ql,carbonate,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Ba
 TMPA_BAL2,Formasi Alor,Tmpa,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Alor — umur sumber: Miosen
 TMPW3,Formasi Waikabubak,Tmpw3,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Waikabubak — umur sumber: Miosen
 TRA,Formasi Aitutu,TRa,siliciclastic,,201.4,251.902,Trias,Trias,,auto,[AUTO] Formasi Aitutu — umur sumber: Trias
-QTV4,ENDE,QTv4,siliciclastic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] ENDE — umur sumber: Plio-Plistosen
+QTV4,ENDE,QTv4,volcanic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] ENDE — umur sumber: Plio-Plistosen
 QHV1_BAL2,Batuan Gunungapi tidak terdiferensiasi,Qhv1,volcanic,,0.0,0.0117,Holosen,Holosen,,auto,[AUTO] Batuan Gunungapi tidak terdiferensiasi — umur sumber: Holosen
 QTV1_BAL2,Produk Batuan Gunungapi Tua,QTv1,volcanic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] Produk Batuan Gunungapi Tua — umur sumber: Plio-Plistosen
 QTB_BAL2,Formasi Bobonaro,QTb,siliciclastic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] Formasi Bobonaro — umur sumber: Plio-Plistosen
@@ -1293,20 +1293,20 @@ QAL_BAL2,Aluvial dan Endapan Koastal,Qal,unconsolidated,,0.0,2.58,Kuarter,Kuarte
 QTN,Formasi Noele,QTn,siliciclastic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] Formasi Noele — umur sumber: Plio-Plistosen
 TMK,Formasi Kiro,Tmk,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Kiro — umur sumber: Miosen
 QPB_BAL2,Formasi Baucau,Qpb,siliciclastic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Formasi Baucau — umur sumber: Pleistosen
-QS_BAL2,Formasi Suai,Qs,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Formasi Suai — umur sumber: Kuarter
+QS_BAL2,Formasi Suai,Qs,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Formasi Suai — umur sumber: Kuarter
 QAC_BAL2,Aluvial dan Endapan Koastal,Qac,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Aluvial dan Endapan Koastal — umur sumber: Kuarter
 QPVJ,Batuan Vulkanik Jembrana,Qpvj,volcanic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Batuan Vulkanik Jembrana — umur sumber: Pleistosen
 TMB1_BAL2,RUTENG,Tmb1,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] RUTENG — umur sumber: Miosen
 QHV2,Unit Lava-breksi,Qhv2,volcanic,,0.0,0.0117,Holosen,Holosen,,auto,[AUTO] Unit Lava-breksi — umur sumber: Holosen
-TQB,Formasi Kalibabak,TQb,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Formasi Kalibabak — umur sumber: Tersier
+TQB,Formasi Kalibabak,TQb,siliciclastic,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] Formasi Kalibabak — umur sumber: Tersier
 QTV3,Batuan Gunungapi Tua,QTv3,volcanic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] Batuan Gunungapi Tua — umur sumber: Plio-Plistosen
-QVL_BAL2,Formasi Lekopiko,Qvl,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Formasi Lekopiko — umur sumber: Kuarter
+QVL_BAL2,Formasi Lekopiko,Qvl,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Formasi Lekopiko — umur sumber: Kuarter
 TMN1_BAL2,Formasi Naumatang,Tmn1,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Naumatang — umur sumber: Miosen
 PPL,Formasi Lolotoi,pPl,siliciclastic,,251.902,538.8,Perm,Kambrium,,auto,[AUTO] Formasi Lolotoi — umur sumber: tidak tercatat (estimasi Perm-Kambrium)
 TOMP_BAL2,Formasi Pengulung,Tomp,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Formasi Pengulung — umur sumber: Oligosen
 JW,Formasi Waululi,Jw,siliciclastic,,143.1,201.4,Jura,Jura,,auto,[AUTO] Formasi Waululi — umur sumber: Jura
 TMN_BAL2,Formasi Noil Toko,Tmn,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Noil Toko — umur sumber: Miosen
-TQP,Formasi Kalipalung,TQp,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Formasi Kalipalung — umur sumber: Tersier
+TQP,Formasi Kalipalung,TQp,siliciclastic,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] Formasi Kalipalung — umur sumber: Tersier
 QHV3,Produk vulkanik muda,Qhv3,volcanic,,0.0,0.0117,Holosen,Holosen,,auto,[AUTO] Produk vulkanik muda — umur sumber: Holosen
 TLMV,Batuan Gunungapi Tua,Tlmv,volcanic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Batuan Gunungapi Tua — umur sumber: Tersier
 TPM_BAL2,Formasi Masu,Tpm,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Formasi Masu — umur sumber: Pliosen
@@ -1318,7 +1318,7 @@ TMT1_BAL2,Formasi Tihu,Tmt1,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO
 PB_BAL2,Formasi Bisane,Pb,siliciclastic,,251.902,298.9,Perm,Perm,,auto,[AUTO] Formasi Bisane — umur sumber: Perm
 QVSA,Satuan breksi Andesit-Basal,Qvsa,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Satuan breksi Andesit-Basal — umur sumber: Kuarter
 TRPML,Batugamping,TRPml,carbonate,,201.4,251.902,Trias,Trias,,auto,[AUTO] Batugamping — umur sumber: Trias
-TMIA,Batuan Terobosan,Tmia,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batuan Terobosan — umur sumber: Miosen
+TMIA,Batuan Terobosan,Tmia,plutonic_felsic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batuan Terobosan — umur sumber: Miosen
 TKO,Formasi Ofu,TKo,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Formasi Ofu — umur sumber: Tersier
 QHV_BAL2,Batuan Gunungapi Muda,Qhv,volcanic,,0.0,0.0117,Holosen,Holosen,,auto,[AUTO] Batuan Gunungapi Muda — umur sumber: Holosen
 TMPL_BAL2,Formasi Laka,Tmpl,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Laka — umur sumber: Miosen
@@ -1326,8 +1326,8 @@ QL1,Terumbu koral terangkat,Ql1,carbonate,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO]
 TMC1_BAL2,Formasi Cablac,Tmc1,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Cablac — umur sumber: Miosen
 TMPS_BAL2,Formasi Selatan,Tmps,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Selatan — umur sumber: Miosen
 TMS_BAL2,Batupasir Tuffaan,Tms,volcanic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batupasir Tuffaan — umur sumber: Miosen
-TPV_BAL2,Formasi Viqueque,Tpv,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Formasi Viqueque — umur sumber: Pliosen
-QTV_BAL2,Formasi Viquegue,QTv,siliciclastic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] Formasi Viquegue — umur sumber: Plio-Plistosen
+TPV_BAL2,Formasi Viqueque,Tpv,volcanic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Formasi Viqueque — umur sumber: Pliosen
+QTV_BAL2,Formasi Viquegue,QTv,volcanic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] Formasi Viquegue — umur sumber: Plio-Plistosen
 TEM,Formasi Metan,Tem,siliciclastic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Formasi Metan — umur sumber: Eosen
 TMDT,Tuff dengan kandungan utama tuff,Tmdt,volcanic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Tuff dengan kandungan utama tuff — umur sumber: Miosen
 PC,Formasi Cribas,Pc,siliciclastic,,251.902,298.9,Perm,Perm,,auto,[AUTO] Formasi Cribas — umur sumber: Perm
@@ -1348,7 +1348,7 @@ TMPB_BAL2,Formasi Batuputih,Tmpb,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,
 TME,Formasi Ekas,Tme,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Ekas — umur sumber: Miosen
 QOT_BAL2,Unit Breksi Tanah Merah,Qot,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Unit Breksi Tanah Merah — umur sumber: Kuarter
 TMJ,Formasi Jawila,Tmj,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Jawila — umur sumber: Miosen
-TPVA,Formasi Asah,Tpva,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Formasi Asah — umur sumber: Pliosen
+TPVA,Formasi Asah,Tpva,volcanic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Formasi Asah — umur sumber: Pliosen
 TMPL1_BAL2,Formasi Loka,Tmpl1,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Loka — umur sumber: Miosen
 QV_BAL2,Batuan Gunungapi Kelompok Lesong-Pohen-Sengayang,Qv,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Batuan Gunungapi Kelompok Lesong-Pohen-Sengayang — umur sumber: Kuarter
 QPVS,Batuan Gunungapi Seraya,Qpvs,volcanic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Batuan Gunungapi Seraya — umur sumber: Pleistosen
@@ -1361,7 +1361,7 @@ TOP,Batugamping Paumbapa,Top,carbonate,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO
 TOMU_BAL2,Formasi Ulakan,Tomu,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Formasi Ulakan — umur sumber: Oligosen
 QPA_BAL2,Formasi Ainaro,Qpa,siliciclastic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Formasi Ainaro — umur sumber: Pleistosen
 TRPMV,Formasi Maubisse,TRPmv,siliciclastic,,201.4,251.902,Trias,Trias,,auto,[AUTO] Formasi Maubisse — umur sumber: Trias
-TP,Batuan Terobosan,Tp,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Batuan Terobosan — umur sumber: Pliosen
+TP,Batuan Terobosan,Tp,plutonic_felsic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Batuan Terobosan — umur sumber: Pliosen
 QPS_BAL2,Formasi Surobeco,Qps,siliciclastic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Formasi Surobeco — umur sumber: Pleistosen
 TPD_BAL2,Formasi Dilor,Tpd,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Formasi Dilor — umur sumber: Pliosen
 QVM_BAL2,Satuan Breksi Andesit-Basal,Qvm,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Satuan Breksi Andesit-Basal — umur sumber: Kuarter
@@ -1369,15 +1369,15 @@ TPC_BAL2,Batulempung Tuffaan,Tpc,volcanic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUT
 TMG_BAL2,Granodiorit.,Tmg,plutonic_felsic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Granodiorit. — umur sumber: Miosen
 QVWS,Hasil Gunungapi Muda,Qvws,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Hasil Gunungapi Muda — umur sumber: Kuarter
 TML_BAL2,Batugamping,Tml,carbonate,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batugamping — umur sumber: Miosen
-QHVB1,Batuan Gunung api Muda,Qhvb1,siliciclastic,,0.0,0.0117,Holosen,Holosen,,auto,[AUTO] Batuan Gunung api Muda — umur sumber: Holosen
+QHVB1,Batuan Gunung api Muda,Qhvb1,volcanic,,0.0,0.0117,Holosen,Holosen,,auto,[AUTO] Batuan Gunung api Muda — umur sumber: Holosen
 TMN4_BAL2,ATAMBUA/KUPANG,Tmn4,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] ATAMBUA/KUPANG — umur sumber: Miosen
-TMPL2_BAL2,Batugamping Tufaan,Tmpl2,volcanic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batugamping Tufaan — umur sumber: Miosen
+TMPL2_BAL2,Batugamping Tufaan,Tmpl2,carbonate,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batugamping Tufaan — umur sumber: Miosen
 KW,Formasi Waibua,Kw,siliciclastic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Formasi Waibua — umur sumber: Kapur
 TPSP,Formasi Prapatagung,Tpsp,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Formasi Prapatagung — umur sumber: Pliosen
 TMN2_BAL2,Formasi Nangapanda,Tmn2,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Nangapanda — umur sumber: Miosen
 TET_BAL2,Formasi Tanah Roong,Tet,siliciclastic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Formasi Tanah Roong — umur sumber: Eosen
 TMPW,Formasi Waihekang,Tmpw,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Waihekang — umur sumber: Miosen
-TG,Batuan Terobosan,Tg,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Batuan Terobosan — umur sumber: Tersier
+TG,Batuan Terobosan,Tg,plutonic_felsic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Batuan Terobosan — umur sumber: Tersier
 KB,Formasi Borolalo,Kb,siliciclastic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Formasi Borolalo — umur sumber: Kapur
 TMT2_BAL2,Formasi Tanahau,Tmt2,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Tanahau — umur sumber: Miosen
 TED,Diorit,Ted,plutonic_felsic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Diorit — umur sumber: Eosen
@@ -1395,7 +1395,7 @@ TMPW1,Formasi Waihekang,Tmpw1,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AU
 TMVS,Batuan Gunungapi Riolit Sakir,Tmvs,volcanic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batuan Gunungapi Riolit Sakir — umur sumber: Miosen
 TMD_BAL2,Diorit Kuarsa,Tmd,plutonic_felsic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Diorit Kuarsa — umur sumber: Miosen
 TPAH,Formasi Haulasi,Tpah,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Formasi Haulasi — umur sumber: Pliosen
-TM_BAL2,Batuan Terobosan,Tm,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batuan Terobosan — umur sumber: Miosen
+TM_BAL2,Batuan Terobosan,Tm,plutonic_felsic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batuan Terobosan — umur sumber: Miosen
 TKHN,Formasi Haulasi dan Formasi Noni Tak Teruraikan,TKhn,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Formasi Haulasi dan Formasi Noni Tak Teruraikan — umur sumber: Tersier
 TMPW2,Formasi Waihekang,Tmpw2,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Waihekang — umur sumber: Miosen
 TMS1_BAL2,Formasi Sorga,Tms1,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Sorga — umur sumber: Miosen
@@ -1407,28 +1407,28 @@ QVLP,Lava Gunung Dawon,Qvlp,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Lava
 TMA_BAL2,Formasi Aliambata,Tma,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Aliambata — umur sumber: Miosen
 TED1,BAUCAU/DILI,Ted1,siliciclastic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] BAUCAU/DILI — umur sumber: Eosen
 QHVK_BAL2,Batuan Gunungapi Muda,Qhvk,volcanic,,0.0,0.0117,Holosen,Holosen,,auto,[AUTO] Batuan Gunungapi Muda — umur sumber: Holosen
-TQS,Anggota Selayar dari Formasi Kalipalung,TQs,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Anggota Selayar dari Formasi Kalipalung — umur sumber: Tersier
-TMIU,Batuan Terobosan,Tmiu,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batuan Terobosan — umur sumber: Miosen
+TQS,Anggota Selayar dari Formasi Kalipalung,TQs,siliciclastic,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] Anggota Selayar dari Formasi Kalipalung — umur sumber: Tersier
+TMIU,Batuan Terobosan,Tmiu,plutonic_felsic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batuan Terobosan — umur sumber: Miosen
 KNO,Formasi Noni,Kno,siliciclastic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Formasi Noni — umur sumber: Kapur
 TPDI1,Diorit Kuarsa Sidongmang,Tpdi1,plutonic_felsic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Diorit Kuarsa Sidongmang — umur sumber: Pliosen
 PAT,Formasi Atahoc,Pat,siliciclastic,,251.902,298.9,Perm,Perm,,auto,[AUTO] Formasi Atahoc — umur sumber: Perm
-QA_KAL2,Alluvial Deposits,Qa,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Alluvial Deposits — umur sumber: Kuarter
+QA_KAL2,Alluvial Deposits,Qa,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Alluvial Deposits — umur sumber: Kuarter
 KTME,Mentarang Formation,KTme,siliciclastic,,33.9,143.1,Kapur-Paleogen,Kapur-Paleogen,,auto,[AUTO] Mentarang Formation — umur sumber: Kapur-Paleogen
-TQD,Dahor Formation,TQd,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Dahor Formation — umur sumber: Tersier
+TQD,Dahor Formation,TQd,siliciclastic,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] Dahor Formation — umur sumber: Tersier
 KLS,Sepauk Tonalite,Kls,plutonic_felsic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Sepauk Tonalite — umur sumber: Kapur
-QS_KAL2,Talus Deposit,Qs,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Talus Deposit — umur sumber: Kuarter
+QS_KAL2,Talus Deposit,Qs,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Talus Deposit — umur sumber: Kuarter
 TOMP_KAL2,Pamaluan Formation,Tomp,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Pamaluan Formation — umur sumber: Oligosen
 TEH,Haloq Sandstone,Teh,siliciclastic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Haloq Sandstone — umur sumber: Eosen
 KUS,Sukadana Granite,Kus,plutonic_felsic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Sukadana Granite — umur sumber: Kapur
-TQMM,Metulang Volcanics,TQmm,volcanic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Metulang Volcanics — umur sumber: Tersier
+TQMM,Metulang Volcanics,TQmm,volcanic,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] Metulang Volcanics — umur sumber: Tersier
 KTLU,Lurah Formation,KTlu,siliciclastic,,33.9,143.1,Kapur-Paleogen,Kapur-Paleogen,,auto,[AUTO] Lurah Formation — umur sumber: Kapur-Paleogen
 KTE,Embaluh Group,KTe,siliciclastic,,33.9,143.1,Kapur-Paleogen,Kapur-Paleogen,,auto,[AUTO] Embaluh Group — umur sumber: Kapur-Paleogen
 TMW,Warukin Formation,Tmw,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Warukin Formation — umur sumber: Miosen
 KSE,Selangkai Group,Kse,siliciclastic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Selangkai Group — umur sumber: Kapur
 KUK,Kerabai Volcanics,Kuk,volcanic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Kerabai Volcanics — umur sumber: Kapur
-QAL_KAL2,Lake Deposits,Qal,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Lake Deposits — umur sumber: Kuarter
+QAL_KAL2,Lake Deposits,Qal,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Lake Deposits — umur sumber: Kuarter
 TOMS_KAL2,Sintang Intrusives,Toms,plutonic_felsic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Sintang Intrusives — umur sumber: Oligosen
-TRVK,Matan Complex,TRvk,siliciclastic,,201.4,251.902,Trias,Trias,,auto,[AUTO] Matan Complex — umur sumber: Trias
+TRVK,Matan Complex,TRvk,volcanic,,201.4,251.902,Trias,Trias,,auto,[AUTO] Matan Complex — umur sumber: Trias
 TOT,Tebidah Formation,Tot,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Tebidah Formation — umur sumber: Oligosen
 TOMM_KAL2,Maau Formation,Tomm,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Maau Formation — umur sumber: Oligosen
 TEA,Batu Ayau Formation,Tea,siliciclastic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Batu Ayau Formation — umur sumber: Eosen
@@ -1452,22 +1452,22 @@ TOMV_KAL2,Malasan Volcanic Rock,Tomv,volcanic,,23.03,33.9,Oligosen,Oligosen,,aut
 TOS,Sekayam Sandstone,Tos,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Sekayam Sandstone — umur sumber: Oligosen
 TEKE,Ketungau Formation,Teke,siliciclastic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Ketungau Formation — umur sumber: Eosen
 TES1,Tes1,Tes1,siliciclastic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Tes1 — umur sumber: Eosen
-KVH,Haruyan Formation,Kvh,siliciclastic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Haruyan Formation — umur sumber: Kapur
+KVH,Haruyan Formation,Kvh,volcanic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Haruyan Formation — umur sumber: Kapur
 TOMK_KAL2,Karamuan Formation,Tomk,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Karamuan Formation — umur sumber: Oligosen
 TOML_KAL2,Lebak Formation,Toml,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Lebak Formation — umur sumber: Oligosen
 MUB_KAL2,Jurassic Ophiolite,Mub,plutonic_mafic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Jurassic Ophiolite — umur sumber: Miosen
 TMPK_KAL2,Kampungbaru Formation,Tmpk,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Kampungbaru Formation — umur sumber: Miosen
-TML_KAL2,Latih Formation,Tml,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Latih Formation — umur sumber: Miosen
+TML_KAL2,Latih Formation,Tml,carbonate,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Latih Formation — umur sumber: Miosen
 TRJB,Bengkayang Group,TRJb,siliciclastic,,201.4,251.902,Trias,Trias,,auto,[AUTO] Bengkayang Group — umur sumber: Trias
 TKK,Kayan Sandstone,TKk,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Kayan Sandstone — umur sumber: Tersier
 CTRS,Semitau Complex,CTRs,siliciclastic,,298.9,358.9,Karbon,Karbon,,auto,[AUTO] Semitau Complex — umur sumber: Karbon
 TEM_KAL2,Marah Formation,Tem,siliciclastic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Marah Formation — umur sumber: Eosen
 TEK,Kuaro Formation,Tek,siliciclastic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Kuaro Formation — umur sumber: Eosen
 TPKB,Kampungbaru Formation,Tpkb,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Kampungbaru Formation — umur sumber: Pliosen
-QAT_KAL2,Disected Alluvial Deposits,Qat,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Disected Alluvial Deposits — umur sumber: Kuarter
+QAT_KAL2,Disected Alluvial Deposits,Qat,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Disected Alluvial Deposits — umur sumber: Kuarter
 PTRB,Busang Complex,PTRb,siliciclastic,,251.902,298.9,Perm,Perm,,auto,[AUTO] Busang Complex — umur sumber: Perm
 KLL,Laur Granite,Kll,plutonic_felsic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Laur Granite — umur sumber: Kapur
-TQPS2,Sajau Formation,TQps2,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Sajau Formation — umur sumber: Tersier
+TQPS2,Sajau Formation,TQps2,siliciclastic,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] Sajau Formation — umur sumber: Tersier
 TEI,Ingar Formation,Tei,siliciclastic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Ingar Formation — umur sumber: Eosen
 TEMA,Malinau Formation,Tema,siliciclastic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Malinau Formation — umur sumber: Eosen
 TOTY,Tuyu Formation,Toty,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Tuyu Formation — umur sumber: Oligosen
@@ -1504,11 +1504,11 @@ TOT1,Tebidah Formation,Tot1,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[A
 TPR_KAL2,Raharjapura Formation,Tpr,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Raharjapura Formation — umur sumber: Pliosen
 QC_KAL2,Littoral Deposits,Qc,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Littoral Deposits — umur sumber: Kuarter
 JKKE,Ketapang Complex,JKke,siliciclastic,,66.0,201.4,Jura-Kapur,Jura-Kapur,,auto,[AUTO] Ketapang Complex — umur sumber: Jura-Kapur
-TQPS,Sajau Formation,TQps,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Sajau Formation — umur sumber: Tersier
+TQPS,Sajau Formation,TQps,siliciclastic,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] Sajau Formation — umur sumber: Tersier
 KUBU,Bunga Basalt,Kubu,volcanic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Bunga Basalt — umur sumber: Kapur
 KAG,Anambas Granite,Kag,plutonic_felsic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Anambas Granite — umur sumber: Kapur
 TEN,Nyaan Volcanics,Ten,volcanic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Nyaan Volcanics — umur sumber: Eosen
-KVP,Paau Formation,Kvp,siliciclastic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Paau Formation — umur sumber: Kapur
+KVP,Paau Formation,Kvp,volcanic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Paau Formation — umur sumber: Kapur
 MM,Early Cretaceous Metamorphics,Mm,metamorphic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Early Cretaceous Metamorphics — umur sumber: Miosen
 PZTRS,Seminis Formation,PzTRs,siliciclastic,,251.902,298.9,Perm,Perm,,auto,[AUTO] Seminis Formation — umur sumber: Perm
 TMBL_KAL2,Bebulu Formation,Tmbl,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Bebulu Formation — umur sumber: Miosen
@@ -1523,7 +1523,7 @@ TOMP1_KAL2,Tomp1,Tomp1,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] 
 JU,Ju,Ju,siliciclastic,,143.1,201.4,Jura,Jura,,auto,[AUTO] Ju — umur sumber: Jura
 TEU,Undiff Melawi Group,Teu,siliciclastic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Undiff Melawi Group — umur sumber: Eosen
 KUSA,Sangiyang Granite,Kusa,plutonic_felsic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Sangiyang Granite — umur sumber: Kapur
-QAR_KAL2,Swamp Deposits,Qar,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Swamp Deposits — umur sumber: Kuarter
+QAR_KAL2,Swamp Deposits,Qar,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Swamp Deposits — umur sumber: Kuarter
 TER,Ritan Limestone Member,Ter,carbonate,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Ritan Limestone Member — umur sumber: Eosen
 TMW1_KAL2,Warukin Formation,Tmw1,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Warukin Formation — umur sumber: Miosen
 KUM,Tebang Mélange,Kum,melange,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Tebang Mélange — umur sumber: Kapur
@@ -1535,7 +1535,7 @@ TML1_KAL2,Tml1,Tml1,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Tml1 �
 TOMW_KAL2,Wahau Formation,Tomw,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Wahau Formation — umur sumber: Oligosen
 MGB,Early Cretaceous Gabbro,Mgb,plutonic_mafic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Early Cretaceous Gabbro — umur sumber: Miosen
 KUT,Topai Granite,Kut,plutonic_felsic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Topai Granite — umur sumber: Kapur
-QP_KAL2,Coastal Deposit,Qp,siliciclastic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Coastal Deposit — umur sumber: Pleistosen
+QP_KAL2,Coastal Deposit,Qp,unconsolidated,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Coastal Deposit — umur sumber: Pleistosen
 KGM,Mandahan Granite,Kgm,plutonic_felsic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Mandahan Granite — umur sumber: Kapur
 TMK_KAL2,Kelinjau Formation,Tmk,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Kelinjau Formation — umur sumber: Miosen
 KUP,Pueh Granite,Kup,plutonic_felsic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Pueh Granite — umur sumber: Kapur
@@ -1544,7 +1544,7 @@ KAK,Keramaian Formation,Kak,siliciclastic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] K
 KUE,Era Granite,Kue,plutonic_felsic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Era Granite — umur sumber: Kapur
 KUB_KAL2,Biwa Gabbro,Kub,plutonic_mafic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Biwa Gabbro — umur sumber: Kapur
 KLME,Menyukung Granite,Klme,plutonic_felsic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Menyukung Granite — umur sumber: Kapur
-TOL_KAL2,Lenmuring Sandstone Member,Tol,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Lenmuring Sandstone Member — umur sumber: Oligosen
+TOL_KAL2,Lenmuring Sandstone Member,Tol,carbonate,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Lenmuring Sandstone Member — umur sumber: Oligosen
 QTV_KAL2,Young Volcanic Rocks,QTv,volcanic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] Young Volcanic Rocks — umur sumber: Plio-Plistosen
 MZB,Bengara Formation,Mzb,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Bengara Formation — umur sumber: Miosen
 TMOP,Pamaluan Formation,Tmop,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Pamaluan Formation — umur sumber: Miosen
@@ -1553,10 +1553,10 @@ JUM,Mafic / Ultramaphic Rocks,Jum,siliciclastic,,143.1,201.4,Jura,Jura,,auto,[AU
 TES,Serantak Volcanics,Tes,volcanic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Serantak Volcanics — umur sumber: Eosen
 KGS,Sukadana Granite Suite,Kgs,plutonic_felsic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Sukadana Granite Suite — umur sumber: Kapur
 TOMI_KAL2,Intrusive Rock,Tomi,plutonic_felsic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Intrusive Rock — umur sumber: Oligosen
-QAS_KAL2,River Deposits,Qas,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] River Deposits — umur sumber: Kuarter
-QAP,Beach Deposits,Qap,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Beach Deposits — umur sumber: Kuarter
+QAS_KAL2,River Deposits,Qas,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] River Deposits — umur sumber: Kuarter
+QAP,Beach Deposits,Qap,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Beach Deposits — umur sumber: Kuarter
 MR,Unnamed Chert,Mr,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Unnamed Chert — umur sumber: Miosen
-KVPI,Pitanak Formation,Kvpi,siliciclastic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Pitanak Formation — umur sumber: Kapur
+KVPI,Pitanak Formation,Kvpi,volcanic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Pitanak Formation — umur sumber: Kapur
 MDI,Diorite,Mdi,plutonic_felsic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Diorite — umur sumber: Miosen
 JUB,Belaban Granite,Jub,plutonic_felsic,,143.1,201.4,Jura,Jura,,auto,[AUTO] Belaban Granite — umur sumber: Jura
 KGR,Late Cretaceous Granite,Kgr,plutonic_felsic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Late Cretaceous Granite — umur sumber: Kapur
@@ -1580,7 +1580,7 @@ TMA_KAL2,"Plug, Dyke",Tma,plutonic_felsic,,5.333,23.03,Miosen,Miosen,,auto,"[AUT
 TRM,Quarzite,TRm,siliciclastic,,201.4,251.902,Trias,Trias,,auto,[AUTO] Quarzite — umur sumber: Trias
 TRUS,Sadong Formation,TRus,siliciclastic,,201.4,251.902,Trias,Trias,,auto,[AUTO] Sadong Formation — umur sumber: Trias
 TMB_KAL2,Bebuluh Formation,Tmb,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Bebuluh Formation — umur sumber: Miosen
-TEB_KAL2,Bawang Dacite,Teb,siliciclastic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Bawang Dacite — umur sumber: Eosen
+TEB_KAL2,Bawang Dacite,Teb,volcanic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Bawang Dacite — umur sumber: Eosen
 TOK,Kedango Formation,Tok,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Kedango Formation — umur sumber: Oligosen
 TRUSK,Sekadau Volcanics,TRusk,volcanic,,201.4,251.902,Trias,Trias,,auto,[AUTO] Sekadau Volcanics — umur sumber: Trias
 MBA,Basalt,Mba,volcanic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Basalt — umur sumber: Miosen
@@ -1622,7 +1622,7 @@ TMPB_SUL2,Formasi Bongka,Tmpb,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AU
 QPW_SUL2,Formasi Wapulaka,Qpw,siliciclastic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Formasi Wapulaka — umur sumber: Pleistosen
 TRJM,Formasi Meluhu,TRJm,siliciclastic,,201.4,251.902,Trias,Trias,,auto,[AUTO] Formasi Meluhu — umur sumber: Trias
 QL_SUL2,Batugamping Tak Bernama,Ql,carbonate,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Batugamping Tak Bernama — umur sumber: Kuarter
-TMPI_SUL2,Batuan Terobosan,Tmpi,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batuan Terobosan — umur sumber: Miosen
+TMPI_SUL2,Batuan Terobosan,Tmpi,plutonic_felsic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batuan Terobosan — umur sumber: Miosen
 KM_SUL2,Formasi Marada,Km,siliciclastic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Formasi Marada — umur sumber: Kapur
 QTV_SUL2,Batuan gunungapi,QTv,volcanic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] Batuan gunungapi — umur sumber: Plio-Plistosen
 TMPT_SUL2,Anggota tacipi,Tmpt,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Anggota tacipi — umur sumber: Miosen
@@ -1630,7 +1630,7 @@ TMPS_SUL2,Anggota Selayar,Tmps,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[A
 TRJT,Formasi Toloka,TRJt,siliciclastic,,201.4,251.902,Trias,Trias,,auto,[AUTO] Formasi Toloka — umur sumber: Trias
 TMPW_SUL2,Formasi Walanae,Tmpw,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Walanae — umur sumber: Miosen
 TMPL_SUL2,Formasi Lariang,Tmpl,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Lariang — umur sumber: Miosen
-GR,Batuan Terobosan,gr,siliciclastic,,0.0,538.8,Holosen,Kambrium,,auto,[AUTO] Batuan Terobosan — umur sumber: tidak tercatat (estimasi Holosen-Kambrium)
+GR,Batuan Terobosan,gr,plutonic_felsic,,0.0,538.8,Holosen,Kambrium,,auto,[AUTO] Batuan Terobosan — umur sumber: tidak tercatat (estimasi Holosen-Kambrium)
 TMD_SUL2,Formasi Dolokapa,Tmd,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Dolokapa — umur sumber: Miosen
 TML_SUL2,Batugamping Ratatotok,Tml,carbonate,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batugamping Ratatotok — umur sumber: Miosen
 TPKG,Granit Kambuno,Tpkg,plutonic_felsic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Granit Kambuno — umur sumber: Pliosen
@@ -1662,11 +1662,11 @@ TMPP_SUL2,Formasi Pandua,Tmpp,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AU
 TMA_SUL2,Batuan Gunungapi Adang,Tma,volcanic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batuan Gunungapi Adang — umur sumber: Miosen
 TPBV,Batuan Gunungapi Baturape,Tpbv,volcanic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Batuan Gunungapi Baturape — umur sumber: Pliosen
 QP_SUL2,Formasi Pakuli,Qp,siliciclastic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Formasi Pakuli — umur sumber: Pleistosen
-TQLS,Formasi Lokodidi,TQls,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Formasi Lokodidi — umur sumber: Tersier
+TQLS,Formasi Lokodidi,TQls,siliciclastic,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] Formasi Lokodidi — umur sumber: Tersier
 TMBO_SUL2,Diorit Boliohuto,Tmbo,plutonic_felsic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Diorit Boliohuto — umur sumber: Miosen
-TQP_SUL2,Formasi Pasangkayu,TQp,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Formasi Pasangkayu — umur sumber: Tersier
-TQPN,Formasi Napu,TQpn,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Formasi Napu — umur sumber: Tersier
-CORAL,Coral,Coral,siliciclastic,,298.9,358.9,Karbon,Karbon,,auto,[AUTO] Coral — umur sumber: Karbon
+TQP_SUL2,Formasi Pasangkayu,TQp,siliciclastic,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] Formasi Pasangkayu — umur sumber: Tersier
+TQPN,Formasi Napu,TQpn,siliciclastic,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] Formasi Napu — umur sumber: Tersier
+CORAL,Coral,Coral,carbonate,,298.9,358.9,Karbon,Karbon,,auto,[AUTO] Coral — umur sumber: Karbon
 TMPA_SUL2,Formasi Awit,Tmpa,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Awit — umur sumber: Miosen
 QS_SUL2,Endapan danau dan sungai,Qs,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Endapan danau dan sungai — umur sumber: Kuarter
 QLV_SUL2,Batuan Gunungapi Lompobatang,Qlv,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Batuan Gunungapi Lompobatang — umur sumber: Kuarter
@@ -1677,7 +1677,7 @@ TMKV,Batuan Gunungapi Kalamiseng,Tmkv,volcanic,,5.333,23.03,Miosen,Miosen,,auto,
 TMPK_SUL2,Formasi Kintom,Tmpk,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Kintom — umur sumber: Miosen
 KMG,Malihan Tak Bernama,kmg,metamorphic,,0.0,538.8,Holosen,Kambrium,,auto,[AUTO] Malihan Tak Bernama — umur sumber: tidak tercatat (estimasi Holosen-Kambrium)
 DI,Batuan industri,di,siliciclastic,,0.0,538.8,Holosen,Kambrium,,auto,[AUTO] Batuan industri — umur sumber: tidak tercatat (estimasi Holosen-Kambrium)
-TQPV,Batuan Gunungapi Pinogu,TQpv,volcanic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Batuan Gunungapi Pinogu — umur sumber: Tersier
+TQPV,Batuan Gunungapi Pinogu,TQpv,volcanic,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] Batuan Gunungapi Pinogu — umur sumber: Tersier
 TMCA,Tefrit Leusit,Tmca,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Tefrit Leusit — umur sumber: Miosen
 QPA_SUL2,Formasi Alangga,Qpa,siliciclastic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Formasi Alangga — umur sumber: Pleistosen
 TMPV_SUL2,Aliran Lava,Tmpv,volcanic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Aliran Lava — umur sumber: Miosen
@@ -1722,7 +1722,7 @@ TRM_SUL2,Formasi Meluhu,TRm,siliciclastic,,201.4,251.902,Trias,Trias,,auto,[AUTO
 GD,Granodiorit,gd,plutonic_felsic,,0.0,538.8,Holosen,Kambrium,,auto,[AUTO] Granodiorit — umur sumber: tidak tercatat (estimasi Holosen-Kambrium)
 TMK_SUL2,Formasi Kalao,Tmk,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Kalao — umur sumber: Miosen
 TMR_SUL2,Formasi Randangan,Tmr,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Randangan — umur sumber: Miosen
-TQL,Batugamping Tak Bernama,TQl,carbonate,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Batugamping Tak Bernama — umur sumber: Tersier
+TQL,Batugamping Tak Bernama,TQl,carbonate,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] Batugamping Tak Bernama — umur sumber: Tersier
 TMVL,Batuan Gunungapi,Tmvl,volcanic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batuan Gunungapi — umur sumber: Miosen
 TPV_SUL2,Batuan Gunungapi Langi,Tpv,volcanic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Batuan Gunungapi Langi — umur sumber: Pliosen
 TMM_SUL2,Formasi Mamuju,Tmm,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Mamuju — umur sumber: Miosen
@@ -1761,10 +1761,10 @@ QF_SUL2,Endapan Kipas Aluvium,Qf,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,
 TMPG_SUL2,Granit palopo,Tmpg,plutonic_felsic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Granit palopo — umur sumber: Miosen
 QPBT,Tufa,Qpbt,volcanic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Tufa — umur sumber: Pleistosen
 MTI_SUL2,MTI,MTI,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] MTI — umur sumber: Miosen
-QTIA,Batuan Terobosan,QTi(a,siliciclastic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] Batuan Terobosan — umur sumber: Plio-Plistosen
+QTIA,Batuan Terobosan,QTi(a,plutonic_felsic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] Batuan Terobosan — umur sumber: Plio-Plistosen
 TOMB_SUL2,Formasi Batu,Tomb,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Formasi Batu — umur sumber: Oligosen
 PTRM,Formasi Mukito,PTRm,siliciclastic,,251.902,298.9,Perm,Perm,,auto,[AUTO] Formasi Mukito — umur sumber: Perm
-QTID,Batuan Terobosan,QTi(d,siliciclastic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] Batuan Terobosan — umur sumber: Plio-Plistosen
+QTID,Batuan Terobosan,QTi(d,plutonic_felsic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] Batuan Terobosan — umur sumber: Plio-Plistosen
 QLVC,Endapan Sumbat,Qlvc,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Endapan Sumbat — umur sumber: Kuarter
 JNS,Formasi Nanaka,Jns,siliciclastic,,143.1,201.4,Jura,Jura,,auto,[AUTO] Formasi Nanaka — umur sumber: Jura
 TPLL,Formasi Lerea,Tpll,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Formasi Lerea — umur sumber: Pliosen
@@ -1783,14 +1783,14 @@ QL1_MAL2,Ql1,Ql1,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Ql1 — um
 TMK_MAL2,Koba Formation,Tmk,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Koba Formation — umur sumber: Miosen
 TPML,Manumbai Formation,Tpml,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Manumbai Formation — umur sumber: Pliosen
 TRJK,TRjk,TRjk,siliciclastic,,201.4,251.902,Trias,Trias,,auto,[AUTO] TRjk — umur sumber: Trias
-UB_MAL2,Ultrabasic Complex,Ub,siliciclastic,,0.0,538.8,Holosen,Kambrium,,auto,[AUTO] Ultrabasic Complex — umur sumber: tidak tercatat (estimasi Holosen-Kambrium)
+UB_MAL2,Ultrabasic Complex,Ub,plutonic_mafic,,0.0,538.8,Holosen,Kambrium,,auto,[AUTO] Ultrabasic Complex — umur sumber: tidak tercatat (estimasi Holosen-Kambrium)
 PZTA,Taunusa Complex,Pzta,siliciclastic,,251.902,298.9,Perm,Perm,,auto,[AUTO] Taunusa Complex — umur sumber: Perm
 JB,Buya Formation,Jb,siliciclastic,,143.1,201.4,Jura,Jura,,auto,[AUTO] Buya Formation — umur sumber: Jura
 QPT_MAL2,Togawa Formation,Qpt,siliciclastic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Togawa Formation — umur sumber: Pleistosen
 QPK_MAL2,Kayasa Formation,Qpk,siliciclastic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Kayasa Formation — umur sumber: Pleistosen
 TRD_MAL2,Dalan Formation,TRd,siliciclastic,,201.4,251.902,Trias,Trias,,auto,[AUTO] Dalan Formation — umur sumber: Trias
 QHT_MAL2,Tuff,Qht,volcanic,,0.0,0.0117,Holosen,Holosen,,auto,[AUTO] Tuff — umur sumber: Holosen
-QS_MAL2,Saumlaki Formation,Qs,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Saumlaki Formation — umur sumber: Kuarter
+QS_MAL2,Saumlaki Formation,Qs,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Saumlaki Formation — umur sumber: Kuarter
 TRJM_MAL2,Manusela Formation,TRJm,siliciclastic,,201.4,251.902,Trias,Trias,,auto,[AUTO] Manusela Formation — umur sumber: Trias
 QTB_MAL2,Bati lemburi Formation,QTb,siliciclastic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] Bati lemburi Formation — umur sumber: Plio-Plistosen
 QT1_MAL2,Tanah Merah Formation,Qt1,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Tanah Merah Formation — umur sumber: Kuarter
@@ -1801,7 +1801,7 @@ PZM_MAL2,Metamorphic Rock,Pzm,metamorphic,,251.902,298.9,Perm,Perm,,auto,[AUTO] 
 JBS,Bobong Formation,Jbs,siliciclastic,,143.1,201.4,Jura,Jura,,auto,[AUTO] Bobong Formation — umur sumber: Jura
 QHVA_MAL2,Holocene Volcanics Rocks,Qhva,volcanic,,0.0,0.0117,Holosen,Holosen,,auto,[AUTO] Holocene Volcanics Rocks — umur sumber: Holosen
 TPW1,Wahai Formation,Tpw1,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Wahai Formation — umur sumber: Pliosen
-QL_MAL2,Peleng Formation,Ql,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Peleng Formation — umur sumber: Kuarter
+QL_MAL2,Peleng Formation,Ql,carbonate,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Peleng Formation — umur sumber: Kuarter
 TPAV1,Ambon Volcanic Rock,Tpav1,volcanic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Ambon Volcanic Rock — umur sumber: Pliosen
 TRG_MAL2,Ghegan Formation,TRg,siliciclastic,,201.4,251.902,Trias,Trias,,auto,[AUTO] Ghegan Formation — umur sumber: Trias
 PTRBG,Banggai Granite,PTRbg,plutonic_felsic,,251.902,298.9,Perm,Perm,,auto,[AUTO] Banggai Granite — umur sumber: Perm
@@ -1816,16 +1816,16 @@ QGP,Coralline Limestone,Qgp,carbonate,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Cor
 TPED,Dorosagu Formation,Tped,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Dorosagu Formation — umur sumber: Pliosen
 TMPW1_MAL2,Woi Formation,Tmpw1,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Woi Formation — umur sumber: Miosen
 QHV_MAL2,Holocene Volcanic Rocks,Qhv,volcanic,,0.0,0.0117,Holosen,Holosen,,auto,[AUTO] Holocene Volcanic Rocks — umur sumber: Holosen
-TQF,Fufa Formation,TQf,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Fufa Formation — umur sumber: Tersier
+TQF,Fufa Formation,TQf,siliciclastic,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] Fufa Formation — umur sumber: Tersier
 TMPO,Obit Formation,Tmpo,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Obit Formation — umur sumber: Miosen
 PTUM,Ultramaphic Rocks,pTum,siliciclastic,,66.0,538.8,Kapur,Kambrium,,auto,[AUTO] Ultramaphic Rocks — umur sumber: tidak tercatat (estimasi Kapur-Kambrium)
 TEE,Elat Formation,Tee,siliciclastic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Elat Formation — umur sumber: Eosen
-QT_MAL2,Terrace deposits,Qt,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Terrace deposits — umur sumber: Kuarter
+QT_MAL2,Terrace deposits,Qt,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Terrace deposits — umur sumber: Kuarter
 QPFL,Limestone Member of Fufa Formation,Qpfl,carbonate,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Limestone Member of Fufa Formation — umur sumber: Pleistosen
 KS1,Sibela Metamorphic Complex,Ks1,metamorphic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Sibela Metamorphic Complex — umur sumber: Kapur
-TQW,Wasir Formation,TQw,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Wasir Formation — umur sumber: Tersier
+TQW,Wasir Formation,TQw,siliciclastic,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] Wasir Formation — umur sumber: Tersier
 TMR_MAL2,Ruta Formation,Tmr,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Ruta Formation — umur sumber: Miosen
-TPL_MAL2,Leko Formation,Tpl,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Leko Formation — umur sumber: Pliosen
+TPL_MAL2,Leko Formation,Tpl,carbonate,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Leko Formation — umur sumber: Pliosen
 M_MAL2,Molu Complex,M,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Molu Complex — umur sumber: Miosen
 JKU1,Ultramafic Rocks,JKu1,plutonic_mafic,,66.0,201.4,Jura-Kapur,Jura-Kapur,,auto,[AUTO] Ultramafic Rocks — umur sumber: Jura-Kapur
 QV_MAL2,Volcanic Breccia,Qv,volcanic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Volcanic Breccia — umur sumber: Kuarter
@@ -1855,11 +1855,11 @@ GB,Gabbro,Gb,plutonic_mafic,,0.0,538.8,Holosen,Kambrium,,auto,[AUTO] Gabbro — 
 PPS_MAL2,Metamorphics,pPs,metamorphic,,251.902,538.8,Perm,Kambrium,,auto,[AUTO] Metamorphics — umur sumber: tidak tercatat (estimasi Perm-Kambrium)
 JS1,Loleobasso Formation,Js1,siliciclastic,,143.1,201.4,Jura,Jura,,auto,[AUTO] Loleobasso Formation — umur sumber: Jura
 TPEH,Hatuolo Formation,Tpeh,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Hatuolo Formation — umur sumber: Pliosen
-TQP_MAL2,Quartz Sandstone,TQp,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Quartz Sandstone — umur sumber: Tersier
+TQP_MAL2,Quartz Sandstone,TQp,siliciclastic,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] Quartz Sandstone — umur sumber: Tersier
 KD_MAL2,Dodaga Formation,Kd,siliciclastic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Dodaga Formation — umur sumber: Kapur
 TOMW1,Waeken Formation,Tomw1,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Waeken Formation — umur sumber: Oligosen
 QPO,Ohoinol Formation,Qpo,siliciclastic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Ohoinol Formation — umur sumber: Pleistosen
-QD_MAL2,Lake deposit,Qd,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Lake deposit — umur sumber: Kuarter
+QD_MAL2,Lake deposit,Qd,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Lake deposit — umur sumber: Kuarter
 JKU,Basic-ultramafic rocks complex,JKu,plutonic_mafic,,66.0,201.4,Jura-Kapur,Jura-Kapur,,auto,[AUTO] Basic-ultramafic rocks complex — umur sumber: Jura-Kapur
 TOMS_MAL2,Selagor Formation,Toms,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Selagor Formation — umur sumber: Oligosen
 PTOF,Ultra basic rock,pTof,siliciclastic,,66.0,538.8,Kapur,Kambrium,,auto,[AUTO] Ultra basic rock — umur sumber: tidak tercatat (estimasi Kapur-Kambrium)
@@ -1898,7 +1898,7 @@ TRGP,Beddded Limestone,TRgp,carbonate,,201.4,251.902,Trias,Trias,,auto,[AUTO] Be
 TMGP,Clastic Limestone,Tmgp,carbonate,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Clastic Limestone — umur sumber: Miosen
 TMFV,Ftau Formation,Tmfv,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Ftau Formation — umur sumber: Miosen
 TPM_MAL2,Tanjung Matot Complex,Tpm,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Tanjung Matot Complex — umur sumber: Pliosen
-QA_PAP2,Qa,Qa,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Qa — umur sumber: Kuarter
+QA_PAP2,Qa,Qa,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Qa — umur sumber: Kuarter
 QS2,Qs2,Qs2,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Qs2 — umur sumber: Kuarter
 QS1,Qs1,Qs1,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Qs1 — umur sumber: Kuarter
 JKK,JKk,JKk,siliciclastic,,66.0,201.4,Jura-Kapur,Jura-Kapur,,auto,[AUTO] JKk — umur sumber: Jura-Kapur
@@ -1919,31 +1919,31 @@ TEMY,Batugamping Yawce,Temy,carbonate,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Au Cu 
 TMK_PAP2,Bat.Sedimen Klasafet,Tmk,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Bat.Sedimen Klasafet — umur sumber: Miosen
 TMKA,Batugamping Kais,Tmka,carbonate,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batugamping Kais — umur sumber: Miosen
 KTI,KTi,KTi,siliciclastic,,33.9,143.1,Kapur-Paleogen,Kapur-Paleogen,,auto,[AUTO] KTi — umur sumber: Kapur-Paleogen
-QL_PAP2,Ql,Ql,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Ql — umur sumber: Kuarter
+QL_PAP2,Ql,Ql,carbonate,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Ql — umur sumber: Kuarter
 QPA_PAP2,Qpa,Qpa,siliciclastic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Qpa — umur sumber: Pleistosen
 PTMC,Kelompok Malihan Cycop,pTmc,metamorphic,,66.0,538.8,Kapur,Kambrium,,auto,[AUTO] Ni Cr Zn — umur sumber: tidak tercatat (estimasi Kapur-Kambrium)
 KUE_PAP2,Kue,Kue,siliciclastic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Kue — umur sumber: Kapur
-TQSM,Formasi Steenkool,TQsm,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Formasi Steenkool — umur sumber: Tersier
+TQSM,Formasi Steenkool,TQsm,siliciclastic,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] Formasi Steenkool — umur sumber: Tersier
 QF_PAP2,Qf,Qf,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Qf — umur sumber: Kuarter
 TPD_PAP2,Basal,Tpd,volcanic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Logam — umur sumber: Pliosen
 KTEW,Formasi Warupi,KTew,siliciclastic,,33.9,143.1,Kapur-Paleogen,Kapur-Paleogen,,auto,[AUTO] Cu — umur sumber: Kapur-Paleogen
 QMD,Qmd,Qmd,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Qmd — umur sumber: Kuarter
 TEMO,Batugamping Onin,Temo,carbonate,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Batugamping Onin — umur sumber: Eosen
 QM,Qm,Qm,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Qm — umur sumber: Kuarter
-TMU,Logam/Terobosan Utawa,Tmu,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Logam — umur sumber: Miosen
+TMU,Logam/Terobosan Utawa,Tmu,plutonic_felsic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Logam — umur sumber: Miosen
 TEMA_PAP2,Formasi Auwewa,Tema,siliciclastic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Logam — umur sumber: Eosen
 JKW,JKw,JKw,siliciclastic,,66.0,201.4,Jura-Kapur,Jura-Kapur,,auto,[AUTO] JKw — umur sumber: Jura-Kapur
 QLAC,Qlac,Qlac,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Qlac — umur sumber: Kuarter
 OT,Ot,Ot,siliciclastic,,443.1,486.85,Ordovisium,Ordovisium,,auto,[AUTO] Ot — umur sumber: Ordovisium
 JKT,JKt,JKt,siliciclastic,,66.0,201.4,Jura-Kapur,Jura-Kapur,,auto,[AUTO] JKt — umur sumber: Jura-Kapur
 JUM_PAP2,Batuan Ultramafik,Jum,plutonic_mafic,,143.1,201.4,Jura,Jura,,auto,[AUTO] Cr Ni — umur sumber: Jura
-TMPTD,Batuan Terobosan Timepa,Tmptd,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Logam — umur sumber: Miosen
+TMPTD,Batuan Terobosan Timepa,Tmptd,plutonic_felsic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Logam — umur sumber: Miosen
 KP_PAP2,Kp,Kp,siliciclastic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Kp — umur sumber: Kapur
 TOMN,Batugamping Nubai,Tomn,carbonate,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Batugamping Nubai — umur sumber: Oligosen
 PA_PAP2,Formasi Aiduna,Pa,siliciclastic,,23.03,66.0,Paleogen,Paleogen,,auto,[AUTO] Batubara — umur sumber: Paleogen
-QA1,Qa1,Qa1,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Qa1 — umur sumber: Kuarter
+QA1,Qa1,Qa1,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Qa1 — umur sumber: Kuarter
 TEMKC,Temkc,Temkc,siliciclastic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Temkc — umur sumber: Eosen
-TQBU,Formasi Buru,TQbu,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Au — umur sumber: Tersier
+TQBU,Formasi Buru,TQbu,siliciclastic,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] Au — umur sumber: Tersier
 TQK,Formasi Kelasaman,TQk,siliciclastic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Batubara — umur sumber: Neogen
 TMPW_PAP2,Batugamping Wardo,Tmpw,carbonate,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batugamping Wardo — umur sumber: Miosen
 TMW_PAP2,Batugamping Wurui,Tmw,carbonate,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batugamping Wurui — umur sumber: Miosen
@@ -1955,7 +1955,7 @@ TEMYA,Bt. Gunungapi Yapen,Temya,volcanic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Log
 QT_PAP2,Qt,Qt,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Qt — umur sumber: Kuarter
 TMS_PAP2,Formasi Sekau,Tms,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Sekau — umur sumber: Miosen
 TOMS_PAP2,Formasi Sirga,Toms,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Formasi Sirga — umur sumber: Oligosen
-TQBM,Grup Bumi,TQbm,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Grup Bumi — umur sumber: Tersier
+TQBM,Grup Bumi,TQbm,siliciclastic,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] Grup Bumi — umur sumber: Tersier
 SFX,SFx,SFx,siliciclastic,,419.62,443.1,Silur,Silur,,auto,[AUTO] SFx — umur sumber: Silur
 QPU,Formasi Upa,Qpu,siliciclastic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Formasi Upa — umur sumber: Pleistosen
 QG_PAP2,Qg,Qg,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Qg — umur sumber: Kuarter
@@ -1975,16 +1975,16 @@ TOMA_PAP2,Formasi Auwea,Toma,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[
 PZU,Pzu,Pzu,siliciclastic,,251.902,298.9,Perm,Perm,,auto,[AUTO] Pzu — umur sumber: Perm
 DM,Dm,Dm,siliciclastic,,358.9,419.62,Devon,Devon,,auto,[AUTO] Dm — umur sumber: Devon
 TMOP_PAP2,Batugamping Openta,Tmop,carbonate,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batugamping Openta — umur sumber: Miosen
-QS_PAP2,Qs,Qs,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Qs — umur sumber: Kuarter
+QS_PAP2,Qs,Qs,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Qs — umur sumber: Kuarter
 PRK,Granit Kwatisone,PRk,plutonic_felsic,,251.902,298.9,Perm,Perm,,auto,[AUTO] Logam — umur sumber: Perm
 TEMKB,Temkb,Temkb,siliciclastic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Temkb — umur sumber: Eosen
 KTMP,KTmp,KTmp,siliciclastic,,33.9,143.1,Kapur-Paleogen,Kapur-Paleogen,,auto,[AUTO] KTmp — umur sumber: Kapur-Paleogen
 QPM_PAP2,Formasi Manokwari,Qpm,siliciclastic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Formasi Manokwari — umur sumber: Pleistosen
 QPF_PAP2,Qpf,Qpf,siliciclastic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Qpf — umur sumber: Pleistosen
 MTS_PAP2,MTs,MTs,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] MTs — umur sumber: Miosen
-TQB_PAP2,Formasi Befoor,TQb,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Formasi Befoor — umur sumber: Tersier
-TQA,TQa,TQa,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] TQa — umur sumber: Tersier
-TQLE,TQle,TQle,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] TQle — umur sumber: Tersier
+TQB_PAP2,Formasi Befoor,TQb,siliciclastic,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] Formasi Befoor — umur sumber: Tersier
+TQA,TQa,TQa,siliciclastic,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] TQa — umur sumber: Tersier
+TQLE,TQle,TQle,siliciclastic,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] TQle — umur sumber: Tersier
 TMWU,Batugamping Wurui,Tmwu,carbonate,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Batugamping Wurui — umur sumber: Miosen
 TEOL_PAP2,Batugamping Ubrug,Teol,carbonate,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Batugamping Ubrug — umur sumber: Eosen
 TEMM,Anggota Mampang/Mandi,Temm,siliciclastic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Logam — umur sumber: Eosen
@@ -1996,7 +1996,7 @@ PEO,PEo,PEo,siliciclastic,,251.902,298.9,Perm,Perm,,auto,[AUTO] PEo — umur sum
 RJT,Formasi Tipuma,RJt,siliciclastic,,0.0,538.8,Holosen,Kambrium,,auto,[AUTO] Formasi Tipuma — umur sumber: tidak tercatat (estimasi Holosen-Kambrium)
 UM,Batuan Ultramafik,Um,plutonic_mafic,,0.0,538.8,Holosen,Kambrium,,auto,[AUTO] Logam — umur sumber: tidak tercatat (estimasi Holosen-Kambrium)
 TRN_PAP2,TRn,TRn,siliciclastic,,201.4,251.902,Trias,Trias,,auto,[AUTO] TRn — umur sumber: Trias
-TQO,TQo,TQo,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] TQo — umur sumber: Tersier
+TQO,TQo,TQo,siliciclastic,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] TQo — umur sumber: Tersier
 CPA,CPa,CPa,siliciclastic,,251.902,358.9,Karbon-Perm,Karbon-Perm,,auto,[AUTO] CPa — umur sumber: Karbon-Perm
 QC1_PAP2,Qc1,Qc1,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Qc1 — umur sumber: Kuarter
 TOMW_PAP2,Tomw,Tomw,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Tomw — umur sumber: Oligosen
@@ -2004,7 +2004,7 @@ TEMR,Formasi Rumai,Temr,siliciclastic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Formas
 TQAT,Formasi Atkari,TQat,siliciclastic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Batubara — umur sumber: Neogen
 QPK_PAP2,Formasi Kukunduri,Qpk,siliciclastic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Formasi Kukunduri — umur sumber: Pleistosen
 TMPT_PAP2,Monzonit Tinepa,Tmpt,plutonic_felsic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Au Ag Cu — umur sumber: Miosen
-TPL_PAP2,Tpl,Tpl,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Tpl — umur sumber: Pliosen
+TPL_PAP2,Tpl,Tpl,carbonate,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Tpl — umur sumber: Pliosen
 TLT_PAP2,Batuan Gunungapi Tobe,Tlt,volcanic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Au Cu — umur sumber: Tersier
 KTPA,KTpa,KTpa,siliciclastic,,33.9,143.1,Kapur-Paleogen,Kapur-Paleogen,,auto,[AUTO] KTpa — umur sumber: Kapur-Paleogen
 KUF,Kuf,Kuf,siliciclastic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Kuf — umur sumber: Kapur
@@ -2021,7 +2021,7 @@ TPKA_PAP2,Tpka,Tpka,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Tpka 
 PCUA,pCua,pCua,siliciclastic,,538.8,4567.0,Prakambrium,Prakambrium,,auto,[AUTO] pCua — umur sumber: Prakambrium
 JKK_PAP2,Jkk,Jkk,siliciclastic,,143.1,201.4,Jura,Jura,,auto,[AUTO] Jkk — umur sumber: Jura
 TPK_PAP2,Tpk,Tpk,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Tpk — umur sumber: Pliosen
-QAB,Qab,Qab,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Qab — umur sumber: Kuarter
+QAB,Qab,Qab,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Qab — umur sumber: Kuarter
 JF,Jf,Jf,siliciclastic,,143.1,201.4,Jura,Jura,,auto,[AUTO] Jf — umur sumber: Jura
 PUA,Formasi Ainim,Pua,siliciclastic,,23.03,66.0,Paleogen,Paleogen,,auto,[AUTO] Batubara — umur sumber: Paleogen
 TMPN_PAP2,Batuan Gunungapi Nabire,Tmpn,volcanic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Logam — umur sumber: Miosen
@@ -2040,7 +2040,7 @@ SFS,SFs,SFs,siliciclastic,,419.62,443.1,Silur,Silur,,auto,[AUTO] SFs — umur su
 TPAN_PAP2,Andesit,TpAn,volcanic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Logam — umur sumber: Pliosen
 TMX,Tmx,Tmx,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Tmx — umur sumber: Miosen
 MTR,Bt Gunungapi Malih Posbur,MTr,volcanic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Logam — umur sumber: Miosen
-TPV_PAP2,Lamprovir dll. (Bt.Gunung,Tpv,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Logam — umur sumber: Pliosen
+TPV_PAP2,Lamprovir dll. (Bt.Gunung,Tpv,volcanic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Logam — umur sumber: Pliosen
 TRUK,TRuk,TRuk,siliciclastic,,201.4,251.902,Trias,Trias,,auto,[AUTO] TRuk — umur sumber: Trias
 QPD_PAP2,Formasi Dakebo,Qpd,siliciclastic,,2.58,23.03,Neogen,Neogen,,auto,[AUTO] Batubara — umur sumber: Neogen
 TMLE_PAP2,Granit Lembai,Tmle,plutonic_felsic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Logam — umur sumber: Miosen
@@ -2059,7 +2059,7 @@ TMR_PAP2,Anggota Batugamping Rumba,Tmr,carbonate,,5.333,23.03,Miosen,Miosen,,aut
 QTB_PAP2,Bat. Lumpur Bumi,QTb,siliciclastic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] Bat. Lumpur Bumi — umur sumber: Plio-Plistosen
 CM,Granit Metaurna,Cm,plutonic_felsic,,298.9,358.9,Karbon,Karbon,,auto,[AUTO] Logam — umur sumber: Karbon
 TRUB_PAP2,TRub,TRub,siliciclastic,,201.4,251.902,Trias,Trias,,auto,[AUTO] TRub — umur sumber: Trias
-TQM,Formasi Maschesa,TQm,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Formasi Maschesa — umur sumber: Tersier
+TQM,Formasi Maschesa,TQm,siliciclastic,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] Formasi Maschesa — umur sumber: Tersier
 TPI_PAP2,Diorit,Tpi,plutonic_felsic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Logam — umur sumber: Pliosen
 TMPTA,Tmpta,Tmpta,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Tmpta — umur sumber: Miosen
 SFU,SFu,SFu,siliciclastic,,419.62,443.1,Silur,Silur,,auto,[AUTO] SFu — umur sumber: Silur
@@ -2067,8 +2067,8 @@ TRW_PAP2,Granit Wariki,TRw,plutonic_felsic,,201.4,251.902,Trias,Trias,,auto,[AUT
 TMPP_PAP2,Diorit Porfik/Pariri,Tmpp,plutonic_felsic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Au Cu — umur sumber: Miosen
 SFY,SFy,SFy,siliciclastic,,419.62,443.1,Silur,Silur,,auto,[AUTO] SFy — umur sumber: Silur
 TON_PAP2,Ton,Ton,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Ton — umur sumber: Oligosen
-TQW_PAP2,TQw,TQw,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] TQw — umur sumber: Tersier
-TQAS,Konglomerat Asbakin,TQas,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Konglomerat Asbakin — umur sumber: Tersier
+TQW_PAP2,TQw,TQw,siliciclastic,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] TQw — umur sumber: Tersier
+TQAS,Konglomerat Asbakin,TQas,siliciclastic,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] Konglomerat Asbakin — umur sumber: Tersier
 S_PAP2,Formasi Korido,s,siliciclastic,,0.0,538.8,Holosen,Kambrium,,auto,[AUTO] Formasi Korido — umur sumber: tidak tercatat (estimasi Holosen-Kambrium)
 QCL_PAP2,Qcl,Qcl,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Qcl — umur sumber: Kuarter
 CW,Granit Warjati,Cw,plutonic_felsic,,298.9,358.9,Karbon,Karbon,,auto,[AUTO] Pb Zn Au — umur sumber: Karbon
@@ -2078,20 +2078,20 @@ TMPJ,Batuan Ofiolit,Tmpj,plutonic_mafic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] 
 PZM_PAP2,Pzm,Pzm,siliciclastic,,251.902,298.9,Perm,Perm,,auto,[AUTO] Pzm — umur sumber: Perm
 SFSO,Granit Sorong,SFso,plutonic_felsic,,419.62,443.1,Silur,Silur,,auto,[AUTO] Logam — umur sumber: Silur
 QT_PAP3,QT,QT,siliciclastic,,0.0117,5.333,Plio-Plistosen,Plio-Plistosen,,auto,[AUTO] QT — umur sumber: Plio-Plistosen
-QAE,Qae,Qae,siliciclastic,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Qae — umur sumber: Kuarter
+QAE,Qae,Qae,unconsolidated,,0.0,2.58,Kuarter,Kuarter,,auto,[AUTO] Qae — umur sumber: Kuarter
 JUL,Jul,Jul,siliciclastic,,143.1,201.4,Jura,Jura,,auto,[AUTO] Jul — umur sumber: Jura
 MG,Ofiolit Gau,Mg,plutonic_mafic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Logam — umur sumber: Miosen
 PEN,pEn,pEn,siliciclastic,,0.0,538.8,Holosen,Kambrium,,auto,[AUTO] pEn — umur sumber: tidak tercatat (estimasi Holosen-Kambrium)
 JLMY,Jlmy,Jlmy,siliciclastic,,143.1,201.4,Jura,Jura,,auto,[AUTO] Jlmy — umur sumber: Jura
-TPVI,Lamprovir dll. (Bt.Gunung,Tpvi,siliciclastic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Logam — umur sumber: Pliosen
+TPVI,Lamprovir dll. (Bt.Gunung,Tpvi,volcanic,,2.58,5.333,Pliosen,Pliosen,,auto,[AUTO] Logam — umur sumber: Pliosen
 TOS_PAP2,Tos,Tos,siliciclastic,,23.03,33.9,Oligosen,Oligosen,,auto,[AUTO] Tos — umur sumber: Oligosen
 JRJT,JRJt,JRJt,siliciclastic,,143.1,201.4,Jura,Jura,,auto,[AUTO] JRJt — umur sumber: Jura
-TQBE,Andesit Berangan,TQbe,volcanic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] Logam — umur sumber: Tersier
+TQBE,Andesit Berangan,TQbe,volcanic,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] Logam — umur sumber: Tersier
 KTEW_PAP2,Formasi Warupi,Ktew,siliciclastic,,66.0,143.1,Kapur,Kapur,,auto,[AUTO] Cu — umur sumber: Kapur
 PM_PAP2,Pm,Pm,siliciclastic,,251.902,298.9,Perm,Perm,,auto,[AUTO] Pm — umur sumber: Perm
 SFV,SFv,SFv,siliciclastic,,419.62,443.1,Silur,Silur,,auto,[AUTO] SFv — umur sumber: Silur
 TEOB_PAP2,Formasi Biri,Teob,siliciclastic,,33.9,56.0,Eosen,Eosen,,auto,[AUTO] Formasi Biri — umur sumber: Eosen
 TMY,Formasi Yeben,Tmy,siliciclastic,,5.333,23.03,Miosen,Miosen,,auto,[AUTO] Formasi Yeben — umur sumber: Miosen
 QPME_PAP2,Formasi Menyambo,Qpme,siliciclastic,,0.0117,2.58,Pleistosen,Pleistosen,,auto,[AUTO] Formasi Menyambo — umur sumber: Pleistosen
-TQL_PAP2,TQl,TQl,siliciclastic,,2.58,66.0,Tersier,Tersier,,auto,[AUTO] TQl — umur sumber: Tersier
+TQL_PAP2,TQl,TQl,carbonate,,0.0117,5.333,Pleistosen,Pliosen,,auto,[AUTO] TQl — umur sumber: Tersier
 JKF_PAP2,JKf,JKf,siliciclastic,,66.0,201.4,Jura-Kapur,Jura-Kapur,,auto,[AUTO] JKf — umur sumber: Jura-Kapur

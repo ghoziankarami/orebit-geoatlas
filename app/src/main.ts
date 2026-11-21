@@ -21,6 +21,7 @@ import { initSearch, type NationalUnit } from "./search";
 import { readState, writeState, type ConfidenceFilter } from "./state";
 import { ERA_PRESETS } from "./timescale";
 import { createTransectController } from "./transect";
+import { createShpImportController } from "./shp_import";
 
 const state = readState();
 setLang(state.lang ?? getLang());
@@ -64,96 +65,114 @@ $("scaleSlot").append(scale.onAdd(map));
 $("zoomIn").addEventListener("click", () => map.zoomIn());
 $("zoomOut").addEventListener("click", () => map.zoomOut());
 
-function ensureTerrainSource() {
-  if (map.getSource("terrain-dem")) return;
-  map.addSource("terrain-dem", {
-    type: "raster-dem",
-    url: "https://tiles.mapterhorn.com/tilejson.json",
-  });
-  const labelLayer = map.getStyle().layers?.find((layer) => layer.type === "symbol")?.id;
-  map.addLayer(
-    {
-      id: "terrain-hillshade",
-      type: "hillshade",
-      source: "terrain-dem",
-      layout: { visibility: "none" },
-      paint: {
-        "hillshade-exaggeration": 0.48,
-        "hillshade-illumination-direction": 315,
-        "hillshade-illumination-anchor": "map",
-        "hillshade-shadow-color": "rgba(25, 43, 49, 0.34)",
-        "hillshade-highlight-color": "rgba(255, 255, 255, 0.16)",
-        "hillshade-accent-color": "rgba(37, 57, 62, 0.2)",
+function ensureTerrainSource(): boolean {
+  try {
+    if (!map.isStyleLoaded()) return false;
+    if (map.getSource("terrain-dem")) return true;
+    map.addSource("terrain-dem", {
+      type: "raster-dem",
+      url: "https://tiles.mapterhorn.com/tilejson.json",
+    });
+    const labelLayer = map.getStyle().layers?.find((layer) => layer.type === "symbol")?.id;
+    map.addLayer(
+      {
+        id: "terrain-hillshade",
+        type: "hillshade",
+        source: "terrain-dem",
+        layout: { visibility: "none" },
+        paint: {
+          "hillshade-exaggeration": 0.48,
+          "hillshade-illumination-direction": 315,
+          "hillshade-illumination-anchor": "map",
+          "hillshade-shadow-color": "rgba(25, 43, 49, 0.34)",
+          "hillshade-highlight-color": "rgba(255, 255, 255, 0.16)",
+          "hillshade-accent-color": "rgba(37, 57, 62, 0.2)",
+        },
       },
-    },
-    labelLayer,
-  );
+      labelLayer,
+    );
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function bringHillshadeAboveGeology() {
+  if (!map.isStyleLoaded()) return;
   const labelLayer = map.getStyle().layers?.find((layer) => layer.type === "symbol")?.id;
   if (map.getLayer("terrain-hillshade") && labelLayer) map.moveLayer("terrain-hillshade", labelLayer);
 }
 
 function setTopography(visible: boolean) {
-  ensureTerrainSource();
-  map.setLayoutProperty("terrain-hillshade", "visibility", visible ? "visible" : "none");
   $("topographyToggle").setAttribute("aria-pressed", String(visible));
   $("terrainAttribution").hidden = !visible && !state.view3d;
+  if (ensureTerrainSource() && map.getLayer("terrain-hillshade")) {
+    map.setLayoutProperty("terrain-hillshade", "visibility", visible ? "visible" : "none");
+  }
 }
 
 let terrainTransition = 0;
 function set3D(enabled: boolean) {
   const transitionId = ++terrainTransition;
   map.stop();
-  ensureTerrainSource();
+  const ready = ensureTerrainSource();
   if (enabled) {
     state.topo = true;
     setTopography(true);
-    const animate = () => {
-      if (transitionId !== terrainTransition) return;
-      map.setTerrain({ source: "terrain-dem", exaggeration: 1.6 });
-      map.easeTo({ pitch: 58, bearing: 0, duration: 1100, essential: true });
-    };
-    if (map.isSourceLoaded("terrain-dem")) animate();
-    else {
-      let done = false;
-      let fallback = 0;
-      const cleanup = () => {
-        if (done) return;
-        done = true;
-        map.off("sourcedata", startWhenReady);
-        window.clearTimeout(fallback);
-      };
-      const startWhenReady = (event: maplibregl.MapSourceDataEvent) => {
-        if (transitionId !== terrainTransition) {
-          cleanup();
-          return;
-        }
-        if (event.sourceId === "terrain-dem" && map.isSourceLoaded("terrain-dem")) {
-          cleanup();
-          animate();
+    if (ready) {
+      const animate = () => {
+        if (transitionId !== terrainTransition) return;
+        try {
+          map.setTerrain({ source: "terrain-dem", exaggeration: 1.6 });
+          map.easeTo({ pitch: 58, bearing: 0, duration: 1100, essential: true });
+        } catch {
+          // Style belum siap
         }
       };
-      map.on("sourcedata", startWhenReady);
-      fallback = window.setTimeout(() => {
-        if (transitionId !== terrainTransition) {
+      if (map.isSourceLoaded("terrain-dem")) animate();
+      else {
+        let done = false;
+        let fallback = 0;
+        const cleanup = () => {
+          if (done) return;
+          done = true;
+          map.off("sourcedata", startWhenReady);
+          window.clearTimeout(fallback);
+        };
+        const startWhenReady = (event: maplibregl.MapSourceDataEvent) => {
+          if (transitionId !== terrainTransition) {
+            cleanup();
+            return;
+          }
+          if (event.sourceId === "terrain-dem" && map.isSourceLoaded("terrain-dem")) {
+            cleanup();
+            animate();
+          }
+        };
+        map.on("sourcedata", startWhenReady);
+        fallback = window.setTimeout(() => {
+          if (transitionId !== terrainTransition) {
+            cleanup();
+            return;
+          }
           cleanup();
-          return;
-        }
-        cleanup();
-        state.view3d = false;
-        $("terrainView").setAttribute("aria-pressed", "false");
-        $("planView").setAttribute("aria-pressed", "true");
-        syncOrientationControls();
-        map.easeTo({ pitch: 0, duration: 500, essential: true });
-        writeState(state);
-        toast(t("terrainFail"));
-      }, 7000);
+          state.view3d = false;
+          $("terrainView").setAttribute("aria-pressed", "false");
+          $("planView").setAttribute("aria-pressed", "true");
+          syncOrientationControls();
+          map.easeTo({ pitch: 0, duration: 500, essential: true });
+          writeState(state);
+          toast(t("terrainFail"));
+        }, 7000);
+      }
     }
-  } else {
+  } else if (ready) {
     const flatten = () => {
-      if (transitionId === terrainTransition) map.setTerrain(null);
+      try {
+        if (transitionId === terrainTransition && map.isStyleLoaded()) map.setTerrain(null);
+      } catch {
+        // Style belum siap
+      }
     };
     if (map.getPitch() < 0.5) flatten();
     else {
@@ -179,9 +198,17 @@ function syncOrientationControls() {
   document.documentElement.style.setProperty("--detail-top", state.view3d ? "106px" : "64px");
 }
 const rotateBy = (degrees: number) => map.easeTo({ bearing: map.getBearing() + degrees, duration: 420, essential: true });
+const resetNorthAndTilt = () => {
+  pushViewHistory();
+  map.easeTo({ bearing: 0, pitch: state.view3d ? 50 : 0, duration: 500, essential: true });
+};
 $("rotateLeft").addEventListener("click", () => rotateBy(-30));
 $("rotateRight").addEventListener("click", () => rotateBy(30));
-$("resetNorth").addEventListener("click", () => map.easeTo({ bearing: 0, duration: 500, essential: true }));
+$("resetNorth").addEventListener("click", resetNorthAndTilt);
+$("compassNorthBtn").addEventListener("click", () => {
+  pushViewHistory();
+  map.easeTo({ bearing: 0, pitch: 0, duration: 500, essential: true });
+});
 $("tiltUp").addEventListener("click", () => {
   if (state.view3d) map.easeTo({ pitch: Math.min(70, map.getPitch() + 8), duration: 420, essential: true });
 });
@@ -189,7 +216,69 @@ $("tiltDown").addEventListener("click", () => {
   if (state.view3d) map.easeTo({ pitch: Math.max(28, map.getPitch() - 8), duration: 420, essential: true });
 });
 map.on("rotate", () => {
-  $("resetNorth").style.transform = "rotate(" + -map.getBearing() + "deg)";
+  const rot = "rotate(" + -map.getBearing() + "deg)";
+  $("resetNorth").style.transform = rot;
+  $("compassArrow").style.transform = rot;
+});
+
+// ---------- Riwayat Navigasi Kamera (Back / Previous View) ----------
+interface CameraSnapshot {
+  center: [number, number];
+  zoom: number;
+  bearing: number;
+  pitch: number;
+}
+const viewHistory: CameraSnapshot[] = [];
+let suppressHistoryCapture = false;
+
+function captureCurrentCamera(): CameraSnapshot {
+  const c = map.getCenter();
+  return {
+    center: [Number(c.lng.toFixed(4)), Number(c.lat.toFixed(4))],
+    zoom: Number(map.getZoom().toFixed(2)),
+    bearing: Number(map.getBearing().toFixed(1)),
+    pitch: Number(map.getPitch().toFixed(1)),
+  };
+}
+
+function pushViewHistory() {
+  if (suppressHistoryCapture) return;
+  const snap = captureCurrentCamera();
+  const last = viewHistory[viewHistory.length - 1];
+  if (
+    last &&
+    Math.abs(last.center[0] - snap.center[0]) < 0.005 &&
+    Math.abs(last.center[1] - snap.center[1]) < 0.005 &&
+    Math.abs(last.zoom - snap.zoom) < 0.08
+  ) {
+    return;
+  }
+  viewHistory.push(snap);
+  if (viewHistory.length > 25) viewHistory.shift();
+  $<HTMLButtonElement>("navBack").disabled = viewHistory.length === 0;
+}
+
+map.on("dragstart", pushViewHistory);
+map.on("zoomstart", (e) => {
+  if (e.originalEvent) pushViewHistory();
+});
+
+$("navBack").addEventListener("click", () => {
+  const prev = viewHistory.pop();
+  $<HTMLButtonElement>("navBack").disabled = viewHistory.length === 0;
+  if (!prev) return;
+  suppressHistoryCapture = true;
+  map.easeTo({
+    center: prev.center,
+    zoom: prev.zoom,
+    bearing: prev.bearing,
+    pitch: prev.pitch,
+    duration: 650,
+    essential: true,
+  });
+  map.once("moveend", () => {
+    suppressHistoryCapture = false;
+  });
 });
 $("topographyToggle").addEventListener("click", () => {
   state.topo = !state.topo;
@@ -232,6 +321,7 @@ function setupGeologyOnMap() {
   applyFiltersToMap();
   setLinesVisible(map, state.lines);
   transect.refresh();
+  shpImport.refresh();
   syncOrientationControls();
   $("opacityValue").textContent = state.geologyOpacity + "%";
 }
@@ -571,6 +661,7 @@ function renderRegionBar() {
     btn.textContent = lang === "id" ? r.labelId : r.labelEn;
     btn.setAttribute("aria-pressed", String(activeRegion === r.id));
     btn.addEventListener("click", () => {
+      pushViewHistory();
       state.region = r.id;
       writeState(state);
       renderRegionBar();
@@ -686,10 +777,17 @@ const TEXT_IDS: Record<string, Key> = {
   snapPeek: "sheetSnapPeek",
   snapHalf: "sheetSnapHalf",
   snapFull: "sheetSnapFull",
+  "t-shpTitle": "shpTitle",
+  "t-shpHint": "shpHint",
+  shpImportBtn: "shpImportBtn",
+  shpFocusBtn: "shpFocusBtn",
+  shpClearBtn: "shpClearBtn",
 };
 const LABEL_IDS: Record<string, Key> = {
   zoomIn: "zoomIn",
   zoomOut: "zoomOut",
+  navBack: "navBack",
+  compassNorthBtn: "navNorthUp",
   locateBtn: "locate",
   transectBtn: "transectBtn",
   detailClose: "closeDetail",
@@ -760,6 +858,7 @@ function applyText() {
   if (activeFeature && !$<HTMLElement>("detail").hidden) selectFeature(activeFeature, activeNearbyLines);
   else if (activeIndexUnit && !$<HTMLElement>("detail").hidden) selectIndexUnit(activeIndexUnit);
   transect.refresh();
+  shpImport.refresh();
 }
 
 function updateSheetHint() {
@@ -1044,6 +1143,9 @@ const transect = createTransectController(map, (isActive) => {
   }
 });
 
+// ---------- Impor SHP / GeoJSON (Cek Lokasi) ----------
+const shpImport = createShpImportController(map, pushViewHistory, toast);
+
 // ---------- Tentang & sumber ----------
 const about = $<HTMLDialogElement>("aboutDialog");
 $("aboutBtn").addEventListener("click", () => about.showModal());
@@ -1083,13 +1185,20 @@ map.on("zoom", () => {
   }
 });
 
-const queryLayers = () => QUERY_LAYERS.filter((id) => map.getLayer(id));
+const queryLayers = () => {
+  try {
+    return map.isStyleLoaded() ? QUERY_LAYERS.filter((id) => Boolean(map.getLayer(id))) : [];
+  } catch {
+    return [];
+  }
+};
 map.on("click", (e) => {
   if (transect.isActive()) {
     transect.addPoint(e.lngLat.lng, e.lngLat.lat);
     return;
   }
-  const f = map.queryRenderedFeatures(e.point, { layers: queryLayers() })[0];
+  const ql = queryLayers();
+  const f = ql.length ? map.queryRenderedFeatures(e.point, { layers: ql })[0] : undefined;
   if (!f) {
     hideDetail();
     highlight(map, null);
@@ -1098,7 +1207,7 @@ map.on("click", (e) => {
     activeNearbyLines = undefined;
     return;
   }
-  const lineLayers = ["ob-lines", "ms-lines"].filter((id) => map.getLayer(id));
+  const lineLayers = map.isStyleLoaded() ? ["ob-lines", "ms-lines"].filter((id) => map.getLayer(id)) : [];
   const nearbyLines = lineLayers.length
     ? map.queryRenderedFeatures([[e.point.x - 14, e.point.y - 14], [e.point.x + 14, e.point.y + 14]], { layers: lineLayers })
     : [];
@@ -1141,7 +1250,8 @@ map.on("mousemove", (e) => {
     hoverTip.hidden = true;
     return;
   }
-  const feature = map.queryRenderedFeatures(e.point, { layers: queryLayers() })[0];
+  const ql = queryLayers();
+  const feature = ql.length ? map.queryRenderedFeatures(e.point, { layers: ql })[0] : undefined;
   map.getCanvas().style.cursor = feature ? "pointer" : "";
   if (!feature || isMobile()) {
     hoverTip.hidden = true;

@@ -110,6 +110,18 @@
         <p class="opacity-hint" id="opacityHint"></p>
       </section>
 
+      <section class="block shp-block" id="shpBlock">
+        <h2 id="t-shpTitle"></h2>
+        <p class="opacity-hint" id="t-shpHint"></p>
+        <input type="file" id="shpFileInput" accept=".zip,.shp,.dbf,.geojson,.json,.kml" multiple hidden />
+        <div class="shp-actions">
+          <button type="button" class="btn primary shp-import-btn" id="shpImportBtn"></button>
+          <button type="button" class="btn" id="shpFocusBtn" hidden></button>
+          <button type="button" class="btn" id="shpClearBtn" hidden></button>
+        </div>
+        <div id="shpImportSummary" class="shp-summary" hidden></div>
+      </section>
+
       <section class="block legend" id="legend" aria-live="polite"></section>
 
       <footer class="panel-foot">
@@ -159,6 +171,12 @@
         <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8 H14" /></svg>
       </button>
     </div>
+    <button type="button" id="navBack" class="ctrl solo nav-back" disabled>
+      <svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"><path d="M11 4 L5 9 L11 14 M5 9 H15" /></svg>
+    </button>
+    <button type="button" id="compassNorthBtn" class="ctrl solo compass-north" title="Northing Up">
+      <span class="compass-arrow" id="compassArrow" aria-hidden="true">▲</span><span class="compass-n">N</span>
+    </button>
     <button type="button" id="locateBtn" class="ctrl solo">
       <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="5" /><path d="M9 1 V4 M9 14 V17 M1 9 H4 M14 9 H17" /></svg>
     </button>

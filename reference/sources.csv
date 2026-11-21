@@ -23,3 +23,4 @@ source_id,file_key,sheet_name,scale,year,authors,publisher,license,url
 22,maluku/Str Maluku.TAB,Geology-Maluku/Str Maluku,250000,,,"Pusat Survei Geologi, Badan Geologi","Lisensi Terbuka PSG (atribusi, tidak diperjualbelikan)",https://geologi.esdm.go.id/geomap
 23,papua/litoirian.tab,Geology-Papua/litoirian,250000,,,"Pusat Survei Geologi, Badan Geologi","Lisensi Terbuka PSG (atribusi, tidak diperjualbelikan)",https://geologi.esdm.go.id/geomap
 24,papua/Struktur Papua.TAB,Geology-Papua/Struktur Papua,250000,,,"Pusat Survei Geologi, Badan Geologi","Lisensi Terbuka PSG (atribusi, tidak diperjualbelikan)",https://geologi.esdm.go.id/geomap
+25,babel/Lito Sumatera.TAB,Geology-Sumatra/Lito Sumatera,250000,,,"Pusat Survei Geologi, Badan Geologi","Lisensi Terbuka PSG (atribusi, tidak diperjualbelikan)",https://geologi.esdm.go.id/geomap

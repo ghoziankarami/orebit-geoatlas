@@ -14,7 +14,10 @@ export type ColorMode = "age" | "lith";
 
 export const FINE_ZOOM = 11;
 export const isFineZoom = (zoom: number): boolean => zoom >= FINE_ZOOM;
-const obZoomFade: ExpressionSpecification = ["interpolate", ["linear"], ["zoom"], 7.5, 0, 8.8, 0.85] as unknown as ExpressionSpecification;
+const obZoomFade: ExpressionSpecification = ["interpolate", ["linear"], ["zoom"], 5.8, 0, 6.6, 0.88] as unknown as ExpressionSpecification;
+const msZoomFadeOut: ExpressionSpecification = CONFIG.orebitTiles
+  ? (["interpolate", ["linear"], ["zoom"], 5.8, 0.78, 6.6, 0] as unknown as ExpressionSpecification)
+  : (0.78 as unknown as ExpressionSpecification);
 
 const MS = "macrostrat";
 const OB = "orebit";
@@ -63,6 +66,7 @@ export function addGeologyLayers(map: maplibregl.Map) {
         source: MS,
         "source-layer": "units",
         minzoom: 6,
+        ...(CONFIG.orebitTiles ? { maxzoom: 7 } : {}),
         paint: { "line-color": "#1F2B33", "line-opacity": 0.18, "line-width": 0.4 },
       },
       before,
@@ -75,6 +79,7 @@ export function addGeologyLayers(map: maplibregl.Map) {
         type: "line",
         source: MS,
         "source-layer": "lines",
+        ...(CONFIG.orebitTiles ? { maxzoom: 7 } : {}),
         paint: {
           "line-color": "#1F2B33",
           "line-width": ["interpolate", ["linear"], ["zoom"], 4, 0.5, 12, 1.6],
@@ -90,7 +95,7 @@ export function addGeologyLayers(map: maplibregl.Map) {
       type: "vector",
       url: `pmtiles://${CONFIG.orebitTiles}`,
       attribution:
-        'Data layanan Geologi Litologi ESDM (status Mei 2018) © <a href="https://geoportal.esdm.go.id/gis4/rest/services/BGS_PM/Geologi_Litologi/MapServer" target="_blank" rel="noopener">Pusat Survei Geologi, Badan Geologi</a>; diolah oleh Orebit',
+        'Data Peta Geologi 1:250.000 © <a href="https://geologi.esdm.go.id/geomap" target="_blank" rel="noopener">Pusat Survei Geologi, Badan Geologi</a>; diolah oleh Orebit',
     });
     map.addLayer(
       {
@@ -98,7 +103,7 @@ export function addGeologyLayers(map: maplibregl.Map) {
         type: "fill",
         source: OB,
         "source-layer": "units",
-        minzoom: 7.5,
+        minzoom: 5.8,
         paint: {
           "fill-color": ["coalesce", ["get", "color_hex"], "#D9DEE1"],
           "fill-opacity": obZoomFade,
@@ -116,7 +121,7 @@ export function addGeologyLayers(map: maplibregl.Map) {
         minzoom: CONFIG.orebitMinZoom,
         paint: {
           "line-color": "#1F2B33",
-          "line-opacity": ["interpolate", ["linear"], ["zoom"], 8, 0, 9, 0.3],
+          "line-opacity": ["interpolate", ["linear"], ["zoom"], 6, 0.12, 9, 0.32],
           "line-width": 0.5,
         },
       },
@@ -131,9 +136,9 @@ export function addGeologyLayers(map: maplibregl.Map) {
         minzoom: CONFIG.orebitMinZoom,
         paint: {
           "line-color": "#1F2B33",
-          "line-width": ["interpolate", ["linear"], ["zoom"], 8, 0.8, 14, 2],
+          "line-width": ["interpolate", ["linear"], ["zoom"], 6, 0.7, 14, 2],
           "line-dasharray": ["case", ["==", ["get", "certainty"], "inferred"], ["literal", [3, 2]], ["literal", [1, 0]]],
-          "line-opacity": ["interpolate", ["linear"], ["zoom"], 8, 0, 9, 1],
+          "line-opacity": ["interpolate", ["linear"], ["zoom"], 6, 0.65, 9, 1],
         },
       },
       before,
@@ -198,11 +203,15 @@ const obLithColor: ExpressionSpecification = [
 ] as unknown as ExpressionSpecification;
 
 export function setColorMode(map: maplibregl.Map, mode: ColorMode) {
-  if (map.getLayer("ms-units")) {
-    map.setPaintProperty("ms-units", "fill-color", mode === "age" ? msAgeColor : msLithColor);
-  }
-  if (map.getLayer("ob-units")) {
-    map.setPaintProperty("ob-units", "fill-color", mode === "age" ? obAgeColor : obLithColor);
+  try {
+    if (map.getLayer("ms-units")) {
+      map.setPaintProperty("ms-units", "fill-color", mode === "age" ? msAgeColor : msLithColor);
+    }
+    if (map.getLayer("ob-units")) {
+      map.setPaintProperty("ob-units", "fill-color", mode === "age" ? obAgeColor : obLithColor);
+    }
+  } catch {
+    // Style belum siap; akan diterapkan saat style.load
   }
 }
 
@@ -244,32 +253,38 @@ export interface FilterOptions {
 }
 
 export function applyGeologyFilters(map: maplibregl.Map, opts: FilterOptions) {
-  const { ageMin, ageMax, lithFilter, confFilter = "all", opacity } = opts;
+  try {
+    const { ageMin, ageMax, lithFilter, confFilter = "all", opacity } = opts;
 
-  if (map.getLayer("ms-units")) {
-    const conds: unknown[] = [
-      [">=", ["to-number", ["coalesce", ["get", "best_b_age"], 9999]], ageMin],
-      ["<=", ["to-number", ["coalesce", ["get", "best_t_age"], 0]], ageMax],
-    ];
-    const lithExpr = lithMatchExpr(lithFilter, false);
-    if (lithExpr !== true) conds.push(lithExpr);
-    const expr = ["case", ["all", ...conds], 0.78 * opacity, 0.08 * opacity] as unknown as ExpressionSpecification;
-    map.setPaintProperty("ms-units", "fill-opacity", expr);
-  }
+    if (map.getLayer("ms-units")) {
+      const conds: unknown[] = [
+        [">=", ["to-number", ["coalesce", ["get", "best_b_age"], 9999]], ageMin],
+        ["<=", ["to-number", ["coalesce", ["get", "best_t_age"], 0]], ageMax],
+      ];
+      const lithExpr = lithMatchExpr(lithFilter, false);
+      if (lithExpr !== true) conds.push(lithExpr);
+      const vis = CONFIG.orebitTiles ? (["*", msZoomFadeOut, opacity] as unknown as ExpressionSpecification) : 0.78 * opacity;
+      const dim = CONFIG.orebitTiles ? (["*", msZoomFadeOut, 0.1 * opacity] as unknown as ExpressionSpecification) : 0.08 * opacity;
+      const expr = ["case", ["all", ...conds], vis, dim] as unknown as ExpressionSpecification;
+      map.setPaintProperty("ms-units", "fill-opacity", expr);
+    }
 
-  if (map.getLayer("ob-units")) {
-    const conds: unknown[] = [
-      [">=", ["to-number", ["coalesce", ["get", "age_base_ma"], 9999]], ageMin],
-      ["<=", ["to-number", ["coalesce", ["get", "age_top_ma"], 0]], ageMax],
-    ];
-    const lithExpr = lithMatchExpr(lithFilter, true);
-    if (lithExpr !== true) conds.push(lithExpr);
-    const confExpr = confMatchExpr(confFilter);
-    if (confExpr !== true) conds.push(confExpr);
-    const visible = ["*", obZoomFade, opacity];
-    const dimmed = ["*", obZoomFade, 0.08 * opacity];
-    const expr = ["case", ["all", ...conds], visible, dimmed] as unknown as ExpressionSpecification;
-    map.setPaintProperty("ob-units", "fill-opacity", expr);
+    if (map.getLayer("ob-units")) {
+      const conds: unknown[] = [
+        [">=", ["to-number", ["coalesce", ["get", "age_base_ma"], 9999]], ageMin],
+        ["<=", ["to-number", ["coalesce", ["get", "age_top_ma"], 0]], ageMax],
+      ];
+      const lithExpr = lithMatchExpr(lithFilter, true);
+      if (lithExpr !== true) conds.push(lithExpr);
+      const confExpr = confMatchExpr(confFilter);
+      if (confExpr !== true) conds.push(confExpr);
+      const visible = ["*", obZoomFade, opacity];
+      const dimmed = ["*", obZoomFade, 0.08 * opacity];
+      const expr = ["case", ["all", ...conds], visible, dimmed] as unknown as ExpressionSpecification;
+      map.setPaintProperty("ob-units", "fill-opacity", expr);
+    }
+  } catch {
+    // Style belum siap; akan diterapkan saat style.load
   }
 }
 
@@ -278,24 +293,32 @@ export function setAgeFilter(map: maplibregl.Map, min: number, max: number, opac
 }
 
 export function setLinesVisible(map: maplibregl.Map, visible: boolean) {
-  for (const id of ["ms-lines", "ob-lines"]) {
-    if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", visible ? "visible" : "none");
+  try {
+    for (const id of ["ms-lines", "ob-lines"]) {
+      if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", visible ? "visible" : "none");
+    }
+  } catch {
+    // Style belum siap
   }
 }
 
 export function highlight(map: maplibregl.Map, feature: maplibregl.MapGeoJSONFeature | null) {
-  if (map.getLayer("ms-selected")) {
-    map.setFilter("ms-selected", [
-      "==",
-      ["get", "map_id"],
-      feature?.source === MS ? (feature.properties.map_id as number) : -1,
-    ]);
-  }
-  if (map.getLayer("ob-selected")) {
-    map.setFilter("ob-selected", [
-      "==",
-      ["get", "poly_id"],
-      feature?.source === OB ? (feature.properties.poly_id as string) : "",
-    ]);
+  try {
+    if (map.getLayer("ms-selected")) {
+      map.setFilter("ms-selected", [
+        "==",
+        ["get", "map_id"],
+        feature?.source === MS ? (feature.properties.map_id as number) : -1,
+      ]);
+    }
+    if (map.getLayer("ob-selected")) {
+      map.setFilter("ob-selected", [
+        "==",
+        ["get", "poly_id"],
+        feature?.source === OB ? (feature.properties.poly_id as string) : "",
+      ]);
+    }
+  } catch {
+    // Style belum siap
   }
 }

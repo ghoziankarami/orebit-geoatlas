@@ -45,7 +45,12 @@ LINE_TYPE_FIELDS = ["JENIS", "TYPE", "KETERANGAN", "KET", "NAMA", "NAMOBJ", "NAM
 VECTOR_GLOBS = ["*.shp", "*.geojson", "*.gpkg", "*.tab", "*.TAB"]
 
 # Pemetaan direktori/file lokal ketika data/raw/<wilayah> tidak tersedia langsung.
+BABEL_SHEET_NUMBERS = {1113.0, 1114.0, 1213.0, "1113", "1114", "1213", "1113.0", "1114.0", "1213.0"}
+
 REGION_RAW_FILES = {
+    "babel": [
+        RAW / "Geology-Sumatra" / "Lito Sumatera.TAB",
+    ],
     "sumatra": [
         RAW / "Geology-Sumatra" / "Lito Sumatera.TAB",
         RAW / "Geology-Sumatra" / "Str Sumatera.TAB",

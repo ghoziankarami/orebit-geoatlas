@@ -7,8 +7,8 @@ export interface RegionInfo {
 
 export const REGIONS: readonly RegionInfo[] = [
   { id: "all", labelId: "Nasional", labelEn: "National", bbox: [[94.8, -11.2], [141.2, 6.2]] },
-  { id: "sumatra", labelId: "Sumatra", labelEn: "Sumatra", bbox: [[95.0, -6.2], [105.0, 6.0]] },
-  { id: "babel", labelId: "Babel", labelEn: "Babel", bbox: [[105.0, -3.5], [109.0, 1.8]] },
+  { id: "sumatra", labelId: "Sumatra", labelEn: "Sumatra", bbox: [[95.0, -6.0], [106.0, 5.9]] },
+  { id: "babel", labelId: "Babel", labelEn: "Babel", bbox: [[105.05, -3.35], [108.35, -1.45]] },
   { id: "jawa", labelId: "Jawa", labelEn: "Java", bbox: [[105.0, -8.9], [114.6, -5.8]] },
   { id: "balinusra", labelId: "Bali–Nusra", labelEn: "Bali–Nusra", bbox: [[114.4, -11.0], [125.3, -8.0]] },
   { id: "kalimantan", labelId: "Kalimantan", labelEn: "Kalimantan", bbox: [[108.6, -4.3], [119.0, 4.4]] },
@@ -36,7 +36,7 @@ export const CONFIG = {
   /** PMTiles hasil pipeline Orebit. Kosong = mode Macrostrat + indeks nasional. */
   orebitTiles: (import.meta.env.VITE_TILES_URL as string | undefined) ?? "",
   /** Zoom saat data Orebit mengambil alih dari Macrostrat. */
-  orebitMinZoom: 8,
+  orebitMinZoom: 6,
   initialView: { center: [117.5, -2.5] as [number, number], zoom: 4.2 },
   bounds: [[90, -15], [145, 10]] as [[number, number], [number, number]],
   ageMaxMa: 600,

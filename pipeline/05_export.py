@@ -34,12 +34,17 @@ print(f"units.geojsonl: {len(u):,} fitur")
 
 try:
     ln = gpd.read_parquet(od / "02_lines.parquet")
-    t = ln.type_orig.str.lower()
-    ln["type"] = pd.Series("contact", index=ln.index).mask(t.str.contains("sesar|fault"), "fault").mask(
-        t.str.contains("antiklin|anticline"), "anticline").mask(t.str.contains("sinklin|syncline"), "syncline")
-    ln["certainty"] = t.str.contains("duga|inferred|diperkirakan").map({True: "inferred", False: "certain"})
+    t = ln.type_orig.fillna("").astype(str).str.lower()
+    ln["type"] = (
+        pd.Series("contact", index=ln.index)
+        .mask(t.str.contains("sesar|fault|subduksi|kelurusan|lineament|intrusi"), "fault")
+        .mask(t.str.contains("antiklin|anticline|lipatan|fold"), "anticline")
+        .mask(t.str.contains("sinklin|syncline"), "syncline")
+    )
+    ln["line_type"] = ln.type_orig.fillna("").astype(str).replace("", "Kontak Geologi")
+    ln["certainty"] = t.str.contains("duga|inferred|diperkirakan|kelurusan").map({True: "inferred", False: "certain"})
     ln["region"] = region
-    ln[["source_id", "region", "type", "certainty", "geometry"]].to_file(od / "lines.geojsonl", driver="GeoJSONSeq")
+    ln[["source_id", "region", "type", "line_type", "certainty", "geometry"]].to_file(od / "lines.geojsonl", driver="GeoJSONSeq")
     print(f"lines.geojsonl: {len(ln):,} fitur")
 except FileNotFoundError:
     pass
