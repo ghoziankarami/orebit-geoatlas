@@ -75,48 +75,44 @@ Pemilik yang menempelkan prompt ini memberi izin kepada agent koordinator untuk:
 | `REL-01` | `WP-18` | Runbook deploy VPS `atlas.orebit.id`, manifest SHA256 kandidat rilis, & deploy setelah persetujuan pemilik | `local-ci.sh --full` |
 | `HUM-01` | `WP-19` | Kit uji usability `docs/audits/hum-1-geoatlas.md` & rekaman ≥5 peserta representatif | `check-docs.py` |
 | `VAL-01` | `WP-20` | Audit akhir 45/45 cek SPEC §6 di `docs/audits/audit-full-indonesia-uiux-2026-11-21.md` | `local-ci.sh --full` |
+| `PIP-05` | `WP-21` | Ekstraksi `NM_LEMBAR`/`NAME_OF_SH` & `NO_LEMBAR` per poligon serta atribut mineral P3G 1:250.000 di pipeline | `validate_reference.py`, `test_pipeline_contracts.py` |
+| `DAT-06` | `WP-22` | Sintesis komposisi batuan `lith_detail` geologis baku untuk seluruh 2.096 unit (`0` kosong) di `units.csv` | `validate_reference.py`, `test_pipeline_contracts.py` |
+| `DAT-07` | `WP-22` | Penajaman presisi umur sub-kala stratigrafi ICS (`Tml`, `Tmm`, `Tmu`, `Tpl`, `Tol`, `Tel`, `PC`, `TRJ`) di `units.csv` | `validate_reference.py`, `build_index.py` |
+| `TOOL-04` | `WP-23` | Workstation Penampang Geologi Panoramik (`A–A'`) dengan 3 horizon, patahan + *throw*, kontrol `VE (1×–10×)`, hover peta, & ekspor `SVG`/`CSV` | `test_app_contracts.mjs`, `test_browser_uiux.py` |
+| `TOOL-05` | `WP-24` | Workstation Impor SHP UTM 46N–54S & WGS84 dengan pin lokasi (`📍`), *drag-and-drop*, popup atribut `.dbf`, & audit formasi | `test_app_contracts.mjs`, `test_browser_uiux.py` |
+| `UIX-06` | `WP-25` | Navigasi kamera `Back` (`#navBack`) & `Northing Up` (`#compassNorthBtn`) 2D/3D, bebas jargon internal (`auto_crosswalk.py`/`[AUTO]`), & optimasi seluler | `test_app_contracts.mjs`, `test_browser_uiux.py` |
+| `TEST-03` | `WP-26` | Suite pengujian otomatis kontrak (`utmToLngLat`, `lith_detail`) & Playwright E2E untuk penampang geologi, SHP UTM, & navigasi | `local-ci.sh --full` |
+| `REL-02` | `WP-27` | Rebuild `all-v3.pmtiles` & `indonesia-units-index.json` 8 wilayah serta deploy produksi terverifikasi ke `https://atlas.orebit.id/` | `local-ci.sh --full --write-receipt` |
 
 ---
 
-## 5. Prompt Satu Kali Siap Tempel untuk Langsung Eksekusi (Copy-Paste)
+## 5. Prompt Satu Kali Siap Tempel untuk Langsung Eksekusi Gelombang F & G (`WP-21` s/d `WP-27`)
 
-Salin seluruh blok di bawah ini dan tempelkan ke sesi agent untuk langsung mengeksekusi seluruh gelombang dari awal sampai selesai:
+Salin seluruh blok di bawah ini dan tempelkan ke sesi agent untuk langsung mengeksekusi **Gelombang F & G (`WP-21` s/d `WP-27`)** dari awal sampai selesai & ter-deploy:
 
 ```text
-PERAN: Kamu adalah Koordinator Utama (Staff Geologist + Principal Frontend/GIS Architect) untuk repositori `orebit-geoatlas` di workspace ini. Kerjakan seluruh antrean Work Package (`WP-01` s/d `WP-20`) menuju sasaran **Full Satu Indonesia (8 Wilayah Kepulauan) & UI/UX 100/100** secara otonom tanpa berhenti di tengah gelombang, kecuali pada titik STOP-TANYA yang membutuhkan persetujuan produksi atau partisipasi manusia nyata.
+PERAN: Kamu adalah Koordinator Utama (Senior Exploration Geologist + Principal GIS/Frontend Architect) untuk repositori `orebit-geoatlas` di workspace ini. Kerjakan seluruh antrean Work Package terbuka Gelombang F & G (`WP-21` s/d `WP-27`) berdasarkan `docs/audits/audit-senior-geologist-uiux-2026-11-21.md` secara otonom sampai selesai, terverifikasi `local-ci.sh --full --write-receipt`, dan ter-deploy ke `https://atlas.orebit.id/`.
 
 BACA KONTRAK UTAMA (urut, hemat token):
 1. `PIPELINE.md`, `AGENTS.md`, `CLAUDE.md`
-2. `docs/handover/PROMPT-close-all-tasks.md` (gerbang G1–G8 dan tabel 28 tugas)
-3. `ACTIVE CHECKPOINT` di `docs/handover/HANDOVER-geoatlas.md`
-4. Gunakan `python3 ops/scripts/agents/wp.py brief WP-NN --role executor` untuk mengambil micro-brief tiap WP (~4 KB) tanpa membaca berulang berkas besar.
+2. `ACTIVE CHECKPOINT` di `docs/handover/HANDOVER-geoatlas.md`
+3. `docs/audits/audit-senior-geologist-uiux-2026-11-21.md`
+4. Gunakan `python3 ops/scripts/agents/wp.py wave` untuk melihat gelombang paralel dan `python3 ops/scripts/agents/wp.py brief WP-NN --role executor` (atau `--role reviewer`) untuk mengambil micro-brief tiap WP (~4 KB).
 
-ALUR EKSEKUSI GELOMBANG (LOOP SAMPAI SEMUA WP SELESAI):
-1. GELOMBANG A (Fondasi Pipeline 8 Wilayah, Koreksi Audit Geologi, Layout Anti-Tabrakan & Koordinat UTM):
-   - Eksekusi `WP-01` (`DATA`), `WP-02` (`PIPE`), `WP-03` (`UIX`), dan `WP-04` (`DOCS`).
-   - Pastikan `python3 pipeline/validate_reference.py`, `python3 pipeline/build_index.py`, dan `cd app && npm run build` lulus.
-2. GELOMBANG B (Harmonisasi Data Geologi 8 Kepulauan Indonesia, Pencarian Nasional Instan & Basemap/State):
-   - Eksekusi `WP-05` (`jawa` & `balinusra`), `WP-06` (`kalimantan` & `sulawesi`), `WP-07` (`maluku` & `papua` + kompilasi penuh `indonesia-units-index.json` 8 wilayah).
-   - Eksekusi `WP-08` (`SEARCH`: mesin pencarian nasional instan dari semua zoom dengan live typeahead & navigasi keyboard) dan `WP-09` (`MAP`: basemap switcher Terang/Gelap/Topografi, filter `confidence`, ketahanan tile, dan state URL lengkap).
-3. GELOMBANG C (Interaktivitas UI/UX 100/100 & Alat Kerja Geolog):
-   - Eksekusi `WP-10` (`UIX`: kolom stratigrafi ICS & legenda litologi interaktif klik-untuk-filter + chip preset era + tombol Reset Filter).
-   - Eksekusi `WP-11` (`UIX, SEARCH`: Island Quick-Jump Bar 8 wilayah Indonesia + bottom sheet seluler 3-snap-point `peek`/`half`/`full`).
-   - Eksekusi `WP-12` (`TOOLS`: kartu detail unit generasi baru dengan pita posisi stratigrafi, luas km², badge `confidence`, unduh GeoJSON unit, dan tombol Laporkan Koreksi).
-   - Eksekusi `WP-13` (`TOOLS`: alat ukur jarak km, azimuth °, dan profil lintasan geologi / Geological Transect Strip-Log + ekspor lintasan).
-4. GELOMBANG D (Ekspor Publikasi, Aksesibilitas WCAG 2.2 AA & Suite Pengujian Otomatis):
-   - Eksekusi `WP-14` (`TOOLS`: ekspor PNG & PDF kualitas publikasi dengan kompas utara, skala bar grafis, filter aktif, dan atribusi).
-   - Eksekusi `WP-15` (`UIX`: aksesibilitas WCAG 2.2 AA, fokus keyboard & `Escape`, target sentuh ≥44px, dan paritas 100% kamus ID/EN).
-   - Eksekusi `WP-16` (`TEST`: bangun dan jalankan `tests/test_pipeline_contracts.py`, `tests/test_app_contracts.mjs`, dan Playwright `tests/test_browser_uiux.py` pada viewport desktop 1366×768 & mobile 375×812 dalam bahasa ID & EN).
-5. GELOMBANG E (Sertifikasi Exact-Source, Paket Rilis, Kit Usability & Audit 45/45 Cek):
-   - Eksekusi `WP-17` (`TEST`: bukti mutasi + `bash ops/scripts/ci/local-ci.sh --full --write-receipt`).
-   - Siapkan `WP-18` (runbook deploy VPS `docs/runbooks/deploy-atlas-vps.md` & manifest SHA256 build `app/dist`), `WP-19` (kit uji usability `docs/audits/hum-1-geoatlas.md`), dan `WP-20` (pembaruan matriks 45 cek di `docs/audits/audit-full-indonesia-uiux-2026-11-21.md`).
-   - Pada setiap penutupan WP (G8): pindahkan tugas yang selesai dari `docs/PLAN-geoatlas.md` ke `docs/geoatlas-completed.md` dengan bukti commit/tes, perbarui `ACTIVE CHECKPOINT` di `docs/handover/HANDOVER-geoatlas.md`, dan pastikan `bash ops/scripts/ci/local-ci.sh --full --write-receipt` hijau.
+PEMETAAN OTOMATIS MODEL EKSEKUTOR & REVIEWER:
+- Tabel registry `docs/handover/WORK-PACKAGES-geoatlas.md` mencatat tier logis setiap WP:
+  - Eksekutor T1 (`gpt-luna-6` / `deepseek-flash`): di Antigravity otomatis dijalankan oleh agent eksekutor (`model="flash"` atau `"inherit"`, write tools aktif) atau via `python3 ops/scripts/agents/wp.py workflow <WP...> --exec-model flash --review-model pro`.
+  - Reviewer Independen T2/T3 (`claude-sonnet-5-5` / `claude-opus-5-5` / `gpt-sol-6-1`): di Antigravity otomatis dijalankan oleh subagent read-only `type_name="research"` (`model="pro"` atau `"inherit"`, sandbox read-only) yang memeriksa diff `git diff`, pemenuhan DoD, keamanan DOM (`esc()`), dan paritas kamus ID/EN sebelum memberi verdict `PASS` / `NEEDS_FIX`.
 
-PEMISAHAN EKSEKUTOR & REVIEWER PADA SETIAP WP:
-- Eksekutor mengimplementasikan perubahan dan menjalankan tes (`local-ci.sh --fast` + tes terarah).
-- Reviewer independen (subagent read-only `type_name="research"` atau pemeriksaan diff terpisah) memeriksa diff, pemenuhan DoD, keamanan DOM (`esc()`), serta paritas ID/EN, lalu mengeluarkan verdict `PASS` atau `NEEDS_FIX`.
-- Jangan menutup tugas ke arsip sebelum tes lulus dan reviewer memberi `PASS`.
-
-STOP-TANYA (berhenti hanya pada kondisi berikut):
-- Setelah seluruh `WP-01` s/d `WP-17` dan `WP-20` selesai serta paket rilis `WP-18` dan kit `WP-19` siap: laporkan SHA commit, lokasi receipt `.tmp-tier-receipts/local-ci-<SHA>.json`, tabel 45/45 cek rubrik SPEC §6, serta minta persetujuan `"ya"` pemilik untuk deploy ke server produksi `atlas.orebit.id` (`WP-18`) dan pelaksanaan sesi peserta nyata `HUM-01` (`WP-19`).
+ALUR EKSEKUSI GELOMBANG F & G (LOOP SAMPAI SEMUA WP-21..WP-27 SELESAI):
+1. GELOMBANG F — Data P3G 1:250.000, Penampang Geologi Bawah Permukaan, Workstation SHP UTM & Navigasi:
+   - `WP-21` (`PIPE`, menutup `PIP-05`): Ekstrak nama & nomor lembar asli (`NM_LEMBAR`/`NAME_OF_SH` & `NO_LEMBAR`) + atribut mineral (`PEMBAWA`, `MINERAL`, `CLASS_LITH`) per poligon di `pipeline/01_ingest.py` → `04_edgematch.py` → `05_export.py` sehingga `sheet_name` per poligon memuat lembar P3G 1:250.000 asli.
+   - `WP-22` (`DATA`, menutup `DAT-06`, `DAT-07`): Sintesis komposisi batuan `lith_detail` geologis baku untuk seluruh 2.096 unit di `reference/units.csv` (0 unit dengan `lith_detail` kosong) dan tajamkan presisi sub-kala stratigrafi ICS (`Tml`, `Tmm`, `Tmu`, `Tpl`, `Tol`, `Tel`, `PC`, `TRJ`, `PTR`, `TQ`), lalu jalankan `validate_reference.py` dan `build_index.py`.
+   - `WP-23` (`TOOLS`, menutup `TOOL-04`): Lengkapi Workstation Penampang Geologi Panoramik (`app/src/transect.ts`) dengan pemilih Perbesaran Vertikal (`VE: 1×, 2×, 5×, 10×`), kursor hover interaktif pada SVG penampang yang tersinkronisasi dengan marker posisi di peta, serta tombol unduh gambar `SVG` di samping `CSV`.
+   - `WP-24` (`MAP, TOOLS`, menutup `TOOL-05`): Lengkapi Workstation Impor SHP UTM/WGS84 (`app/src/shp_import.ts`) dengan *drag-and-drop* berkas `.zip`/`.shp`/`.geojson`/`.kml` langsung ke kanvas peta, klik fitur SHP di peta untuk menampilkan popup atribut `.dbf`, dan rincian formasi terpotong.
+   - `WP-25` (`UIX`, menutup `UIX-06`): Pastikan tombol navigasi `#navBack` (`←`) & `#compassNorthBtn` (`N▲` Northing Up 2D/3D) bebas tabrakan, seluruh teks UI/About/Detail bebas dari jargon internal (`auto_crosswalk.py`, `[AUTO]`), dan ergonomi seluler (`375×812`) optimal.
+2. GELOMBANG G — Sertifikasi E2E, Rebuild `all-v3.pmtiles` & Deploy Produksi `atlas.orebit.id`:
+   - `WP-26` (`TEST`, menutup `TEST-03`): Perluas `tests/test_pipeline_contracts.py` (cek 0 `lith_detail` kosong), `tests/test_app_contracts.mjs` (cek akurasi `utmToLngLat` & `detectPrjSpec`), dan `tests/test_browser_uiux.py` (cek `#navBack`, `#compassNorthBtn`, `#shpImportBtn`, penampang geologi panoramik + `VE`, serta `#aboutDialog` bebas `auto_crosswalk.py`).
+   - Jalankan reviewer independen (`type_name="research"`) untuk memverifikasi seluruh diff `WP-21`..`WP-26` dan pastikan verdict `PASS`.
+   - `WP-27` (`REL`, menutup `REL-02`): Bangun ulang `data/out/all/all.pmtiles` untuk 8 wilayah + `indonesia-units-index.json`, pindahkan tugas `PIP-05`, `DAT-06`, `DAT-07`, `TOOL-04`, `TOOL-05`, `UIX-06`, `TEST-03`, `REL-02` dari `docs/PLAN-geoatlas.md` ke `docs/geoatlas-completed.md`, perbarui `ACTIVE CHECKPOINT`, jalankan `bash ops/scripts/ci/local-ci.sh --full --write-receipt`, `git push origin main`, bangun `app/dist` (`VITE_TILES_URL=https://atlas.orebit.id/tiles/all-v3.pmtiles`), dan deploy ke `orebit-vps2` (`/var/www/atlas.orebit.id/tiles/all-v3.pmtiles` & `/var/www/atlas.orebit.id/current`) dengan verifikasi `HTTP/2 200` dan `HTTP/2 206`.
 ```
