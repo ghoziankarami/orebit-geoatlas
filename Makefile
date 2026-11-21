@@ -1,7 +1,7 @@
 REGION ?= babel
 PY ?= python3
 
-.PHONY: setup fetch-esdm inventory tiles app dev validate clean combine tiles-all
+.PHONY: setup fetch-esdm inventory tiles index app dev validate clean combine tiles-all
 
 fetch-esdm:       ## Tarik poligon Peta Geologi dari layanan ArcGIS ESDM → data/raw/$(REGION)/esdm/
 	cd pipeline && $(PY) 00_fetch_esdm.py $(REGION)
@@ -16,7 +16,10 @@ inventory:        ## Ingest + validasi + daftar simbol baru ke crosswalk.csv
 tiles:            ## Jalankan pipeline lengkap → data/out/$(REGION)/$(REGION).pmtiles
 	cd pipeline && $(PY) 01_ingest.py $(REGION) && $(PY) 02_validate.py $(REGION) \
 	  && $(PY) 03_harmonize.py $(REGION) && $(PY) 04_edgematch.py $(REGION) && $(PY) 05_export.py $(REGION) \
-	  && ./06_tile.sh $(REGION)
+	  && ./06_tile.sh $(REGION) && $(PY) build_index.py
+
+index:            ## Bangun indeks pencarian nasional app/public/data/indonesia-units-index.json
+	cd pipeline && $(PY) build_index.py
 
 combine:          ## Gabung units/lines semua region yang sudah dibangun → data/out/all/
 	mkdir -p data/out/all

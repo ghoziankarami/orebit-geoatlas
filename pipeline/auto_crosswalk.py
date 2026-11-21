@@ -1,23 +1,8 @@
 """Klasifikasi OTOMATIS crosswalk untuk baris yang unit_id-nya masih kosong.
 
 BUKAN pengganti kurasi manual (lihat docs/kurasi-crosswalk.md) — ini best-effort mekanis untuk
-region berskala besar (mis. Sumatra: 479 simbol baru) di mana kurasi tangan per-formasi tidak
-realistis dalam satu sesi. Setiap unit yang dibuat lewat skrip ini ditandai "[AUTO]" di kolom
-description supaya gampang dicari untuk review geolog lebih lanjut.
-
-Metodologi (transparan & deterministik, bukan tebakan ad-hoc):
-1. age_top_ma/age_base_ma: DIAMBIL dari kolom `umurobj` asli di geojson sumber (modus per simbol,
-   bukan ditebak), dikonversi lewat reference/ics_intervals.csv. Istilah era gabungan/kabur di
-   sumber (Permo Karbon, Mesozoikum, Paleozoikum, "Meso - Paleo", "Pra Tersier") direntang selebar
-   cakupan aslinya — jujur terhadap ketidakpastian sumber, bukan dipersempit sepihak.
-2. lith_class: pola kata kunci di name_orig+remark (granit->plutonik felsik, vulkanik->volcanic,
-   dst). Urutan pengecekan dari paling spesifik ke paling umum; default jatuh ke siliciclastic
-   (jenis formasi tersedimen paling umum di data ESDM) bila tak ada sinyal jelas.
-3. unit_id: dipakai ULANG bila (symbol_orig, name_orig) PERSIS sama dengan unit yang sudah
-   dikurasi di region lain (formasi lintas-region yang genuin sama, mis. Formasi Muara Enim
-   Babel & Sumatra). Simbol SAMA tapi nama BEDA antar-region (coincidental collision, mis.
-   PCks1 = "Kelapa Kampit Formation" di Babel vs "Kuantan Formation" di Sumatra) dapat unit_id
-   baru dengan suffix region — TIDAK PERNAH digabung paksa.
+region berskala besar di mana kurasi tangan per-formasi belum selesai. Setiap unit yang dibuat
+lewat skrip ini ditandai "[AUTO]" di kolom description dan `confidence="auto"`.
 
 Pemakaian:
     python3 auto_crosswalk.py <wilayah>
@@ -28,48 +13,126 @@ import json
 import re
 import sys
 from collections import Counter
-from pathlib import Path
 
 from common import RAW, REF, read_csv, region_arg
 
 # --- 1. Umur: istilah umurobj sumber -> (top_ma, base_ma) ------------------------------------
-# Baris tunggal dari ics_intervals.csv dipetakan langsung; istilah era/gabungan dipetakan ke
-# rentang gabungan eksplisit (top dari yang termuda, base dari yang tertua dalam cakupannya).
 AGE_MAP: dict[str, tuple[float, float]] = {
-    "kuarter": (0, 2.58),
+    "holosen": (0.0, 0.0117),
+    "holocene": (0.0, 0.0117),
+    "plistosen": (0.0117, 2.58),
+    "pleistosen": (0.0117, 2.58),
+    "pleistocene": (0.0117, 2.58),
+    "kuarter": (0.0, 2.58),
+    "quaternary": (0.0, 2.58),
+    "pliosen": (2.58, 5.333),
+    "pliocene": (2.58, 5.333),
+    "miosen": (5.333, 23.03),
+    "miocene": (5.333, 23.03),
+    "miosen akhir": (5.333, 11.63),
+    "miosen tengah": (11.63, 15.98),
+    "miosen awal": (15.98, 23.03),
     "neogen": (2.58, 23.03),
+    "neogene": (2.58, 23.03),
+    "oligosen": (23.03, 33.9),
+    "oligocene": (23.03, 33.9),
+    "eosen": (33.9, 56.0),
+    "eocene": (33.9, 56.0),
+    "paleosen": (56.0, 66.0),
+    "paleocene": (56.0, 66.0),
     "paleogen": (23.03, 66.0),
+    "paleogene": (23.03, 66.0),
+    "tersier": (2.58, 66.0),
+    "tertiary": (2.58, 66.0),
+    "kenozoikum": (0.0, 66.0),
+    "cenozoic": (0.0, 66.0),
+    "kuarter - tersier": (0.0, 66.0),
+    "plio - plistosen": (0.0117, 5.333),
+    "plio-plistosen": (0.0117, 5.333),
     "kapur": (66.0, 143.1),
+    "cretaceous": (66.0, 143.1),
+    "kapur akhir": (66.0, 100.5),
+    "kapur awal": (100.5, 143.1),
     "jura": (143.1, 201.4),
+    "jurassic": (143.1, 201.4),
+    "jura akhir": (143.1, 161.5),
+    "jura tengah": (161.5, 174.7),
+    "jura awal": (174.7, 201.4),
     "trias": (201.4, 251.902),
     "triassic": (201.4, 251.902),
+    "trias akhir": (201.4, 237.0),
+    "trias tengah": (237.0, 247.2),
+    "trias awal": (247.2, 251.902),
+    "mesozoikum": (66.0, 251.902),
+    "mesozoic": (66.0, 251.902),
     "perm": (251.902, 298.9),
     "permian": (251.902, 298.9),
     "karbon": (298.9, 358.9),
+    "carboniferous": (298.9, 358.9),
     "permo karbon": (251.902, 358.9),
-    "mesozoikum": (66.0, 251.902),          # Trias-Kapur
-    "paleozoikum": (251.902, 538.8),        # Kambrium-Perm
-    "meso - paleo": (66.0, 538.8),          # Mesozoikum + Paleozoikum
-    "pra tersier": (66.0, 538.8),           # kabur di sumber; direntang selebar mungkin
+    "permo-karbon": (251.902, 358.9),
+    "permo - karbon": (251.902, 358.9),
+    "devon": (358.9, 419.62),
+    "devonian": (358.9, 419.62),
+    "silur": (419.62, 443.1),
+    "silurian": (419.62, 443.1),
+    "ordovisium": (443.1, 486.85),
+    "ordovician": (443.1, 486.85),
+    "kambrium": (486.85, 538.8),
+    "cambrian": (486.85, 538.8),
+    "paleozoikum": (251.902, 538.8),
+    "paleozoic": (251.902, 538.8),
+    "prakambrium": (538.8, 4567.0),
+    "precambrian": (538.8, 4567.0),
+    "meso - paleo": (66.0, 538.8),
+    "pra tersier": (66.0, 538.8),
+    "pra-tersier": (66.0, 538.8),
+    "pra - tersier": (66.0, 538.8),
 }
 
 
 def age_for(term: str | None) -> tuple[float | None, float | None]:
+    """Petakan istilah umur tunggal atau rentang gabungan ('miosen - pliosen') ke (top_ma, base_ma)."""
     if not term:
         return None, None
-    hit = AGE_MAP.get(term.strip().lower())
-    return hit if hit else (None, None)
+    norm = re.sub(r"\s+", " ", term.strip().lower()).replace("–", "-").replace("—", "-")
+    if norm in AGE_MAP:
+        return AGE_MAP[norm]
+    parts = [p.strip() for p in re.split(r"\s*[-/]\s*", norm) if p.strip()]
+    if len(parts) >= 2:
+        hits = [AGE_MAP[p] for p in parts if p in AGE_MAP]
+        if len(hits) == len(parts):
+            return min(h[0] for h in hits), max(h[1] for h in hits)
+    return None, None
 
 
 # --- 2. Litologi: kata kunci -> lith_class (urutan spesifik -> umum) --------------------------
 LITH_RULES: list[tuple[str, str]] = [
-    (r"vulkanik|volcanic|\blava\b|\btuf|andesit|dasit|basal|breksi.*gunungapi|piroklastik|gunungapi|centre|center\b", "volcanic"),
-    (r"batugamping|limestone|karbonat|terumbu|koral|coral", "carbonate"),
-    (r"bancuh|melange|m[eé]lange|campuran", "melange"),
-    (r"komplek|malihan|metamorf|sekis|filit|milonit|gneiss|kuarsit", "metamorphic"),
-    (r"gabbro|gabro|peridotit|ultrabasa|ultramafik|serpentin|piroksenit|mikrogabro", "plutonic_mafic"),
-    (r"granit|adamelit|monzonit|diorit|granodiorit|porfir|porphyry|intrusi|\bstok\b|\bretas\b|dyke|\bsill\b|mikrodiorit", "plutonic_felsic"),
-    (r"aluvium|alluvium|endapan|\brawa\b|pantai|\bsungai\b|koluvium|residu|pasir kuarsa", "unconsolidated"),
+    (
+        r"vulkanik|volcanic|\blava\b|\btuf|andesit|dasit|basal|basalt|breksi.*gunungapi|piroklastik|gunungapi|ignimbrit|lahar|riolit|rhyolit|trakit|centre|center\b",
+        "volcanic",
+    ),
+    (
+        r"batugamping|limestone|karbonat|terumbu|koral|coral|dolomit|kalkarenit|kalsilutit|napal|marl",
+        "carbonate",
+    ),
+    (r"bancuh|melange|m[eé]lange|campuran|olistostrom", "melange"),
+    (
+        r"komplek.*malih|malihan|metamorf|metamorphic|sekis|schist|filit|phyllite|batusabak|slate|milonit|gneiss|kuarsit|quartzite|marmer|marble|amfibolit|eklogit",
+        "metamorphic",
+    ),
+    (
+        r"ofiolit|ophiolite|gabbro|gabro|peridotit|ultrabasa|ultramafik|ultramafic|serpentinit|serpentin|dunit|harzburgit|piroksenit|diabas|mikrogabro",
+        "plutonic_mafic",
+    ),
+    (
+        r"granit|granodiorit|tonalit|adamelit|monzonit|diorit|porfir|porphyry|intrusi|\bstok\b|\bretas\b|dyke|\bsill\b|mikrodiorit|pegmatit",
+        "plutonic_felsic",
+    ),
+    (
+        r"aluvium|alluvium|aluvial|endapan|\brawa\b|gambut|peat|pantai|\bsungai\b|koluvium|residu|pasir kuarsa|terumbu kuarter",
+        "unconsolidated",
+    ),
 ]
 DEFAULT_LITH = "siliciclastic"
 
@@ -102,8 +165,6 @@ def main() -> None:
     crosswalk = read_csv("crosswalk.csv")
     units = read_csv("units.csv")
     existing_ids = set(units.unit_id)
-    # (symbol_orig, name_orig) -> unit_id yang SUDAH dikurasi (region lain), untuk deteksi
-    # formasi lintas-region yang genuin sama.
     curated_lookup = {
         (r.symbol_orig, r.name_orig): r.unit_id
         for r in crosswalk.itertuples()
@@ -142,11 +203,18 @@ def main() -> None:
             top_ma, base_ma = age_for(age_term)
             lith = lith_for(f"{name} {remark}")
             new_unit_rows.append({
-                "unit_id": uid, "formation": name, "symbol_std": sym, "lith_class": lith,
-                "lith_detail": "", "age_top_ma": top_ma if top_ma is not None else "",
+                "unit_id": uid,
+                "formation": name,
+                "symbol_std": sym,
+                "lith_class": lith,
+                "lith_detail": "",
+                "age_top_ma": top_ma if top_ma is not None else "",
                 "age_base_ma": base_ma if base_ma is not None else "",
-                "interval_top": age_term or "", "interval_base": age_term or "",
-                "color_hex": "", "description": f"[AUTO] {remark or name} — umur sumber: {age_term or 'tidak diketahui'}",
+                "interval_top": age_term or "",
+                "interval_base": age_term or "",
+                "color_hex": "",
+                "confidence": "auto",
+                "description": f"[AUTO] {remark or name} — umur sumber: {age_term or 'tidak diketahui'}",
             })
             assigned += 1
 

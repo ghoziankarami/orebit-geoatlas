@@ -1,29 +1,31 @@
 /**
- * Periode ICS untuk legenda mode umur. Batas umur mengikuti International
- * Chronostratigraphic Chart; verifikasi ulang dengan rilis ICS terbaru sebelum rilis publik.
+ * Periode & Epoch ICS untuk legenda mode umur serta chip preset era.
  */
+export const ERA_PRESETS = [
+  { id: "all", labelId: "Semua", labelEn: "All", top: 0, base: 600 },
+  { id: "quaternary", labelId: "Kuarter", labelEn: "Quaternary", top: 0, base: 2.58 },
+  { id: "cenozoic", labelId: "Kenozoikum", labelEn: "Cenozoic", top: 0, base: 66.0 },
+  { id: "mesozoic", labelId: "Mesozoikum", labelEn: "Mesozoic", top: 66.0, base: 251.902 },
+  { id: "paleozoic", labelId: "Paleozoikum", labelEn: "Paleozoic", top: 251.902, base: 538.8 },
+  { id: "precambrian", labelId: "Prakambrium", labelEn: "Precambrian", top: 538.8, base: 600 },
+] as const;
+
 export const PERIODS = [
   { id: "Kuarter", en: "Quaternary", top: 0, base: 2.58, color: "#F9F97F" },
   { id: "Neogen", en: "Neogene", top: 2.58, base: 23.03, color: "#FFE619" },
   { id: "Paleogen", en: "Paleogene", top: 23.03, base: 66.0, color: "#FD9A52" },
   { id: "Kapur", en: "Cretaceous", top: 66.0, base: 143.1, color: "#7FC64E" },
   { id: "Jura", en: "Jurassic", top: 143.1, base: 201.4, color: "#34B2C9" },
-  { id: "Trias", en: "Triassic", top: 201.4, base: 251.9, color: "#812B92" },
-  { id: "Perm", en: "Permian", top: 251.9, base: 298.9, color: "#F04028" },
+  { id: "Trias", en: "Triassic", top: 201.4, base: 251.902, color: "#812B92" },
+  { id: "Perm", en: "Permian", top: 251.902, base: 298.9, color: "#F04028" },
   { id: "Karbon", en: "Carboniferous", top: 298.9, base: 358.9, color: "#67A599" },
-  { id: "Devon", en: "Devonian", top: 358.9, base: 419.6, color: "#CB8C37" },
-  { id: "Silur", en: "Silurian", top: 419.6, base: 443.1, color: "#B3E1B6" },
-  { id: "Ordovisium", en: "Ordovician", top: 443.1, base: 486.9, color: "#009270" },
-  { id: "Kambrium", en: "Cambrian", top: 486.9, base: 538.8, color: "#7FA056" },
-  { id: "Prakambrium", en: "Precambrian", top: 538.8, base: 4567, color: "#F73563" },
+  { id: "Devon", en: "Devonian", top: 358.9, base: 419.62, color: "#CB8C37" },
+  { id: "Silur", en: "Silurian", top: 419.62, base: 443.1, color: "#B3E1B6" },
+  { id: "Ordovisium", en: "Ordovician", top: 443.1, base: 486.85, color: "#009270" },
+  { id: "Kambrium", en: "Cambrian", top: 486.85, base: 538.8, color: "#7FA056" },
+  { id: "Prakambrium", en: "Precambrian", top: 538.8, base: 600, color: "#F73563" },
 ] as const;
 
-/**
- * Interval halus (epoch, atau period tanpa pembagian epoch di Paleozoikum-ke-bawah) untuk
- * legenda mode umur saat zoom dekat. Mengikuti persis reference/ics_intervals.csv — hanya baris
- * yang benar-benar bisa "menang" di pipeline/03_harmonize.py:ics_color (interval tersempit yang
- * memuat umur base), supaya legenda cocok dengan warna yang benar-benar tampil.
- */
 export const EPOCHS = [
   { id: "Holosen", en: "Holocene", top: 0, base: 0.0117, color: "#FEF2E0" },
   { id: "Plistosen", en: "Pleistocene", top: 0.0117, base: 2.58, color: "#FFF2AE" },
@@ -46,7 +48,7 @@ export const EPOCHS = [
   { id: "Silur", en: "Silurian", top: 419.62, base: 443.1, color: "#B3E1B6" },
   { id: "Ordovisium", en: "Ordovician", top: 443.1, base: 486.85, color: "#009270" },
   { id: "Kambrium", en: "Cambrian", top: 486.85, base: 538.8, color: "#7FA056" },
-  { id: "Prakambrium", en: "Precambrian", top: 538.8, base: 4567, color: "#F73563" },
+  { id: "Prakambrium", en: "Precambrian", top: 538.8, base: 600, color: "#F73563" },
 ] as const;
 
 export function periodName(ma: number | undefined, lang: "id" | "en"): string {

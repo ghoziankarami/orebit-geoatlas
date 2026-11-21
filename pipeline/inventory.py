@@ -2,13 +2,13 @@
 import geopandas as gpd
 import pandas as pd
 
-from common import REF, out_dir, read_csv, region_arg
+from common import EQUAL_AREA_CRS, REF, out_dir, read_csv, region_arg
 
 region = region_arg()
 u = gpd.read_parquet(out_dir(region) / "02_units.parquet")
 if "desc_orig" not in u.columns:
     u["desc_orig"] = ""
-area_km2 = u.to_crs(u.estimate_utm_crs()).area / 1e6
+area_km2 = u.to_crs(EQUAL_AREA_CRS).area / 1e6
 most_common = lambda s: s[s != ""].mode().iat[0] if (s != "").any() else ""
 inv = (u.assign(area_km2=area_km2).groupby(["source_id", "symbol_orig", "name_orig"], dropna=False)
          .agg(polygons=("geometry", "size"), area_km2=("area_km2", "sum"), desc=("desc_orig", most_common))
