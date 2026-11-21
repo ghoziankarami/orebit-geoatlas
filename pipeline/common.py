@@ -66,7 +66,6 @@ REGION_RAW_FILES = {
     "sulawesi": [
         RAW / "Geology-Sulawesi" / "Lito Sulawesi.TAB",
         RAW / "Geology-Sulawesi" / "Str Sulawesi.TAB",
-        RAW / "Geology-Sulawesi" / "alluvial Slw.TAB",
     ],
     "maluku": [
         RAW / "Geology-Maluku" / "Lito Maluku.TAB",

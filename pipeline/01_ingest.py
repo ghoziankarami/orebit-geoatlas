@@ -13,7 +13,7 @@ from common import (DESC_FIELDS, LINE_TYPE_FIELDS, NAME_FIELDS, RAW, REF, REGION
                     VECTOR_GLOBS, out_dir, pick_field, pick_fields, read_csv, region_arg)
 
 ESDM_URL = "https://geoportal.esdm.go.id/gis4/rest/services/BGS_PM/Geologi_Litologi/MapServer"
-EXCLUDE_SYMBOLS = {"air", "danau", "laut", "water", "lake", "sea"}
+EXCLUDE_SYMBOLS = {"air", "danau", "laut", "water", "lake", "sea", "pulau", "waduk", "rawa", "sungai", "na"}
 STR_ID_MAP = {
     "5002": "Sesar naik",
     "5003": "Sesar naik",
