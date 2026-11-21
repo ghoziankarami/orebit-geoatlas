@@ -10,7 +10,13 @@ Dibuat 21 November 2026 dari `main` (`faed4d7`). Mengikuti [standar work package
    - `python3 ops/scripts/agents/wp.py brief WP-01 --role reviewer --base main --head HEAD`
 3. **Bangkitkan skrip multi-agent paralel Antigravity (`run_workflow`):**
    - `python3 ops/scripts/agents/wp.py workflow WP-01 WP-02 WP-03 WP-04 --exec-model flash --review-model pro`
-4. **Pemisahan peran:** Eksekutor T1 (`deepseek-flash` / `gpt-luna-6` / `flash`) mengimplementasikan perubahan dan menjalankan `local-ci.sh --fast` + tes terarah (`wp.py fast-test`). Reviewer T2/T3 (`claude-sonnet-5-5` / `claude-opus-5-5` / `gpt-sol-6-1` / `pro`) memeriksa diff dan bukti secara **read-only** dan mengeluarkan verdict `PASS` / `NEEDS_FIX`. Pemilik mengintegrasikan hasil ke `main`.
+4. **Pemisahan peran (harness-agnostic):** Eksekutor T1 (model cepat di harness aktif: Gemini, Claude, Codex, CommandCode, Antigravity, dll.) mengimplementasikan perubahan dan menjalankan `local-ci.sh --fast` + tes terarah (`wp.py fast-test`). Reviewer T2/T3 adalah **model/sesi BERBEDA** dari eksekutor (bukan akun GitHub manusia baru dan bukan collaborator tambahan) yang memeriksa diff dan bukti secara **read-only** lalu menulis verdict `PASS` / `NEEDS_FIX` via `wp.py verdict` atau komentar PR. Eksekutor **DILARANG** menulis verdict `PASS` untuk pekerjaannya sendiri; bila belum ada reviewer independen, WP tetap berstatus `review`, bukan `selesai`. Pemilik mengintegrasikan hasil ke `main`.
+
+## Cara Melacak Progres
+
+- **Sumber kebenaran progres:** Progres dibaca dari riwayat commit `main` (`git log main --grep="Merge WP-" --oneline`) dan registry (`python3 ops/scripts/agents/wp.py status`), **BUKAN** hanya dari daftar PR GitHub.
+- **No-PR merge tetap cepat dan terbaca mesin:** PR bersifat opsional untuk risiko `LOW`/`MEDIUM` sehingga tidak memperlambat kerja. Setiap merge no-PR **WAJIB** menggunakan format commit message `Merge WP-NN: <judul>` dan tetap mensyaratkan verdict `PASS` dari reviewer independen (bukan *self-declared*).
+- **Bukti penutupan wajib:** Setiap WP yang selesai **WAJIB** memiliki satu baris bukti di [arsip penyelesaian](../geoatlas-completed.md) dan pembaruan `## ACTIVE CHECKPOINT` di [HANDOVER-geoatlas.md](HANDOVER-geoatlas.md).
 
 ## Rencana Gelombang Paralel (Wave A–E)
 
