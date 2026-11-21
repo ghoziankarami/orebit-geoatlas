@@ -21,5 +21,4 @@ Satu-satunya antrean kerja terbuka Orebit GeoAtlas. Tugas yang telah selesai (`D
 
 | ID | Prio | Status | Tugas | PRD/SPEC | Selesai bila |
 |---|---|---|---|---|---|
-| REL-02 | P0 | OPEN | Rebuild `all-v3.pmtiles` & `indonesia-units-index.json` 8 wilayah serta deploy produksi terverifikasi ke `https://atlas.orebit.id/` | PRD §2, SPEC §6 | `all-v3.pmtiles` dan `app/dist` terpasang di `orebit-vps2` dengan respons `HTTP/2 200` dan `HTTP/2 206` terverifikasi live (`WP-27`). |
 | HUM-01 | P1 | BLOCKED | Uji usability representatif ≥5 peserta geolog/mahasiswa untuk skenario eksplorasi & penampang geologi GeoAtlas | PRD §2, SPEC §6 | Kit uji [hum-1-geoatlas.md](audits/hum-1-geoatlas.md) siap pakai; menunggu jadwal sesi peserta nyata oleh pemilik (`WP-19`). |
