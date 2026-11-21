@@ -14,7 +14,7 @@ import re
 import sys
 from collections import Counter
 
-from common import RAW, REF, read_csv, region_arg
+from common import OUT, RAW, REF, read_csv, region_arg
 
 # --- 1. Umur: istilah umurobj sumber -> (top_ma, base_ma) ------------------------------------
 AGE_MAP: dict[str, tuple[float, float]] = {
@@ -149,18 +149,66 @@ def sanitize_id(s: str) -> str:
     return re.sub(r"[^A-Z0-9_]", "", s.upper().replace(" ", "_").replace("-", "_"))
 
 
+def infer_age_from_symbol(sym: str) -> tuple[float | None, float | None, str]:
+    """Fallback umur dari konvensi notasi stratigrafi Peta Geologi PSG/Badan Geologi."""
+    s = (sym or "").strip()
+    if not s:
+        return None, None, ""
+    prefixes = [
+        ("QT", 0.0117, 5.333, "Plio-Plistosen"),
+        ("Qh", 0.0, 0.0117, "Holosen"),
+        ("Qp", 0.0117, 2.58, "Pleistosen"),
+        ("Q", 0.0, 2.58, "Kuarter"),
+        ("Tp", 2.58, 5.333, "Pliosen"),
+        ("Tm", 5.333, 23.03, "Miosen"),
+        ("To", 23.03, 33.9, "Oligosen"),
+        ("Te", 33.9, 56.0, "Eosen"),
+        ("KT", 33.9, 143.1, "Kapur-Paleogen"),
+        ("JK", 66.0, 201.4, "Jura-Kapur"),
+        ("TR", 201.4, 251.902, "Trias"),
+        ("Tr", 201.4, 251.902, "Trias"),
+        ("CP", 251.902, 358.9, "Karbon-Perm"),
+        ("PC", 251.902, 358.9, "Karbon-Perm"),
+        ("pC", 538.8, 4567.0, "Prakambrium"),
+        ("Pr", 538.8, 4567.0, "Prakambrium"),
+        ("T", 2.58, 66.0, "Tersier"),
+        ("M", 5.333, 23.03, "Miosen"),
+        ("K", 66.0, 143.1, "Kapur"),
+        ("J", 143.1, 201.4, "Jura"),
+        ("P", 251.902, 298.9, "Perm"),
+        ("C", 298.9, 358.9, "Karbon"),
+        ("D", 358.9, 419.62, "Devon"),
+        ("S", 419.62, 443.1, "Silur"),
+        ("O", 443.1, 486.85, "Ordovisium"),
+    ]
+    for pfx, top_ma, base_ma, label in prefixes:
+        if s.startswith(pfx):
+            return top_ma, base_ma, label
+    return None, None, ""
+
+
 def main() -> None:
     region = region_arg()
     geojson_path = RAW / region / "esdm" / "esdm_litologi.geojson"
-    if not geojson_path.exists():
-        sys.exit(f"Tidak ada {geojson_path}. Jalankan 00_fetch_esdm.py {region} dulu.")
-
-    feats = json.loads(geojson_path.read_text())["features"]
+    parquet_path = OUT / region / "02_units.parquet"
     by_symbol_age: dict[str, Counter] = {}
-    for f in feats:
-        p = f["properties"]
-        sym = p.get("simobj")
-        by_symbol_age.setdefault(sym, Counter())[p.get("umurobj")] += 1
+    if geojson_path.exists():
+        feats = json.loads(geojson_path.read_text())["features"]
+        for f in feats:
+            p = f["properties"]
+            sym = p.get("simobj")
+            by_symbol_age.setdefault(sym, Counter())[p.get("umurobj")] += 1
+    elif parquet_path.exists():
+        import pandas as pd
+        gdf = pd.read_parquet(parquet_path, columns=["symbol_orig", "desc_orig"])
+        for r in gdf.itertuples():
+            if r.desc_orig:
+                for part in str(r.desc_orig).split("|"):
+                    part = part.strip()
+                    if part and age_for(part) != (None, None):
+                        by_symbol_age.setdefault(r.symbol_orig, Counter())[part] += 1
+    else:
+        sys.exit(f"Tidak ada {geojson_path} atau {parquet_path}. Jalankan 01_ingest.py & 02_validate.py {region} dulu.")
 
     crosswalk = read_csv("crosswalk.csv")
     units = read_csv("units.csv")
@@ -173,6 +221,11 @@ def main() -> None:
 
     sources = read_csv("sources.csv")
     region_source_ids = set(sources[sources.file_key.str.startswith(f"{region}/")].source_id)
+    region_symbol_lookup = {
+        r.symbol_orig: r.unit_id
+        for r in crosswalk.itertuples()
+        if r.unit_id and r.source_id in region_source_ids
+    }
     todo = crosswalk[(crosswalk.source_id.isin(region_source_ids)) & (crosswalk.unit_id.fillna("") == "")]
 
     print(f"{len(todo)} baris crosswalk region {region!r} belum ada unit_id.")
@@ -188,8 +241,11 @@ def main() -> None:
         if key in curated_lookup:
             uid = curated_lookup[key]
             reused += 1
+        elif sym in region_symbol_lookup:
+            uid = region_symbol_lookup[sym]
+            reused += 1
         else:
-            base_id = sanitize_id(sym)
+            base_id = sanitize_id(sym) or "UNIT"
             uid = base_id
             suffix = 2
             while uid in existing_ids:
@@ -197,14 +253,19 @@ def main() -> None:
                 suffix += 1
             existing_ids.add(uid)
             curated_lookup[key] = uid
+            region_symbol_lookup[sym] = uid
 
             age_term = by_symbol_age.get(sym, Counter()).most_common(1)
             age_term = age_term[0][0] if age_term else None
             top_ma, base_ma = age_for(age_term)
+            if top_ma is None:
+                top_ma, base_ma, pfx_label = infer_age_from_symbol(sym)
+                if pfx_label and not age_term:
+                    age_term = pfx_label
             lith = lith_for(f"{name} {remark}")
             new_unit_rows.append({
                 "unit_id": uid,
-                "formation": name,
+                "formation": name or sym,
                 "symbol_std": sym,
                 "lith_class": lith,
                 "lith_detail": "",
@@ -214,7 +275,7 @@ def main() -> None:
                 "interval_base": age_term or "",
                 "color_hex": "",
                 "confidence": "auto",
-                "description": f"[AUTO] {remark or name} — umur sumber: {age_term or 'tidak diketahui'}",
+                "description": f"[AUTO] {remark or name or sym} — umur sumber: {age_term or 'tidak diketahui'}",
             })
             assigned += 1
 

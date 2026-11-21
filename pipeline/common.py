@@ -38,11 +38,45 @@ EQUAL_AREA_CRS = "EPSG:6933"
 
 # Kandidat nama kolom pada SHP GeoMap / layanan ESDM (berbeda antar-lembar).
 # SIMOBJ/NAMOBJ = konvensi KUGI (Katalog Unsur Geografi Indonesia) yang dipakai layanan ESDM.
-SYMBOL_FIELDS = ["SIMOBJ", "SIMBOL", "SYMBOL", "SIMB", "NOTASI", "KODE", "KODE_UNIT", "UNIT", "LABEL", "SYMBOL_1"]
-NAME_FIELDS = ["NAMOBJ", "NAMA_FORMASI", "FORMASI", "NAMA", "NAMA_UNIT", "NAME", "UNIT_NAME"]
-DESC_FIELDS = ["UMUR", "UMRBTN", "UMUR_BATUAN", "LITOLOGI", "JNSBTN", "BATUAN", "KETERANGAN", "KET", "DESKRIPSI", "REMARK"]
-LINE_TYPE_FIELDS = ["JENIS", "TYPE", "KETERANGAN", "KET", "NAMA", "NAMOBJ"]
-VECTOR_GLOBS = ["*.shp", "*.geojson", "*.gpkg"]
+SYMBOL_FIELDS = ["SIMOBJ", "SIMBOL", "SYMBOLS", "SYMBOL_FOR", "SYMBOL", "SIMB", "NOTASI", "KODE", "KODE_UNIT", "UNIT", "LABEL", "SYMBOL_1"]
+NAME_FIELDS = ["NAMOBJ", "NAMA_FORMASI", "FORMASI", "NAME_BI", "NAME_E", "FORMATION_", "NAME_UNIT", "NAME_FORMA", "NAMA", "NAMA_UNIT", "NAME", "UNIT_NAME"]
+DESC_FIELDS = ["UMUR", "UMRBTN", "UMUR_BATUAN", "LITOLOGI", "JNSBTN", "BATUAN", "DESCRIP", "DESKRIP", "CLASS_LITH", "B_PERIOD_E", "T_PERIOD_E", "GROUP_E", "PEMBAWA", "MINERAL", "KETERANGAN", "KET", "DESKRIPSI", "REMARK"]
+LINE_TYPE_FIELDS = ["JENIS", "TYPE", "KETERANGAN", "KET", "NAMA", "NAMOBJ", "NAMA_STR", "STR_NAME", "STR_JAWA_I", "STR_KAL_ID", "STR_MAL_ID", "STR_NTG_ID", "STR_SUL_ID", "ID"]
+VECTOR_GLOBS = ["*.shp", "*.geojson", "*.gpkg", "*.tab", "*.TAB"]
+
+# Pemetaan direktori/file lokal ketika data/raw/<wilayah> tidak tersedia langsung.
+REGION_RAW_FILES = {
+    "sumatra": [
+        RAW / "Geology-Sumatra" / "Lito Sumatera.TAB",
+        RAW / "Geology-Sumatra" / "Str Sumatera.TAB",
+        RAW / "Subduction" / "Subduction.TAB",
+    ],
+    "jawa": [
+        RAW / "Geology-Jawa" / "Lithology-Jawa.TAB",
+        RAW / "Geology-Jawa" / "Structure-Jawa.TAB",
+    ],
+    "balinusra": [
+        RAW / "Geology-Nusatenggara" / "Lito Nusatenggara.TAB",
+        RAW / "Geology-Nusatenggara" / "Str Nusatenggara.TAB",
+    ],
+    "kalimantan": [
+        RAW / "Geology-Kalimantan" / "Lito Kalimantan.TAB",
+        RAW / "Geology-Kalimantan" / "Str Kalimantan.TAB",
+    ],
+    "sulawesi": [
+        RAW / "Geology-Sulawesi" / "Lito Sulawesi.TAB",
+        RAW / "Geology-Sulawesi" / "Str Sulawesi.TAB",
+        RAW / "Geology-Sulawesi" / "alluvial Slw.TAB",
+    ],
+    "maluku": [
+        RAW / "Geology-Maluku" / "Lito Maluku.TAB",
+        RAW / "Geology-Maluku" / "Str Maluku.TAB",
+    ],
+    "papua": [
+        RAW / "Geology-Papua" / "litoirian.tab",
+        RAW / "Geology-Papua" / "Struktur Papua.TAB",
+    ],
+}
 
 
 def pick_fields(columns: list[str], candidates: list[str]) -> list[str]:

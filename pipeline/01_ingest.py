@@ -9,13 +9,34 @@ import geopandas as gpd
 import pandas as pd
 import pyogrio
 
-from common import (DESC_FIELDS, LINE_TYPE_FIELDS, NAME_FIELDS, RAW, REF, SYMBOL_FIELDS, VECTOR_GLOBS, out_dir,
-                    pick_field, pick_fields, read_csv, region_arg)
+from common import (DESC_FIELDS, LINE_TYPE_FIELDS, NAME_FIELDS, RAW, REF, REGION_RAW_FILES, SYMBOL_FIELDS,
+                    VECTOR_GLOBS, out_dir, pick_field, pick_fields, read_csv, region_arg)
 
 ESDM_URL = "https://geoportal.esdm.go.id/gis4/rest/services/BGS_PM/Geologi_Litologi/MapServer"
+EXCLUDE_SYMBOLS = {"air", "danau", "laut", "water", "lake", "sea"}
+STR_ID_MAP = {
+    "5002": "Sesar naik",
+    "5003": "Sesar naik",
+    "5004": "Sesar mendatar",
+    "5005": "Sesar mendatar",
+    "5006": "Sesar",
+    "5007": "Sesar diperkirakan",
+    "5008": "Sesar turun",
+    "5009": "Sesar turun",
+    "5013": "Lipatan",
+    "5014": "Lipatan",
+    "5015": "Lipatan",
+    "5017": "Lipatan",
+    "5018": "Lipatan",
+    "5021": "Kelurusan",
+    "6000": "Kelurusan",
+}
 
 region = region_arg()
-files = sorted({p for g in VECTOR_GLOBS for p in (RAW / region).rglob(g)})
+if (RAW / region).exists():
+    files = sorted({p for g in VECTOR_GLOBS for p in (RAW / region).rglob(g)})
+else:
+    files = [p for p in REGION_RAW_FILES.get(region, []) if p.exists()]
 if not files:
     raise SystemExit(f"Tidak ada data di {RAW / region}. Jalankan 00_fetch_esdm.py {region}, "
                      "atau unduh SHP dari https://geologi.esdm.go.id/geomap.")
@@ -27,15 +48,16 @@ new_rows = []
 
 units, lines = [], []
 for f in files:
-    key = f"{region}/{f.relative_to(RAW / region).as_posix()}"
+    rel = f.relative_to(RAW / region) if (RAW / region) in f.parents else f.relative_to(RAW)
+    key = f"{region}/{rel.as_posix()}" if (RAW / region) in f.parents else f"{region}/{f.name}"
     if key not in known:
         known[key] = str(next_id)
         is_esdm = f.parent.name == "esdm"
         new_rows.append({
             "source_id": str(next_id), "file_key": key,
             "sheet_name": "Peta Geologi (layanan Geologi Litologi ESDM, status Mei 2018)" if is_esdm
-                          else f.relative_to(RAW / region).with_suffix("").as_posix(),
-            "scale": "" if is_esdm else "100000",
+                          else rel.with_suffix("").as_posix(),
+            "scale": "" if is_esdm else "250000",
             "year": "2018" if is_esdm else "", "authors": "",
             "publisher": "Pusat Survei Geologi, Badan Geologi",
             "license": "Lisensi Terbuka PSG (atribusi, tidak diperjualbelikan)",
@@ -58,19 +80,29 @@ for f in files:
         if not sym:
             print(f"[PERINGATAN] {key}: kolom simbol tidak dikenali, kolom tersedia: {cols}")
         clean = lambda s: s.fillna("").astype(str).str.strip().replace({"None": "", "nan": ""})
-        desc = (gdf[descs].apply(lambda r: " | ".join(v for v in clean(r) if v), axis=1) if descs
-                else pd.Series("", index=gdf.index))
+        sym_series = clean(gdf[sym]) if sym else pd.Series("", index=gdf.index)
+        keep_mask = ~sym_series.str.lower().isin(EXCLUDE_SYMBOLS) & (sym_series != "")
+        gdf_u = gdf.loc[keep_mask]
+        if gdf_u.empty:
+            continue
+        desc = (gdf_u[descs].apply(lambda r: " | ".join(v for v in clean(r) if v), axis=1) if descs
+                else pd.Series("", index=gdf_u.index))
         units.append(gpd.GeoDataFrame({
             "source_id": sid,
-            "symbol_orig": clean(gdf[sym]) if sym else "",
-            "name_orig": clean(gdf[name]) if name else "",
+            "symbol_orig": sym_series.loc[keep_mask],
+            "name_orig": clean(gdf_u[name]) if name else "",
             "desc_orig": desc,
-        }, geometry=gdf.geometry, crs=4326))
+        }, geometry=gdf_u.geometry, crs=4326))
     elif geom_types & {"LineString", "MultiLineString"}:
         typ = pick_field(cols, LINE_TYPE_FIELDS)
+        if typ:
+            raw_typ = gdf[typ].fillna("").astype(str).str.strip().str.replace(r"\.0$", "", regex=True)
+            mapped_typ = raw_typ.map(lambda v: "Subduksi" if "subduction" in f.stem.lower() else STR_ID_MAP.get(v, v))
+        else:
+            mapped_typ = pd.Series("Subduksi" if "subduction" in f.stem.lower() else "", index=gdf.index)
         lines.append(gpd.GeoDataFrame({
             "source_id": sid,
-            "type_orig": gdf[typ].astype(str).str.strip() if typ else pd.Series("", index=gdf.index),
+            "type_orig": mapped_typ,
         }, geometry=gdf.geometry, crs=4326))
     else:
         print(f"[LEWATI] {key}: tipe geometri {geom_types}")
