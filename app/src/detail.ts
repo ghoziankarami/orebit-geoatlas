@@ -8,6 +8,14 @@ import { periodName } from "./timescale";
 export const esc = (v: unknown) =>
   String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
+export const safeColor = (v: unknown, fallback = "#D9DEE1") => {
+  const s = String(v ?? "").trim();
+  return /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(s) ? s : fallback;
+};
+
+const safeHttpUrl = (v: unknown): string | undefined =>
+  typeof v === "string" && /^https?:\/\//i.test(v.trim()) ? v.trim() : undefined;
+
 const fmtMa = (top?: number, base?: number) => {
   if (top === undefined && base === undefined) return "";
   const f = (n?: number) => (n === undefined || Number.isNaN(n) ? "?" : n.toLocaleString(getLang(), { maximumFractionDigits: 4 }));
@@ -21,7 +29,7 @@ function row(label: string, value: string) {
 }
 
 function swatch(color: unknown) {
-  return `<span class="swatch" style="background:${esc(color || "#D9DEE1")}"></span>`;
+  return `<span class="swatch" style="background:${safeColor(color)}"></span>`;
 }
 
 function confidenceBadge(conf: string | undefined, isAutoDesc: boolean) {
@@ -42,7 +50,7 @@ function stratPositionBar(top?: number, base?: number, color?: string) {
   const rightPct = Math.max(leftPct + 2, Math.min(100, (base / maxMa) * 100));
   const widthPct = Math.max(2, rightPct - leftPct);
   return `<div class="strat-bar" aria-hidden="true" title="0–600 Ma">
-    <div class="strat-bar-fill" style="left:${leftPct.toFixed(1)}%;width:${widthPct.toFixed(1)}%;background:${esc(color || "#2E6A86")}"></div>
+    <div class="strat-bar-fill" style="left:${leftPct.toFixed(1)}%;width:${widthPct.toFixed(1)}%;background:${safeColor(color, "#2E6A86")}"></div>
   </div>`;
 }
 
@@ -179,7 +187,7 @@ function renderOrebit(p: Record<string, unknown>, lines?: NearbyStructure[]) {
       ${p.region ? row(t("regionLabel"), esc(String(p.region).toUpperCase())) : ""}
       ${row(t("unitCode"), esc(p.unit_id))}
       ${row(t("description"), esc(description || t("notInSource")))}
-      ${row(t("source"), `${esc(p.sheet_name)}<br><span class="muted">Pusat Survei Geologi · Badan Geologi</span>${p.source_url ? `<br><a class="inline-src" href="${esc(p.source_url)}" target="_blank" rel="noopener">${esc(t("openSourceService"))}</a>` : ""}`)}
+      ${row(t("source"), `${esc(p.sheet_name)}<br><span class="muted">Pusat Survei Geologi · Badan Geologi</span>${safeHttpUrl(p.source_url) ? `<br><a class="inline-src" href="${esc(safeHttpUrl(p.source_url))}" target="_blank" rel="noopener">${esc(t("openSourceService"))}</a>` : ""}`)}
     </dl>
     ${structures(lines)}
     ${references(name)}`;

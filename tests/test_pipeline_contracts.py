@@ -116,7 +116,7 @@ class TestPipelineContracts(unittest.TestCase):
         self.assertEqual(data.get("schema"), "orebit-geoatlas-index-v1")
         self.assertEqual(set(data.get("regions", [])), set(REGION_ORDER))
         self.assertGreaterEqual(len(data.get("units", [])), 550)
-        for u in data["units"][:50]:
+        for u in data["units"]:
             self.assertEqual(len(u["bbox"]), 4)
             self.assertLessEqual(u["age_top_ma"], u["age_base_ma"])
             self.assertIn(u["confidence"], {"curated", "auto", "flagged"})

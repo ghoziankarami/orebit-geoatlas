@@ -939,6 +939,7 @@ let activeNearbyLines: maplibregl.MapGeoJSONFeature[] | undefined;
 let activeIndexUnit: NationalUnit | null = null;
 
 function selectFeature(f: maplibregl.MapGeoJSONFeature, nearbyLines?: maplibregl.MapGeoJSONFeature[]) {
+  transect.hide();
   activeFeature = f;
   activeIndexUnit = null;
   activeNearbyLines = nearbyLines;
@@ -955,6 +956,7 @@ function selectFeature(f: maplibregl.MapGeoJSONFeature, nearbyLines?: maplibregl
 }
 
 function selectIndexUnit(u: NationalUnit) {
+  transect.hide();
   activeFeature = null;
   activeNearbyLines = undefined;
   activeIndexUnit = u;
@@ -1055,8 +1057,8 @@ document.addEventListener("keydown", (event) => {
   if (toolsMenu.open) {
     toolsMenu.open = false;
     $("toolsSummary").focus();
-  } else if (transect.isActive()) {
-    transect.setActive(false);
+  } else if (transect.isActive() || !$<HTMLElement>("transectPanel").hidden) {
+    transect.hide();
     $("transectBtn").focus();
   } else if (!$<HTMLElement>("detail").hidden) {
     hideDetail();

@@ -131,7 +131,23 @@ class TestBrowserUIUX(unittest.TestCase):
             self.assertIn("km", transect_panel.inner_text())
             page.locator("#transectClose").click()
 
-            # 6. Verify Live UTM Coordinate bar & Language toggle ID <-> EN
+            # 6. Verify 3D mode (#terrainView) also keeps zero overlap between #detail and #mapControls
+            page.locator("#terrainView").click()
+            page.locator("#searchInput").fill("TRJkg")
+            page.wait_for_selector("#searchResults .search-item")
+            page.locator("#searchResults .search-item").first.click()
+            detail.wait_for(state="visible")
+            box_detail_3d = detail.bounding_box()
+            box_ctrls_3d = page.locator("#mapControls").bounding_box()
+            assert box_detail_3d and box_ctrls_3d
+            self.assertFalse(
+                boxes_overlap(box_detail_3d, box_ctrls_3d),
+                f"3D Detail overlaps mapControls: {box_detail_3d} vs {box_ctrls_3d}",
+            )
+            page.keyboard.press("Escape")
+            page.locator("#planView").click()
+
+            # 7. Verify Live UTM Coordinate bar & Language toggle ID <-> EN
             self.assertIn("mE", page.locator("#coordBar").inner_text())
             page.locator("#langBtn").click()
             self.assertEqual(page.locator("html").get_attribute("lang"), "en")
@@ -151,17 +167,45 @@ class TestBrowserUIUX(unittest.TestCase):
             page.goto(self.base_url, wait_until="domcontentloaded")
             page.wait_for_selector("#searchInput")
 
-            # Peek state must keep search & region bar visible
+            # Peek state must keep search & region bar unclipped inside #panel
+            panel_box = page.locator("#panel").bounding_box()
+            search_box = page.locator("#searchInput").bounding_box()
+            reg_box = page.locator("#regionBar").bounding_box()
+            chip_box = page.locator("#regionBar .region-chip").first.bounding_box()
+            assert panel_box and search_box and reg_box and chip_box
             self.assertEqual(page.locator("#panel").get_attribute("data-snap"), "peek")
-            self.assertTrue(page.locator("#searchInput").is_visible())
-            self.assertTrue(page.locator("#regionBar").is_visible())
+            self.assertGreaterEqual(reg_box["height"], 30, f"regionBar squashed in peek: {reg_box}")
+            self.assertGreaterEqual(chip_box["height"], 30, f"region-chip squashed in peek: {chip_box}")
+            self.assertLessEqual(
+                chip_box["y"] + chip_box["height"],
+                panel_box["y"] + panel_box["height"] + 1,
+                f"region-chip clipped at bottom in peek: {chip_box} vs {panel_box}",
+            )
 
-            # Snap to half & full
+            # Snap to half & verify regionBar stays unclipped
             page.locator("#snapHalf").click()
             self.assertEqual(page.locator("#panel").get_attribute("data-snap"), "half")
+            reg_half = page.locator("#regionBar").bounding_box()
+            assert reg_half
+            self.assertGreaterEqual(reg_half["height"], 30, f"regionBar squashed in half: {reg_half}")
+
             page.locator("#snapFull").click()
             self.assertEqual(page.locator("#panel").get_attribute("data-snap"), "full")
             page.locator("#snapPeek").click()
+
+            # Open detail on mobile and verify zero overlap with .map-foot
+            page.locator("#searchInput").fill("TRJkg")
+            page.wait_for_selector("#searchResults .search-item")
+            page.locator("#searchResults .search-item").first.click()
+            detail = page.locator("#detail")
+            detail.wait_for(state="visible")
+            m_detail = detail.bounding_box()
+            m_foot = page.locator(".map-foot").bounding_box()
+            assert m_detail and m_foot
+            self.assertFalse(
+                boxes_overlap(m_detail, m_foot),
+                f"Mobile detail overlaps map-foot: {m_detail} vs {m_foot}",
+            )
 
             # Check no horizontal overflow
             scroll_w = page.evaluate("document.documentElement.scrollWidth")

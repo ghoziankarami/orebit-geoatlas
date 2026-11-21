@@ -1,5 +1,5 @@
 import type maplibregl from "maplibre-gl";
-import { esc } from "./detail";
+import { esc, safeColor } from "./detail";
 import { getLang, t } from "./i18n";
 import { QUERY_LAYERS } from "./layers";
 
@@ -180,13 +180,13 @@ export function createTransectController(map: maplibregl.Map, onActiveChange: (a
     }));
 
     const stripHtml = `<div class="transect-strip" role="img" aria-label="${esc(t("transectTitle"))}">${lastSegments
-      .map((seg) => `<span style="width:${Math.max(2, seg.pct)}%;background:${esc(seg.color)}" title="${esc(seg.label)} (${seg.km} km)"></span>`)
+      .map((seg) => `<span style="width:${Math.max(2, seg.pct)}%;background:${safeColor(seg.color)}" title="${esc(seg.label)} (${seg.km} km)"></span>`)
       .join("")}</div>`;
 
     const listHtml = `<ul class="transect-list">${lastSegments
       .map(
         (seg) => `<li>
-        <span class="chip" style="background:${esc(seg.color)}"></span>
+        <span class="chip" style="background:${safeColor(seg.color)}"></span>
         <span class="transect-seg-name">${esc(seg.label)}${seg.symbol ? ` <code>${esc(seg.symbol)}</code>` : ""}</span>
         <span class="transect-seg-meta">${seg.km.toFixed(1)} km · ${seg.pct}%</span>
       </li>`,
@@ -245,6 +245,12 @@ export function createTransectController(map: maplibregl.Map, onActiveChange: (a
   return {
     isActive: () => active,
     setActive,
+    hide: () => {
+      active = false;
+      btn.setAttribute("aria-pressed", "false");
+      map.getCanvas().style.cursor = "";
+      panel.hidden = true;
+    },
     addPoint: (lng: number, lat: number) => {
       if (!active) return false;
       points.push({ lng, lat });
