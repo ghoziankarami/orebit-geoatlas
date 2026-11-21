@@ -417,7 +417,7 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
   .map-foot .attrib { display: none; }
 
   .detail, .transect-panel {
-    left: 8px; right: 8px; top: 62px; width: auto; max-height: calc(100% - 256px - env(safe-area-inset-bottom, 0px));
+    left: 8px; right: 8px; top: 62px; width: auto; max-height: calc(100% - 284px - env(safe-area-inset-bottom, 0px));
     border-radius: 12px; padding: 14px 16px 16px;
   }
   .detail .close { width: 44px; height: 44px; top: 4px; right: 4px; }

@@ -184,6 +184,9 @@ export function initSearch(map: maplibregl.Map, hooks: SearchHooks) {
   void loadNationalIndex();
 
   const close = () => {
+    window.clearTimeout(localTimer);
+    window.clearTimeout(placeTimer);
+    latestQuery = "";
     box.hidden = true;
     activeIdx = -1;
   };
