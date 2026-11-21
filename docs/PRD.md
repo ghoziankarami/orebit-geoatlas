@@ -1,49 +1,25 @@
-# PRD ringkas: Orebit GeoAtlas
+# PRD: Orebit GeoAtlas — Workstation Geologi Regional & Eksplorasi Full Satu Indonesia (v2.1)
 
-Dokumen ini mencatat sasaran produk. Cakupan dan batasan yang tersedia
-dijelaskan di [README](../README.md); langkah kerja ada di
-[panduan pengembangan](DEVELOPMENT.md).
+Dokumen ini mencatat sasaran produk, kebutuhan fungsional, dan kriteria penerimaan **Orebit GeoAtlas v2.1** berdasarkan [Audit Senior Geologist & UI/UX 21 November 2026](audits/audit-senior-geologist-uiux-2026-11-21.md). Kontrak teknis berada di [SPEC](SPEC.md), antrean tugas terbuka di [TASKS](PLAN-geoatlas.md), dan pembagian Work Package di [WORK-PACKAGES](handover/WORK-PACKAGES-geoatlas.md).
 
-## Tujuan
-1. Peta geologi Indonesia mulus dari zoom 0 sampai 1:100k (zoom ~14), tanpa batas lembar terlihat.
-2. Legenda terharmonisasi: umur numerik (Ma), kelas litologi baku, nama formasi konsisten.
-3. Ringan di laptop dan HP kelas menengah (4G).
-4. Kode terbuka, data siap dikontribusikan ke Macrostrat.
+## 1. Tujuan Produk
+1. **Cakupan Penuh 8 Wilayah Kepulauan Indonesia (`sumatra`, `babel`, `jawa`, `balinusra`, `kalimantan`, `sulawesi`, `maluku`, `papua`):** Peta geologi regional bersambung mulus dari zoom global hingga zoom 14 berdasarkan kompilasi Peta Geologi Bersistem Indonesia Skala 1:250.000 & 1:1.000.000 (Puslitbang Geologi / P3G & Pusat Survei Geologi, Badan Geologi).
+2. **Standarisasi Stratigrafi (ICS) & Litologi Lengkap:** Setiap satuan batuan memiliki umur numerik (`age_top_ma`–`age_base_ma` sesuai *International Chronostratigraphic Chart*), kelas litologi baku (8 kelas utama), rincian litologi (`lith_detail`), serta atribusi lembar peta (`NM_LEMBAR` / `NO_LEMBAR`).
+3. **Penampang Geologi Bawah Permukaan (`Penampang Geologi A — A'`):** Menghasilkan penampang geologi panoramik yang memadukan profil topografi DTM Mapterhorn, arsitektur perlapisan bawah permukaan (hukum superposisi, kemiringan perlapisan, batolit/intrusi yang memotong dari bawah, ketidakselarasan Kuarter), bidang patahan/sesar miring dengan pergeseran blok (*fault throw*), arsiran litologi standar USGS/FGDC, kontrol Perbesaran Vertikal (`VE`), kursor sinkron peta–penampang, serta ekspor `SVG` dan `CSV`.
+4. **Workstation Cek Lokasi & Impor SHP / GeoJSON / KML:** Memungkinkan geolog eksplorasi mengunggah atau *drag-and-drop* batas WIUP/IUP, titik bor, atau poligon kerja (`.zip` SHP, `.shp`+`.dbf`+`.prj`, `.geojson`, `.kml`) baik dalam koordinat **WGS84** maupun **UTM Zona 46N–54S**, langsung melihat pin dan batas lokasi di peta, memeriksa atribut `.dbf`, dan merangkum formasi serta litologi yang terpotong.
+5. **Navigasi Ergonomis Desktop & Seluler:** Dilengkapi riwayat tampilan kamera (`← Back`), kompas `Northing Up (N▲)` yang selalu aktif di mode 2D & 3D, *bottom sheet* seluler 3-snap (`peek`/`half`/`full`) bebas tabrakan, dan antarmuka profesional tanpa jargon skrip internal.
 
-Non-tujuan: bukan peta resmi; tanpa editing; tidak dijual (lisensi GeoMap).
+Non-tujuan: bukan peta resmi pengganti lembar cetak untuk rekayasa tapak detail; tanpa fitur pengeditan poligon server-side; tidak diperjualbelikan.
 
-## Metrik MVP
-| Metrik | Target |
-| --- | --- |
-| Tampil peta pertama (4G, HP menengah) | < 2,5 detik |
-| Ukuran satu tile vektor | < 500 KB |
-| PMTiles Bangka–Belitung | < 30 MB |
-| Poligon lolos validasi | ≥ 98% |
+## 2. Kebutuhan Fungsional Baru (Gelombang F & G — Hasil Audit Senior Geologist)
 
-## Sumber data
-| Sumber | Zoom | Lisensi |
-| --- | --- | --- |
-| Macrostrat carto tiles | 0–14 (dasar) | CC-BY 4.0 |
-| USGS OFR 97-470F (geo3bl) | cadangan regional | domain publik |
-| GeoMap PSG, SHP 1:100k per kab/kota | 8–14 | atribusi PSG, dilarang dijual |
-| GLiM | referensi litologi | cek CCGM |
-
-**Catatan cakupan saat ini:** tile Orebit yang dipakai aplikasi berasal dari layanan Geologi Litologi ESDM berstatus Mei 2018 untuk Bangka-Belitung dan Sumatra; metadata pipeline tidak menyebut skala. Sumatra masih memakai pemetaan otomatis untuk 470/479 unit, sehingga belum memenuhi sasaran kurasi lintas lembar. Jawa, Kalimantan, Sulawesi, dan Papua saat ini memakai lapisan dasar Macrostrat, bukan data rinci Orebit. Target 1:100.000 di atas adalah sasaran produk dan memerlukan lembar GeoMap terverifikasi.
-
-## Fitur MVP
-F1 peta multi-skala · F2 popup unit (formasi, umur, litologi, sumber) · F3 mode warna umur/litologi ·
-F4 filter umur (Ma) · F5 layer sesar/kontak · F6 pencarian lokasi · F7 URL bisa dibagikan ·
-F8 responsif (bottom sheet ≤ 760 px) · F9 ID/EN · F10 halaman Tentang & Sumber ·
-F11 hillshade/topografi · F12 tampilan terrain 3D dengan tombol kembali ke plan view 2D.
-
-Fase 2: overlay fosil PBDB, kolom stratigrafi per cekungan, ekspor PNG/GeoJSON, ukur, laporan koreksi.
-
-## Roadmap
-| Milestone | Isi | Perkiraan |
-| --- | --- | --- |
-| M0 Scaffold | repo, app + Macrostrat, CI | Minggu 1 (selesai) |
-| M1 PoC Babel | SHP, crosswalk, PMTiles, popup | Minggu 2–3 |
-| M2 MVP publik | F1–F10, deploy atlas.orebit.id | Minggu 4 |
-| M3 Sumatra & Jawa | kurasi lintas lembar | Bulan 2–3 |
-| M4 Nasional + fase 2 | pulau lain, fosil, kolom | Bulan 4–6 |
-| M5 Kontribusi Macrostrat | kirim dataset | setelah M4 |
+| Kode | Kategori | Kebutuhan Fungsional | Kriteria Penerimaan |
+|---|---|---|---|
+| **PIP-05** | Pipeline & Provenance | Ekstraksi nama & nomor lembar peta asli (`NM_LEMBAR` / `NAME_OF_SH` & `NO_LEMBAR`) per poligon serta atribut mineral/lingkungan (`PEMBAWA`, `MINERAL`, `CLASS_LITH`) | Setiap poligon di `04_units.parquet` dan `units.geojsonl` menyimpan `sheet_name` lembar P3G 1:250.000 yang akurat. |
+| **DAT-06** | Integritas Data | Pengisian rincian litologi (`lith_detail`) geologis baku untuk seluruh 2.096 unit di `reference/units.csv` | `0` unit dengan `lith_detail` kosong; setiap unit menampilkan komposisi batuan spesifik pada panel detail dan penampang geologi. |
+| **DAT-07** | Integritas Data | Penajaman presisi sub-kala stratigrafi (`Miosen Awal/Tengah/Akhir`, `Pliosen`, `Oligosen`, `Eosen`, `Kapur Awal/Akhir`, `Jura`, `Trias`, `Permo-Karbon`) pada unit kompilasi | Unit dengan notasi sub-kala (`Tml`, `Tmm`, `Tmu`, `Tpl`, `Tol`, `Tel`, `PC*`, `TRJ*`, `JK*`, `KT*`) memiliki rentang Ma spesifik sesuai ICS. |
+| **TOOL-04** | Penampang Geologi | Penampang Geologi Panoramik (`A — A'`) multi-horizon dengan arsiran litologi USGS, patahan miring + *throw* (`↑↓`), pemilih *Vertical Exaggeration* (`1×/2×/5×/10×`), hover sinkron ke peta, dan ekspor `SVG` + `CSV` | Klik ≥2 titik menghasilkan SVG penampang ≥700px di desktop dengan lapisan bawah permukaan, sesar, kontrol VE, hover marker di peta, dan unduh SVG/CSV. |
+| **TOOL-05** | Impor SHP & Cek Lokasi | Impor `.zip` SHP / `.shp`+`.dbf`+`.prj` / `.geojson` / `.kml` dengan reproyeksi otomatis UTM 46N–54S → WGS84, *drag-and-drop* ke peta, pin lokasi (`📍`), popup atribut `.dbf`, dan laporan irisan formasi | Mengimpor SHP berkoordinat UTM maupun WGS84 langsung memindahkan kamera ke lokasi, menampilkan poligon + pin di peta, dan merangkum formasi di bawahnya. |
+| **UIX-06** | Navigasi, Bahasa & Mobile | Tombol `Back` (`#navBack`) & `Northing Up` (`#compassNorthBtn`) permanen di `.map-ctrls`, pembersihan penuh jargon internal (`auto_crosswalk.py`, `[AUTO]`) dari UI/About, dan optimasi *bottom sheet* + penampang di seluler | Tidak ada teks `auto_crosswalk.py` atau `[AUTO]` yang tampil di DOM; `#navBack` dan `#compassNorthBtn` berfungsi di 2D & 3D; layout seluler `375×812` bebas overflow. |
+| **TEST-03** | Pengujian Otomatis | Suite kontrak & Playwright E2E untuk reproyeksi UTM SHP, penampang geologi multi-horizon + VE, bebas jargon internal di DOM, serta navigasi `Back`/`Northing Up` | `local-ci.sh --full --write-receipt` lulus 8/8 pemeriksaan. |
+| **REL-02** | Rilis & Produksi | Pembangunan ulang `all-v3.pmtiles` & `indonesia-units-index.json` serta deploy terverifikasi ke `https://atlas.orebit.id/` | Endpoint produksi `https://atlas.orebit.id/` (`200`) dan `/tiles/all-v3.pmtiles` (`206`) terverifikasi live. |

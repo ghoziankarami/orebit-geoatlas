@@ -21,6 +21,8 @@ Dibuat 21 November 2026 dari `main` (`faed4d7`). Mengikuti [standar work package
 | **Gelombang C — UI/UX 100/100 & Alat Geolog** | `WP-10`, `WP-11`, `WP-12`, `WP-13` | **Sebagian (`UIX` `10→11` paralel dengan `TOOLS` `12→13`)** | `UIX`, `TOOLS` | Legenda stratigrafi & litologi interaktif klik-untuk-filter + chip preset era; Island Quick-Jump Bar 8 pulau + bottom sheet 3-snap seluler; kartu detail generasi baru + unduh GeoJSON + lapor koreksi; alat ukur jarak & profil lintasan geologi (strip-log) |
 | **Gelombang D — Ekspor Publikasi, A11y & Suite Tes** | `WP-14`, `WP-15`, `WP-16` | **Ya (3 lane disjoint)** | `TOOLS`, `UIX`, `TEST` | Ekspor PNG/PDF kualitas publikasi (kompas, skala bar, filter aktif); aksesibilitas WCAG 2.2 AA & paritas ID/EN 100%; suite otomatis Python + Node + Playwright desktop/mobile |
 | **Gelombang E — Sertifikasi, Deploy & Audit 100/100** | `WP-17`, `WP-18`, `WP-19`, `WP-20` | **Berurutan (Gate Rilis)** | `TEST`, `REL`, `HUMAN`, `DOCS` | Sertifikasi `local-ci.sh --full --write-receipt`; deploy VPS `atlas.orebit.id`; uji usability `HUM-01` ≥5 peserta; audit final 45/45 cek (100/100) |
+| **Gelombang F — Senior Geologist Workstation & Data P3G** | `WP-21`, `WP-22`, `WP-23`, `WP-24`, `WP-25` | **Ya (`PIPE→DATA` paralel dengan `TOOLS`, `MAP`, `UIX`)** | `PIPE`, `DATA`, `TOOLS`, `MAP`, `UIX` | Ekstraksi `NM_LEMBAR`/`NO_LEMBAR` P3G 1:250k per poligon; sintesis `lith_detail` 2.096 unit & presisi sub-kala ICS; penampang geologi bawah permukaan panoramik (`VE`, 3 horizon, patahan + *throw*, ekspor SVG); impor SHP UTM 46N–54S + *drag-drop* + atribut `.dbf`; navigasi `Back`/`Northing Up` + pembersihan jargon internal + optimasi seluler |
+| **Gelombang G — Sertifikasi Workstation & Rilis Produksi v3** | `WP-26`, `WP-27` | **Berurutan (Gate Rilis)** | `TEST`, `REL` | Suite kontrak & Playwright E2E untuk penampang geologi, SHP UTM, & navigasi; rebuild `all-v3.pmtiles` & deploy produksi `atlas.orebit.id` |
 
 ---
 
@@ -51,6 +53,13 @@ Urutan baris adalah urutan prioritas dan topologis (setiap dependensi selalu ber
 | WP-18 | Paket rilis nasional indonesia.pmtiles dan deploy produksi atlas.orebit.id | `release/national-atlas-deploy` | REL | REL-01 | REL-01 | WP-04, WP-17 | G4 | gpt-luna-6 | gpt-sol-6-1, pemilik | pemilik: setujui deploy kandidat ke atlas.orebit.id | RELEASE | full |
 | WP-19 | Uji usability representatif HUM-01 minimal 5 peserta geolog dan mahasiswa | `docs/hum-01-usability-round` | HUMAN | HUM-01 | HUM-01 | WP-18 | manusia | deepseek-flash | pemilik | pemilik: jadwal peserta uji usability | MEDIUM | targeted |
 | WP-20 | Audit akhir 45 cek SPEC §6 dan penutupan target Full Satu Indonesia 100/100 | `docs/val-01-final-100-audit` | DOCS | VAL-01 | VAL-01 | WP-18, WP-19 | G3 | gpt-luna-6 | gpt-sol-6-1, pemilik | — | HIGH | targeted |
+| WP-21 | Ekstraksi atribut lembar P3G 1:250.000 NM_LEMBAR dan NO_LEMBAR per poligon di pipeline | `feat/pipeline-sheet-provenance` | PIPE | PIP-05 | PIP-05 | WP-07 | G3 | gpt-luna-6 | claude-sonnet-5-5 | — | HIGH | targeted |
+| WP-22 | Sintesis lith_detail 2096 unit nasional dan penajaman presisi sub-kala stratigrafi ICS | `data/national-lith-detail-subepoch` | DATA | DAT-06, DAT-07 | DAT-06, DAT-07 | WP-21 | G3 | gpt-luna-6 | claude-opus-5-5 | — | HIGH | targeted |
+| WP-23 | Workstation penampang geologi bawah permukaan panoramik dengan VE, patahan, dan ekspor SVG | `feat/panoramic-geological-section` | TOOLS | TOOL-04 | TOOL-04 | WP-13 | G4 | gpt-luna-6 | claude-opus-5-5 | — | HIGH | browser |
+| WP-24 | Workstation impor SHP UTM 46N-54S dan WGS84 dengan pin lokasi, drag-drop, dan atribut DBF | `feat/shp-utm-workstation` | MAP, TOOLS | TOOL-05 | TOOL-05 | WP-12 | G4 | gpt-luna-6 | claude-sonnet-5-5 | — | HIGH | browser |
+| WP-25 | Navigasi kamera Back dan Northing Up 2D/3D, pembersihan jargon internal, dan optimasi seluler | `ux/navigation-clean-about-mobile` | UIX | UIX-06 | UIX-06 | WP-15 | G4 | deepseek-flash | claude-sonnet-5-5 | — | MEDIUM | browser |
+| WP-26 | Suite pengujian kontrak dan Playwright E2E untuk penampang geologi, SHP UTM, dan navigasi | `test/geologist-workstation-e2e` | TEST | TEST-03 | TEST-03 | WP-22, WP-23, WP-24, WP-25 | G4 | gpt-luna-6 | claude-sonnet-5-5 | — | HIGH | full |
+| WP-27 | Rebuild nasional all-v3.pmtiles dengan provenance lembar P3G dan deploy produksi atlas.orebit.id | `release/national-atlas-v3` | REL | REL-02 | REL-02 | WP-26 | G4 | gpt-luna-6 | gpt-sol-6-1, pemilik | — | RELEASE | full |
 <!-- END wp-registry -->
 
 ---
@@ -469,5 +478,149 @@ Branch `docs/val-01-final-100-audit` · Lane `DOCS` · Gerbang `G3` · Exec `gpt
 - [ ] Seluruh 45 cek SPEC §6 memiliki status terverifikasi dan rujukan bukti konkret (`VAL-01`).
 
 **Tes:** `bash ops/scripts/ci/local-ci.sh --full`
+
+**STOP-TANYA:** tidak ada.
+
+### WP-21 — Ekstraksi atribut lembar P3G 1:250.000 NM_LEMBAR dan NO_LEMBAR per poligon di pipeline
+
+Branch `feat/pipeline-sheet-provenance` · Lane `PIPE` · Gerbang `G3` · Exec `gpt-luna-6` · Review `claude-sonnet-5-5`
+
+**Tujuan:** Mengekstrak nama dan nomor lembar peta geologi asli (`NM_LEMBAR` / `NAME_OF_SH` dan `NO_LEMBAR` / `NUMBER_OF_`) serta atribut pembawa mineral (`PEMBAWA`, `MINERAL`, `CLASS_LITH`) dari berkas `.TAB`/`.shp` di `pipeline/01_ingest.py` dan meneruskannya ke `04_edgematch.py`, `05_export.py`, dan `reference/sources.csv`.
+
+**Lingkup file:** `pipeline/common.py`, `pipeline/01_ingest.py`, `pipeline/03_harmonize.py`, `pipeline/04_edgematch.py`, `pipeline/05_export.py`, `reference/sources.csv`; baris `PIP-05` di `docs/PLAN-geoatlas.md`.
+
+**Langkah:**
+1. Perbarui `reference/sources.csv` agar seluruh sumber wilayah merujuk pada **Kompilasi Peta Geologi Bersistem Indonesia Skala 1:250.000 (Puslitbang Geologi / P3G & Pusat Survei Geologi, Badan Geologi)**.
+2. Tambahkan ekstraksi kolom lembar (`NM_LEMBAR`, `NAME_OF_SH`, `SHEET`, `NO_LEMBAR`, `NUMBER_OF_`) pada `pipeline/01_ingest.py` menjadi kolom `sheet_orig`, lalu gabungkan di `04_edgematch.py` dan gunakan sebagai `sheet_name` spesifik lembar di `05_export.py` (mis. `Peta Geologi Lembar Tanjung Pandan (1213), Skala 1:250.000 — P3G`).
+
+**Selesai bila (DoD):**
+- [ ] `reference/sources.csv` dan `05_export.py` menyajikan atribusi lembar P3G/PSG 1:250.000 yang akurat (`PIP-05`).
+- [ ] `python3 pipeline/validate_reference.py` dan `python3 tests/test_pipeline_contracts.py` lulus (`PIP-05`).
+
+**Tes:** `python3 pipeline/validate_reference.py`, `python3 tests/test_pipeline_contracts.py`
+
+**STOP-TANYA:** tidak ada.
+
+### WP-22 — Sintesis lith_detail 2096 unit nasional dan penajaman presisi sub-kala stratigrafi ICS
+
+Branch `data/national-lith-detail-subepoch` · Lane `DATA` · Gerbang `G3` · Exec `gpt-luna-6` · Review `claude-opus-5-5`
+
+**Tujuan:** Mengisi kolom `lith_detail` dengan komposisi batuan geologis yang akurat untuk seluruh 2.096 unit di `reference/units.csv`, serta menajamkan presisi umur sub-kala ICS (`Miosen Awal/Tengah/Akhir`, `Pliosen`, `Oligosen`, `Eosen`, `Kapur`, `Jura`, `Trias`, `Permo-Karbon`) pada unit kompilasi 8 wilayah.
+
+**Lingkup file:** `reference/units.csv`, `pipeline/auto_crosswalk.py`, `app/public/data/indonesia-units-index.json`; baris `DAT-06` dan `DAT-07` di `docs/PLAN-geoatlas.md`.
+
+**Langkah:**
+1. Sintesis `lith_detail` geologis baku untuk seluruh 2.014 unit yang masih kosong di `reference/units.csv` berdasarkan nama satuan/formasi, kata kunci batuan (batupasir, batulempung, batugamping terumbu, tuf, breksi gunungapi, andesit, basal, granit biotit, granodiorit, diorit, gabro, peridotit/ofiolit, sekis, filit, kuarsit, bancuh/melange, aluvium), dan atribut lembar sumber.
+2. Perluas parser sub-kala notasi P3G (`Tml`, `Tmm`, `Tmu`, `Tpl`, `Tpu`, `Tol`, `Tou`, `Tel`, `Tem`, `Teu`, `Kl`, `Ku`, `Jl`, `Jm`, `Ju`, `TRl`, `TRm`, `TRu`, `PC`, `CP`, `TRJ`, `PTR`, `TQ`, `QT`) agar setiap unit memiliki rentang `age_top_ma` dan `age_base_ma` yang presisi.
+3. Jalankan `python3 pipeline/validate_reference.py` dan `python3 pipeline/build_index.py`.
+
+**Selesai bila (DoD):**
+- [ ] `0` baris di `reference/units.csv` memiliki `lith_detail` kosong (`DAT-06`).
+- [ ] Unit dengan simbol sub-kala P3G memiliki rentang umur ICS spesifik dan lulus `python3 pipeline/validate_reference.py` (`DAT-07`).
+- [ ] `app/public/data/indonesia-units-index.json` terbangun ulang secara deterministik (`DAT-06`, `DAT-07`).
+
+**Tes:** `python3 pipeline/validate_reference.py`, `python3 pipeline/build_index.py`, `python3 tests/test_pipeline_contracts.py`
+
+**STOP-TANYA:** tidak ada.
+
+### WP-23 — Workstation penampang geologi bawah permukaan panoramik dengan VE, patahan, dan ekspor SVG
+
+Branch `feat/panoramic-geological-section` · Lane `TOOLS` · Gerbang `G4` · Exec `gpt-luna-6` · Review `claude-opus-5-5`
+
+**Tujuan:** Mengembangkan `#transectPanel` menjadi Workstation Penampang Geologi Bawah Permukaan Panoramik (`Penampang Geologi A — A'`, lebar hingga `740px–880px` di desktop) dengan 3 horizon stratigrafi bertingkat menurut kedalaman, arsiran litologi standar USGS/FGDC, bidang patahan/sesar miring dengan pergeseran blok (*throw* `↑`/`↓`), kontrol Perbesaran Vertikal (`VE: 1×, 2×, 5×, 10×`), hover sinkron peta–penampang, dan ekspor `SVG` serta `CSV`.
+
+**Lingkup file:** `app/src/transect.ts`, `app/src/style.css`, `app/src/i18n.ts`, `app/index.html`; baris `TOOL-04` di `docs/PLAN-geoatlas.md`.
+
+**Langkah:**
+1. Bangun generator SVG penampang geologi panoramik (`viewBox="0 0 820 268"`) di `app/src/transect.ts` yang menggambar lapisan *basement* terpatahkan, lapisan stratigrafi miring/terlipat dengan 3 garis perlapisan internal (`bedding planes`), intrusi batolit plutonik memotong dari bawah, lapisan Kuarter di atas ketidakselarasan, serta arsiran litologi USGS (`pat-carbonate`, `pat-siliciclastic`, `pat-volcanic`, `pat-plutonic_felsic`, `pat-plutonic_mafic`, `pat-metamorphic`, `pat-unconsolidated`, `pat-melange`).
+2. Gambar bidang sesar/patahan miring (`#DC2626`, kemiringan ~68°) lengkap dengan panah pergeseran *hanging-wall / footwall* (`↑` / `↓`), pergeseran vertikal lapisan (*fault throw*), dan label `F1`, `F2`, serta fallback resolusi unit dari `getLoadedNationalUnits()`.
+3. Tambahkan kontrol Perbesaran Vertikal (`VE: 1×, 2×, 5×, 10×`), kursor hover interaktif pada SVG yang menampilkan titik posisi di peta, serta tombol unduh `SVG` di samping `CSV`.
+
+**Selesai bila (DoD):**
+- [ ] Penampang geologi menampilkan lapisan bawah permukaan bertingkat, arsiran litologi USGS, label simbol formasi di penampang, dan bidang patahan miring dengan panah pergeseran (`TOOL-04`).
+- [ ] Pemilih `VE`, hover sinkron peta, dan ekspor `SVG`/`CSV` berfungsi tanpa menabrak `.panel`, `.map-ctrls`, atau `.map-foot` (`TOOL-04`).
+
+**Tes:** `cd app && npm run build`, `node tests/test_app_contracts.mjs`, `python3 tests/test_browser_uiux.py`
+
+**STOP-TANYA:** tidak ada.
+
+### WP-24 — Workstation impor SHP UTM 46N-54S dan WGS84 dengan pin lokasi, drag-drop, dan atribut DBF
+
+Branch `feat/shp-utm-workstation` · Lane `MAP, TOOLS` · Gerbang `G4` · Exec `gpt-luna-6` · Review `claude-sonnet-5-5`
+
+**Tujuan:** Memastikan berkas `.zip` (SHP), `.shp`+`.dbf`+`.prj`, `.geojson`, dan `.kml` dalam sistem koordinat **UTM Zona 46N–54S** maupun **WGS84** langsung terkonversi akurat ke `[lng, lat]`, terlihat mencolok di peta dengan pin marker (`📍`) dan garis tepi berhalo putih, mendukung *drag-and-drop* ke peta, klik-untuk-inspeksi atribut `.dbf`, dan merangkum formasi geologi yang terpotong.
+
+**Lingkup file:** `app/src/shp_import.ts`, `app/src/style.css`, `app/src/i18n.ts`; baris `TOOL-05` di `docs/PLAN-geoatlas.md`.
+
+**Langkah:**
+1. Implementasikan `utmToLngLat(easting, northing, zone, isSouth)` dan parser `.prj` (`detectPrjSpec`) di `app/src/shp_import.ts`, dilengkapi deteksi otomatis koordinat meter UTM serta pemilih dropdown `CRS (WGS84 / UTM 46S..54N)` untuk berganti zona UTM dengan satu klik bila berkas `.shp` diunggah tanpa `.prj`.
+2. Render poligon/garis/titik SHP di bagian paling atas stack layer MapLibre dengan *white halo* (`5.5px`) + garis tepi `#E11D48` (`3px`) + pin marker HTML (`📍 <nama file>`) di titik tengah lokasi, serta otomatis `fitBounds`/`flyTo` ke lokasi SHP.
+3. Tambahkan dukungan *drag-and-drop* berkas `.zip`/`.shp`/`.geojson`/`.kml` langsung ke kanvas peta dan tampilkan ringkasan formasi & litologi yang berada di bawah area SHP.
+
+**Selesai bila (DoD):**
+- [ ] Impor SHP berkoordinat UTM (46N–54S) maupun WGS84 langsung memindahkan kamera ke lokasi yang tepat di Indonesia dan menampilkan poligon + pin marker `📍` (`TOOL-05`).
+- [ ] Pemilih zona UTM interaktif dan daftar formasi/litologi terpotong berfungsi dengan benar (`TOOL-05`).
+
+**Tes:** `cd app && npm run build`, `node tests/test_app_contracts.mjs`, `python3 tests/test_browser_uiux.py`
+
+**STOP-TANYA:** tidak ada.
+
+### WP-25 — Navigasi kamera Back dan Northing Up 2D/3D, pembersihan jargon internal, dan optimasi seluler
+
+Branch `ux/navigation-clean-about-mobile` · Lane `UIX` · Gerbang `G4` · Exec `deepseek-flash` · Review `claude-sonnet-5-5`
+
+**Tujuan:** Menambahkan tombol riwayat navigasi kamera (`#navBack` `←`) dan tombol kompas `Northing Up` (`#compassNorthBtn` `N▲`) yang selalu aktif di mode 2D maupun 3D, menghapus seluruh jargon skrip/otomatis (`auto_crosswalk.py`, `[AUTO]`, `Curation confidence levels`) dari dialog Tentang & Detail Unit, serta mengoptimalkan ergonomi tampilan seluler (`≤ 760px`).
+
+**Lingkup file:** `app/index.html`, `app/src/main.ts`, `app/src/about.ts`, `app/src/detail.ts`, `app/src/i18n.ts`, `app/src/style.css`; baris `UIX-06` di `docs/PLAN-geoatlas.md`.
+
+**Langkah:**
+1. Tambahkan `#navBack` (riwayat hingga 25 posisi kamera sebelum pan/zoom/lompat pulau/cari unit) dan `#compassNorthBtn` (reset instan `bearing: 0, pitch: 0` dengan jarum kompas yang berputar real-time) di `#mapControls`.
+2. Bersihkan `app/src/about.ts`, `app/src/detail.ts`, dan `app/src/i18n.ts` dari istilah `auto_crosswalk.py`, `[AUTO]`, `Automated Mapping`, dan `Curation confidence levels`; tampilkan informasi sumber **Peta Geologi Bersistem Indonesia Skala 1:250.000 (P3G / PSG, Badan Geologi)** serta metodologi harmonisasi ICS.
+3. Optimalkan layout seluler di `app/src/style.css` (`-webkit-overflow-scrolling: touch`, `overscroll-behavior: contain`, scroll horizontal penampang geologi panoramik, dan auto-snap ke `peek` saat detail atau penampang dibuka).
+
+**Selesai bila (DoD):**
+- [ ] `#navBack` dan `#compassNorthBtn` berfungsi di mode 2D & 3D tanpa tabrakan layout (`UIX-06`).
+- [ ] Tidak ada teks `auto_crosswalk.py` atau `[AUTO]` yang tampil pada dialog Tentang maupun kartu Detail Unit (`UIX-06`).
+- [ ] Tampilan seluler (`375×812`) lulus uji zero-overlap dan zero-horizontal-overflow (`UIX-06`).
+
+**Tes:** `cd app && npm run build`, `node tests/test_app_contracts.mjs`, `python3 tests/test_browser_uiux.py`
+
+**STOP-TANYA:** tidak ada.
+
+### WP-26 — Suite pengujian kontrak dan Playwright E2E untuk penampang geologi, SHP UTM, dan navigasi
+
+Branch `test/geologist-workstation-e2e` · Lane `TEST` · Gerbang `G4` · Exec `gpt-luna-6` · Review `claude-sonnet-5-5`
+
+**Tujuan:** Memperluas suite pengujian otomatis (`test_pipeline_contracts.py`, `test_app_contracts.mjs`, `test_browser_uiux.py`) agar menguji konversi UTM→WGS84 `shp_import.ts`, penampang geologi multi-horizon + patahan, ketiadaan jargon internal di DOM, serta tombol navigasi `#navBack` dan `#compassNorthBtn`.
+
+**Lingkup file:** `tests/test_pipeline_contracts.py`, `tests/test_app_contracts.mjs`, `tests/test_browser_uiux.py`; baris `TEST-03` di `docs/PLAN-geoatlas.md`.
+
+**Langkah:**
+1. Tambahkan pengujian `utmToLngLat` dan `detectPrjSpec` di `tests/test_app_contracts.mjs` untuk memverifikasi akurasi konversi koordinat UTM Zona 48S (Bangka-Belitung) dan 50S (Kalimantan) ke WGS84 (< 5 meter toleransi).
+2. Tambahkan pengujian di `tests/test_browser_uiux.py` untuk memverifikasi tombol `#navBack`, `#compassNorthBtn`, `#shpImportBtn`, penampang geologi panoramik (`svg` dengan `<pattern id="pat-`), dan memastikan dialog `#aboutDialog` bebas dari string `auto_crosswalk.py`.
+
+**Selesai bila (DoD):**
+- [ ] `bash ops/scripts/ci/local-ci.sh --full` lulus penuh 8/8 pemeriksaan (`TEST-03`).
+
+**Tes:** `bash ops/scripts/ci/local-ci.sh --full`
+
+**STOP-TANYA:** tidak ada.
+
+### WP-27 — Rebuild nasional all-v3.pmtiles dengan provenance lembar P3G dan deploy produksi atlas.orebit.id
+
+Branch `release/national-atlas-v3` · Lane `REL` · Gerbang `G4` · Exec `gpt-luna-6` · Review `gpt-sol-6-1, pemilik`
+
+**Tujuan:** Membangun ulang `all-v3.pmtiles` dan `app/public/data/indonesia-units-index.json` dengan atribusi lembar P3G 1:250.000 per poligon serta `lith_detail` lengkap untuk 2.096 unit, menulis receipt `local-ci.sh --full --write-receipt`, dan men-deploy ke `https://atlas.orebit.id/`.
+
+**Lingkup file:** `app/public/data/indonesia-units-index.json`, `docs/runbooks/deploy-atlas-vps.md`; baris `REL-02` di `docs/PLAN-geoatlas.md`.
+
+**Langkah:**
+1. Jalankan pipeline penuh 8 wilayah (`babel`, `sumatra`, `jawa`, `balinusra`, `kalimantan`, `sulawesi`, `maluku`, `papua`) → `data/out/all/all.pmtiles` dan `python3 pipeline/build_index.py`.
+2. Jalankan `bash ops/scripts/ci/local-ci.sh --full --write-receipt`, bangun `app/dist` produksi, dan sinkronkan ke `orebit-vps2` (`/var/www/atlas.orebit.id/tiles/all-v3.pmtiles` & `/var/www/atlas.orebit.id/current`).
+
+**Selesai bila (DoD):**
+- [ ] `https://atlas.orebit.id/` merespons `HTTP/2 200` dan `/tiles/all-v3.pmtiles` merespons `HTTP/2 206` dengan atribut `lith_detail` dan `sheet_name` lembar P3G lengkap (`REL-02`).
+
+**Tes:** `bash ops/scripts/ci/local-ci.sh --full --write-receipt`
 
 **STOP-TANYA:** tidak ada.

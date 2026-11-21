@@ -91,6 +91,10 @@ export function searchNationalIndex(units: readonly NationalUnit[], query: strin
 let cachedIndex: NationalUnit[] | null = null;
 let indexPromise: Promise<NationalUnit[]> | null = null;
 
+export function getLoadedNationalUnits(): NationalUnit[] {
+  return cachedIndex ?? [];
+}
+
 export async function loadNationalIndex(): Promise<NationalUnit[]> {
   if (cachedIndex) return cachedIndex;
   if (!indexPromise) {

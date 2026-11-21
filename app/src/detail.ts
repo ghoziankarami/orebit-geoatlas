@@ -32,13 +32,39 @@ function swatch(color: unknown) {
   return `<span class="swatch" style="background:${safeColor(color)}"></span>`;
 }
 
-function confidenceBadge(conf: string | undefined, isAutoDesc: boolean) {
-  const status = conf || (isAutoDesc ? "auto" : "curated");
-  if (status === "flagged") {
-    return `<span class="conf-badge is-flagged">${esc(t("confBadgeFlagged"))}</span>`;
+function formatSheetSource(sheetRaw: unknown, regionRaw: unknown): string {
+  const s = String(sheetRaw ?? "").trim();
+  const reg = String(regionRaw ?? "").toLowerCase();
+  const isEn = getLang() === "en";
+  const regMapId: Record<string, string> = {
+    babel: "Kompilasi Peta Geologi Lembar Bangka & Belitung (Skala 1:250.000)",
+    sumatra: "Kompilasi Peta Geologi Bersistem Sumatra (Skala 1:250.000)",
+    jawa: "Kompilasi Peta Geologi Bersistem Jawa & Madura (Skala 1:100.000–1:250.000)",
+    balinusra: "Kompilasi Peta Geologi Bersistem Bali & Nusa Tenggara (Skala 1:250.000)",
+    kalimantan: "Kompilasi Peta Geologi Bersistem Kalimantan (Skala 1:250.000)",
+    sulawesi: "Kompilasi Peta Geologi Bersistem Sulawesi (Skala 1:250.000)",
+    maluku: "Kompilasi Peta Geologi Bersistem Kepulauan Maluku (Skala 1:250.000)",
+    papua: "Kompilasi Peta Geologi Bersistem Papua (Skala 1:250.000)",
+  };
+  const regMapEn: Record<string, string> = {
+    babel: "Geological Map Compilation of Bangka & Belitung Sheets (1:250,000)",
+    sumatra: "Systematic Geological Map Compilation of Sumatra (1:250,000)",
+    jawa: "Systematic Geological Map Compilation of Java & Madura (1:100,000–1:250,000)",
+    balinusra: "Systematic Geological Map Compilation of Bali & Nusa Tenggara (1:250,000)",
+    kalimantan: "Systematic Geological Map Compilation of Kalimantan (1:250,000)",
+    sulawesi: "Systematic Geological Map Compilation of Sulawesi (1:250,000)",
+    maluku: "Systematic Geological Map Compilation of Maluku Islands (1:250,000)",
+    papua: "Systematic Geological Map Compilation of Papua (1:250,000)",
+  };
+  if (!s || /Geology-|litoirian|layanan Geologi Litologi ESDM/i.test(s)) {
+    return (isEn ? regMapEn[reg] : regMapId[reg]) || (isEn ? "Systematic Geological Map of Indonesia (1:250,000)" : "Peta Geologi Bersistem Indonesia (Skala 1:250.000)");
   }
-  if (status === "auto") {
-    return `<span class="conf-badge is-auto">${esc(t("confBadgeAuto"))}</span>`;
+  return s;
+}
+
+function unitScaleBadge(conf: string | undefined) {
+  if (conf === "flagged") {
+    return `<span class="conf-badge is-flagged">${esc(t("confBadgeFlagged"))}</span>`;
   }
   return `<span class="conf-badge is-curated">${esc(t("confBadgeCurated"))}</span>`;
 }
@@ -164,21 +190,25 @@ function renderOrebit(p: Record<string, unknown>, lines?: NearbyStructure[]) {
     periodName(base, getLang());
   const name = p.formation || p.name_orig || t("unnamed");
   const rawDescription = String(p.description ?? "");
-  const isAuto = /^\[AUTO\]/i.test(rawDescription);
-  const description = rawDescription.replace(/^\[AUTO\](\[KONFLIK\])?\s*/i, "");
-  const conf = typeof p.confidence === "string" ? p.confidence : isAuto ? "auto" : "curated";
+  const description = rawDescription
+    .replace(/^\[AUTO\](\[KONFLIK\])?\s*/i, "")
+    .replace(/\s*—\s*umur sumber:.*$/i, "")
+    .trim();
+  const conf = typeof p.confidence === "string" ? p.confidence : "curated";
   const qualityWarning = /klabat/i.test(String(name))
     ? t("klabatWarning")
     : /kluet/i.test(String(name))
       ? t("kluetWarning")
-      : isAuto
-        ? t("autoReview")
-        : "";
+      : "";
+  const formattedSheet = formatSheetSource(p.sheet_name, p.region);
+  const srcUrl = safeHttpUrl(p.source_url) && !/MapServer/i.test(String(p.source_url))
+    ? safeHttpUrl(p.source_url)
+    : "https://geologi.esdm.go.id/geomap";
   return `
     <p class="detail-kicker">${esc(nameKind(name))} · ${esc(t("sourceOrebit"))}</p>
     <h2>${swatch(p.color_hex)}${esc(name)}</h2>
     ${p.symbol ? `<p class="symbol">${esc(t("unitSymbol"))}: <code>${esc(p.symbol)}</code></p>` : ""}
-    <div class="detail-badges">${confidenceBadge(conf, isAuto)}</div>
+    <div class="detail-badges">${unitScaleBadge(conf)}</div>
     ${qualityWarning ? `<p class="detail-quality">${esc(qualityWarning)}</p>` : ""}
     <dl>
       ${row(t("age"), `${esc(ageText)}<br><span class="muted">${esc(fmtMa(top, base))}</span>${stratPositionBar(top, base, String(p.color_hex || ""))}`)}
@@ -186,8 +216,8 @@ function renderOrebit(p: Record<string, unknown>, lines?: NearbyStructure[]) {
       ${area !== undefined && area > 0 ? row(t("areaLabel"), `${area.toLocaleString(getLang(), { maximumFractionDigits: 1 })} km²`) : ""}
       ${p.region ? row(t("regionLabel"), esc(String(p.region).toUpperCase())) : ""}
       ${row(t("unitCode"), esc(p.unit_id))}
-      ${row(t("description"), esc(description || t("notInSource")))}
-      ${row(t("source"), `${esc(p.sheet_name)}<br><span class="muted">Pusat Survei Geologi · Badan Geologi</span>${safeHttpUrl(p.source_url) ? `<br><a class="inline-src" href="${esc(safeHttpUrl(p.source_url))}" target="_blank" rel="noopener">${esc(t("openSourceService"))}</a>` : ""}`)}
+      ${row(t("description"), esc(description || lithLabel || t("notInSource")))}
+      ${row(t("source"), `${esc(formattedSheet)}<br><span class="muted">Puslitbang Geologi (P3G) / Pusat Survei Geologi · Badan Geologi</span>${srcUrl ? `<br><a class="inline-src" href="${esc(srcUrl)}" target="_blank" rel="noopener">${esc(t("openSourceService"))}</a>` : ""}`)}
     </dl>
     ${structures(lines)}
     ${references(name)}`;

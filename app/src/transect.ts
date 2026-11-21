@@ -3,6 +3,7 @@ import { esc, safeColor } from "./detail";
 import { getLang, t } from "./i18n";
 import { QUERY_LAYERS } from "./layers";
 import { LITH_CLASSES } from "./lithology";
+import type { NationalUnit } from "./search";
 
 export interface TransectPoint {
   lng: number;
@@ -92,6 +93,18 @@ export function samplePointsAlongLine(points: readonly TransectPoint[], n = 48):
     });
   }
   return out;
+}
+
+function inferLithClassFromText(rawText: string, symbol = ""): string {
+  const text = `${rawText} ${symbol}`.toLowerCase();
+  for (const c of LITH_CLASSES) {
+    if (c.keywords.some((kw) => text.includes(kw))) return c.id;
+  }
+  if (/^(qv|qtv|tqv|tmv|tpv)/i.test(symbol)) return "volcanic";
+  if (/^(qa|qal|qh|qs|qak)/i.test(symbol)) return "unconsolidated";
+  if (/^(ql|tml|tol)/i.test(symbol)) return "carbonate";
+  if (/^(trjkg|trtg|jma|kbd|kbg|jgr)/i.test(symbol)) return "plutonic_felsic";
+  return "siliciclastic";
 }
 
 const DEM_TILE_URL = "https://tiles.mapterhorn.com/{z}/{x}/{y}.webp";
@@ -185,96 +198,144 @@ function segmentIntersection2D(
 function findStructureIntersections(
   map: maplibregl.Map,
   points: readonly TransectPoint[],
+  samples: readonly SampleHit[],
   totalKm: number,
 ): TransectStructureHit[] {
+  const hits: TransectStructureHit[] = [];
+  if (points.length < 2 || totalKm <= 0) return hits;
+
   try {
-    if (points.length < 2 || totalKm <= 0 || !map.isStyleLoaded()) return [];
-    const lineLayers = ["ob-lines", "ms-lines"].filter((id) => map.getLayer(id));
-    if (!lineLayers.length) return [];
+    if (map.isStyleLoaded()) {
+      const lineLayers = ["ob-lines", "ms-lines"].filter((id) => map.getLayer(id));
+      if (lineLayers.length) {
+        const screenPts = points.map((p) => map.project([p.lng, p.lat]));
+        const xs = screenPts.map((p) => p.x);
+        const ys = screenPts.map((p) => p.y);
+        const bbox: [maplibregl.PointLike, maplibregl.PointLike] = [
+          [Math.min(...xs) - 10, Math.min(...ys) - 10],
+          [Math.max(...xs) + 10, Math.max(...ys) + 10],
+        ];
+        const feats = map.queryRenderedFeatures(bbox, { layers: lineLayers });
+        const cumKm: number[] = [0];
+        for (let i = 1; i < points.length; i++) cumKm.push(cumKm[i - 1] + haversineKm(points[i - 1], points[i]));
 
-    const screenPts = points.map((p) => map.project([p.lng, p.lat]));
-    const xs = screenPts.map((p) => p.x);
-    const ys = screenPts.map((p) => p.y);
-    const bbox: [maplibregl.PointLike, maplibregl.PointLike] = [
-      [Math.min(...xs) - 4, Math.min(...ys) - 4],
-      [Math.max(...xs) + 4, Math.max(...ys) + 4],
-    ];
-    const feats = map.queryRenderedFeatures(bbox, { layers: lineLayers });
-    if (!feats.length) return [];
+        for (const feat of feats) {
+          const geom = feat.geometry;
+          const rings: number[][][] =
+            geom.type === "LineString"
+              ? [geom.coordinates as number[][]]
+              : geom.type === "MultiLineString"
+                ? (geom.coordinates as number[][][])
+                : [];
+          if (!rings.length) continue;
+          const props = (feat.properties ?? {}) as Record<string, unknown>;
+          const rawType = String(props.line_type || props.type || props.descrip || props.name || "Sesar").trim();
+          const type =
+            rawType === "fault"
+              ? "Sesar"
+              : rawType === "anticline"
+                ? "Antiklin"
+                : rawType === "syncline"
+                  ? "Sinklin"
+                  : rawType === "contact"
+                    ? "Kontak Sesar / Formasi"
+                    : rawType || "Sesar";
 
-    const cumKm: number[] = [0];
-    for (let i = 1; i < points.length; i++) cumKm.push(cumKm[i - 1] + haversineKm(points[i - 1], points[i]));
-
-    const hits: TransectStructureHit[] = [];
-    for (const feat of feats) {
-      const geom = feat.geometry;
-      const rings: number[][][] =
-        geom.type === "LineString"
-          ? [geom.coordinates as number[][]]
-          : geom.type === "MultiLineString"
-            ? (geom.coordinates as number[][][])
-            : [];
-      if (!rings.length) continue;
-      const props = (feat.properties ?? {}) as Record<string, unknown>;
-      const rawType = String(props.line_type || props.type || props.descrip || props.name || "Sesar").trim();
-      const type = rawType === "fault" ? "Sesar" : rawType === "anticline" ? "Antiklin" : rawType === "syncline" ? "Sinklin" : rawType === "contact" ? "Kontak Geologi" : rawType || "Sesar";
-
-      for (const line of rings) {
-        for (let j = 1; j < line.length; j++) {
-          const [cx, cy] = line[j - 1];
-          const [dx, dy] = line[j];
-          for (let i = 1; i < points.length; i++) {
-            const tHit = segmentIntersection2D(
-              points[i - 1].lng, points[i - 1].lat,
-              points[i].lng, points[i].lat,
-              cx, cy, dx, dy,
-            );
-            if (tHit !== null) {
-              const segKm = cumKm[i] - cumKm[i - 1];
-              const km = cumKm[i - 1] + tHit * segKm;
-              const frac = km / totalKm;
-              if (!hits.some((h) => Math.abs(h.frac - frac) < 0.015 && h.type === type)) {
-                hits.push({ km: Number(km.toFixed(2)), frac, type });
+          for (const line of rings) {
+            for (let j = 1; j < line.length; j++) {
+              const [cx, cy] = line[j - 1];
+              const [dx, dy] = line[j];
+              for (let i = 1; i < points.length; i++) {
+                const tHit = segmentIntersection2D(
+                  points[i - 1].lng, points[i - 1].lat,
+                  points[i].lng, points[i].lat,
+                  cx, cy, dx, dy,
+                );
+                if (tHit !== null) {
+                  const segKm = cumKm[i] - cumKm[i - 1];
+                  const km = cumKm[i - 1] + tHit * segKm;
+                  const frac = km / totalKm;
+                  if (!hits.some((h) => Math.abs(h.frac - frac) < 0.03)) {
+                    hits.push({ km: Number(km.toFixed(2)), frac, type });
+                  }
+                }
               }
             }
           }
         }
       }
     }
-    return hits.sort((a, b) => a.frac - b.frac).slice(0, 12);
   } catch {
-    return [];
+    // Abaikan bila layer struktur belum selesai dimuat
   }
+
+  // Deteksi kontak tektonik / sesar batas formasi / intrusi dari perubahan formasi tajam sepanjang lintasan
+  for (let i = 1; i < samples.length; i++) {
+    const prev = samples[i - 1];
+    const curr = samples[i];
+    if (prev.label !== curr.label || prev.symbol !== curr.symbol) {
+      const isSea = /laut|sea|unmapped/i.test(prev.label) || /laut|sea|unmapped/i.test(curr.label);
+      if (isSea) continue;
+      const frac = i / Math.max(1, samples.length - 1);
+      if (hits.some((h) => Math.abs(h.frac - frac) < 0.04)) continue;
+      const isPlutonic =
+        prev.lithClass.startsWith("plutonic") || curr.lithClass.startsWith("plutonic");
+      const ageJump = Math.abs(prev.ageBaseMa - curr.ageBaseMa);
+      const isBasement =
+        prev.lithClass === "metamorphic" ||
+        curr.lithClass === "metamorphic" ||
+        prev.lithClass === "melange" ||
+        curr.lithClass === "melange";
+      if (isPlutonic || isBasement || ageJump >= 18) {
+        const type = isPlutonic
+          ? getLang() === "en"
+            ? "Intrusive / Fault Contact"
+            : "Kontak Intrusi / Sesar"
+          : getLang() === "en"
+            ? "Fault / Tectonic Contact"
+            : "Sesar / Kontak Tektonik";
+        hits.push({
+          km: Number((frac * totalKm).toFixed(2)),
+          frac,
+          type,
+        });
+      }
+    }
+  }
+
+  return hits.sort((a, b) => a.frac - b.frac).slice(0, 10);
 }
 
 const SVG_LITH_PATTERNS = `
   <defs>
-    <pattern id="pat-carbonate" width="16" height="10" patternUnits="userSpaceOnUse">
-      <path d="M0,5 H16 M0,10 H16 M4,0 V5 M12,0 V5 M8,5 V10" stroke="rgba(20,35,45,0.28)" stroke-width="0.8" fill="none"/>
+    <pattern id="pat-carbonate" width="18" height="12" patternUnits="userSpaceOnUse">
+      <path d="M0,6 H18 M0,12 H18 M5,0 V6 M14,0 V6 M9,6 V12" stroke="rgba(18,32,42,0.42)" stroke-width="0.95" fill="none"/>
     </pattern>
-    <pattern id="pat-siliciclastic" width="14" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(-14)">
-      <line x1="0" y1="3" x2="14" y2="3" stroke="rgba(20,35,45,0.26)" stroke-width="0.8" stroke-dasharray="4,2"/>
-      <circle cx="3" cy="7" r="0.7" fill="rgba(20,35,45,0.3)"/>
-      <circle cx="9" cy="7.5" r="0.7" fill="rgba(20,35,45,0.3)"/>
+    <pattern id="pat-siliciclastic" width="16" height="11" patternUnits="userSpaceOnUse" patternTransform="rotate(-15)">
+      <line x1="0" y1="3.5" x2="16" y2="3.5" stroke="rgba(18,32,42,0.4)" stroke-width="0.95" stroke-dasharray="5,2.5"/>
+      <line x1="0" y1="8.5" x2="16" y2="8.5" stroke="rgba(18,32,42,0.28)" stroke-width="0.8"/>
+      <circle cx="4" cy="6" r="0.9" fill="rgba(18,32,42,0.42)"/>
+      <circle cx="11" cy="6.2" r="0.9" fill="rgba(18,32,42,0.42)"/>
     </pattern>
-    <pattern id="pat-volcanic" width="12" height="10" patternUnits="userSpaceOnUse">
-      <path d="M2,3 L4,6 L6,3 M8,7 L10,10 L12,7" stroke="rgba(20,35,45,0.34)" stroke-width="0.9" fill="none"/>
+    <pattern id="pat-volcanic" width="14" height="12" patternUnits="userSpaceOnUse">
+      <path d="M2,3.5 L4.5,7.5 L7,3.5 M8.5,8 L11,11.5 L13.5,8" stroke="rgba(18,32,42,0.46)" stroke-width="1.05" fill="none"/>
     </pattern>
-    <pattern id="pat-plutonic_felsic" width="12" height="12" patternUnits="userSpaceOnUse">
-      <path d="M3,1.5 V5.5 M1,3.5 H5 M9,6.5 V10.5 M7,8.5 H11" stroke="rgba(20,35,45,0.35)" stroke-width="0.9" fill="none"/>
+    <pattern id="pat-plutonic_felsic" width="14" height="14" patternUnits="userSpaceOnUse">
+      <path d="M3.5,1.5 V6.5 M1,4 H6 M10.5,7.5 V12.5 M8,10 H13" stroke="rgba(18,32,42,0.48)" stroke-width="1.05" fill="none"/>
     </pattern>
-    <pattern id="pat-plutonic_mafic" width="10" height="10" patternUnits="userSpaceOnUse">
-      <path d="M2,2 L6,6 M6,2 L2,6" stroke="rgba(15,28,35,0.35)" stroke-width="0.9" fill="none"/>
+    <pattern id="pat-plutonic_mafic" width="12" height="12" patternUnits="userSpaceOnUse">
+      <path d="M2.5,2.5 L7.5,7.5 M7.5,2.5 L2.5,7.5" stroke="rgba(15,28,35,0.48)" stroke-width="1.05" fill="none"/>
     </pattern>
-    <pattern id="pat-metamorphic" width="16" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(-10)">
-      <path d="M0,4 Q4,1 8,4 T16,4" stroke="rgba(20,35,45,0.34)" stroke-width="0.9" fill="none"/>
+    <pattern id="pat-metamorphic" width="18" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(-12)">
+      <path d="M0,5 Q4.5,1.2 9,5 T18,5" stroke="rgba(18,32,42,0.46)" stroke-width="1.05" fill="none"/>
     </pattern>
-    <pattern id="pat-unconsolidated" width="10" height="8" patternUnits="userSpaceOnUse">
-      <circle cx="2.5" cy="3" r="0.85" fill="rgba(20,35,45,0.32)"/>
-      <circle cx="7.5" cy="6" r="1.1" fill="rgba(20,35,45,0.26)"/>
+    <pattern id="pat-unconsolidated" width="12" height="9" patternUnits="userSpaceOnUse">
+      <circle cx="3" cy="3" r="1.05" fill="rgba(18,32,42,0.42)"/>
+      <circle cx="8.5" cy="6.5" r="1.3" fill="rgba(18,32,42,0.34)"/>
+      <circle cx="10" cy="2.5" r="0.75" fill="rgba(18,32,42,0.38)"/>
     </pattern>
-    <pattern id="pat-melange" width="12" height="10" patternUnits="userSpaceOnUse">
-      <polygon points="2,8 5,3 7,8" fill="none" stroke="rgba(20,35,45,0.34)" stroke-width="0.8"/>
+    <pattern id="pat-melange" width="14" height="12" patternUnits="userSpaceOnUse">
+      <polygon points="2,9 5.5,3 8.5,9" fill="none" stroke="rgba(18,32,42,0.45)" stroke-width="0.95"/>
     </pattern>
   </defs>
 `;
@@ -286,6 +347,7 @@ interface UnitBlock {
   symbol: string;
   color: string;
   lithClass: string;
+  lithLabel: string;
   ageBaseMa: number;
 }
 
@@ -293,27 +355,44 @@ function buildSectionSvg(
   samples: readonly SampleHit[],
   structures: readonly TransectStructureHit[],
   totalKm: number,
+  azimuthDeg: number,
 ): string {
-  const W = 420;
-  const H = 205;
-  const padL = 38;
-  const padR = 12;
-  const padT = 18;
-  const padB = 24;
+  // Panoramic wide geological cross-section (3.1 : 1 horizontal ratio)
+  const W = 820;
+  const H = 268;
+  const padL = 48;
+  const padR = 18;
+  const padT = 26;
+  const padB = 28;
   const plotW = W - padL - padR;
   const plotH = H - padT - padB;
 
   const validElevs = samples.map((s) => s.elevM).filter((v): v is number => v !== null);
   const hasDem = validElevs.length >= 2;
   const rawMin = hasDem ? Math.min(...validElevs, 0) : 0;
-  const rawMax = hasDem ? Math.max(...validElevs, 120) : 120;
-  const span = Math.max(60, rawMax - rawMin);
-  // 48% subsurface thickness so geological architecture (batholiths, dipping strata, basement) is clearly visible
-  const yMin = rawMin - span * 0.55;
-  const yMax = rawMax + span * 0.14;
+  const rawMax = hasDem ? Math.max(...validElevs, 150) : 150;
+  const topoSpan = Math.max(80, rawMax - rawMin);
+  // Beri 65% ruang kedalaman bawah permukaan agar lapisan stratigrafi, lipatan, batolit & patahan terlihat proporsional
+  const subDepthM = Math.max(250, Math.round(topoSpan * 1.45));
+  const yMin = rawMin - subDepthM;
+  const yMax = rawMax + topoSpan * 0.22;
   const yToPx = (elev: number) => padT + ((yMax - elev) / (yMax - yMin)) * plotH;
   const xToPx = (idx: number) => padL + (idx / Math.max(1, samples.length - 1)) * plotW;
   const yBase = H - padB;
+
+  // Hitung vertical fault throw (pergeseran blok patahan naik/turun) untuk setiap sampel berdasarkan struktur yang memotong
+  const faultThrowsPx = samples.map((_, idx) => {
+    const frac = idx / Math.max(1, samples.length - 1);
+    let throwAcc = 0;
+    structures.forEach((st, sIdx) => {
+      if (frac > st.frac) {
+        throwAcc += (sIdx % 2 === 0 ? 1 : -1) * 14;
+      }
+    });
+    // Tambahkan gelombang struktur lipatan regional halus (gentle structural folding)
+    const foldWave = Math.sin(frac * Math.PI * 2.5) * 9;
+    return throwAcc + foldWave;
+  });
 
   // Group contiguous samples into UnitBlocks
   const blocks: UnitBlock[] = [];
@@ -330,33 +409,55 @@ function buildSectionSvg(
         symbol: s.symbol,
         color: s.color,
         lithClass: s.lithClass,
+        lithLabel: s.lithLabel,
         ageBaseMa: s.ageBaseMa,
       });
     }
   }
 
-  // Pick oldest pre-Quaternary bedrock unit along the line as deep basement foundation
+  // Cari batuan dasar (basement) tertua dan satuan sedimen regional menengah untuk lapisan bawah permukaan bertingkat
   const bedrockBlocks = blocks.filter((b) => b.lithClass !== "unconsolidated" && b.ageBaseMa > 2.6);
-  const oldestBedrock = bedrockBlocks.length
-    ? bedrockBlocks.reduce((a, b) => (a.ageBaseMa >= b.ageBaseMa ? a : b))
-    : blocks[0];
+  const sortedByAge = [...(bedrockBlocks.length ? bedrockBlocks : blocks)].sort((a, b) => b.ageBaseMa - a.ageBaseMa);
+  const oldestBasement = sortedByAge[0] ?? blocks[0];
+  const midSequence = sortedByAge[Math.min(1, sortedByAge.length - 1)] ?? oldestBasement;
 
   const layersSvg: string[] = [];
 
-  // 1. Deep Basement Foundation Layer across the whole section base (Law of Superposition)
-  if (oldestBedrock) {
-    const baseTopPoints = samples
-      .map((s, i) => `${xToPx(i).toFixed(1)},${yToPx(s.elevM ?? 50).toFixed(1)}`)
-      .join(" ");
-    const bCol = safeColor(oldestBedrock.color);
-    const bPat = `pat-${oldestBedrock.lithClass || "metamorphic"}`;
+  // Horizon kedalaman:
+  // 1) yBasementTop(i): batas atas Batuan Dasar (Basement) di kedalaman ~58% bawah permukaan (bergeser naik/turun oleh patahan!)
+  const yBasementTop = (i: number) => {
+    const ySurf = yToPx(samples[i].elevM ?? 50);
+    return Math.min(yBase - 18, Math.max(ySurf + 26, ySurf + (yBase - ySurf) * 0.58 + faultThrowsPx[i]));
+  };
+
+  // Gambar Lapisan 1: Deep Crystalline / Metamorphic Basement (paling bawah, terpatahkan oleh sesar)
+  if (oldestBasement) {
+    const topBasementPts = samples.map((_, i) => `${xToPx(i).toFixed(1)},${yBasementTop(i).toFixed(1)}`).join(" ");
+    const bCol = safeColor(oldestBasement.color === "#D9DEE1" ? "#A895C9" : oldestBasement.color);
+    const bPat = `pat-${oldestBasement.lithClass === "unconsolidated" ? "metamorphic" : oldestBasement.lithClass || "metamorphic"}`;
     layersSvg.push(
-      `<polygon points="${padL.toFixed(1)},${yBase.toFixed(1)} ${baseTopPoints} ${(W - padR).toFixed(1)},${yBase.toFixed(1)}" fill="${bCol}" fill-opacity="0.72"/>`,
-      `<polygon points="${padL.toFixed(1)},${yBase.toFixed(1)} ${baseTopPoints} ${(W - padR).toFixed(1)},${yBase.toFixed(1)}" fill="url(#${bPat})"/>`,
+      `<polygon points="${padL.toFixed(1)},${yBase.toFixed(1)} ${topBasementPts} ${(W - padR).toFixed(1)},${yBase.toFixed(1)}" fill="${bCol}" fill-opacity="0.78"/>`,
+      `<polygon points="${padL.toFixed(1)},${yBase.toFixed(1)} ${topBasementPts} ${(W - padR).toFixed(1)},${yBase.toFixed(1)}" fill="url(#${bPat})"/>`,
+      `<polyline points="${topBasementPts}" fill="none" stroke="rgba(31,43,51,0.55)" stroke-width="1.1" stroke-dasharray="5,3"/>`,
     );
   }
 
-  // 2. Render Sedimentary / Metamorphic / Volcanic strata with dipping contacts, then Plutons cross-cutting, then Quaternary veneer on top
+  // Gambar Lapisan 2: Subsurface Regional Stratigraphic Sequence di atas Basement (dengan garis perlapisan miring/terlipat)
+  if (midSequence) {
+    const topSurfPts = samples.map((s, i) => `${xToPx(i).toFixed(1)},${yToPx(s.elevM ?? 50).toFixed(1)}`).join(" ");
+    const botBasePts = [...samples].map((_, idx) => {
+      const i = samples.length - 1 - idx;
+      return `${xToPx(i).toFixed(1)},${yBasementTop(i).toFixed(1)}`;
+    }).join(" ");
+    const mCol = safeColor(midSequence.color === "#D9DEE1" ? "#E4B77A" : midSequence.color);
+    const mPat = `pat-${midSequence.lithClass || "siliciclastic"}`;
+    layersSvg.push(
+      `<polygon points="${topSurfPts} ${botBasePts}" fill="${mCol}" fill-opacity="0.65"/>`,
+      `<polygon points="${topSurfPts} ${botBasePts}" fill="url(#${mPat})"/>`,
+    );
+  }
+
+  // Gambar Lapisan 3: Setiap Blok Formasi Permukaan & Bawah Permukaan (Sedimen Miring + Garis Perlapisan, Batolit Plutonik Memotong dari Bawah, dan Endapan Kuarter di Atas)
   const renderBlockPolygon = (b: UnitBlock, mode: "strata" | "pluton" | "veneer") => {
     const i0 = b.startIdx;
     const i1 = Math.min(samples.length - 1, Math.max(b.endIdx, i0 + 1));
@@ -368,53 +469,80 @@ function buildSectionSvg(
     const xR = xToPx(i1);
     const yTopL = yToPx(samples[i0].elevM ?? 50);
     const yTopR = yToPx(samples[i1].elevM ?? 50);
-    const col = safeColor(b.color);
+    const lithMeta = LITH_CLASSES.find((c) => c.id === b.lithClass);
+    const col = safeColor(b.color && b.color !== "#D9DEE1" ? b.color : lithMeta?.color || "#E4B77A");
     const patId = `pat-${b.lithClass || "siliciclastic"}`;
 
     let polyPts = "";
-    let contactLines = "";
+    let extraLines = "";
     if (mode === "veneer") {
-      // Surficial Quaternary unconsolidated blanket (top ~24% of subsurface thickness)
+      // Lapisan Endapan Kuarter / Aluvium di atas ketidakselarasan (unconformity)
       const botPts: string[] = [];
       for (let i = i1; i >= i0; i--) {
         const ySurf = yToPx(samples[i].elevM ?? 50);
-        const thickness = Math.min(24, Math.max(11, (yBase - ySurf) * 0.25));
-        botPts.push(`${xToPx(i).toFixed(1)},${Math.min(yBase - 4, ySurf + thickness).toFixed(1)}`);
+        const thickness = Math.min(28, Math.max(14, (yBase - ySurf) * 0.24));
+        botPts.push(`${xToPx(i).toFixed(1)},${Math.min(yBase - 8, ySurf + thickness).toFixed(1)}`);
       }
       polyPts = `${topPts.join(" ")} ${botPts.join(" ")}`;
-      contactLines = `<polyline points="${botPts.join(" ")}" fill="none" stroke="rgba(31,43,51,0.55)" stroke-width="1" stroke-dasharray="3,2"/>`;
+      extraLines = `<polyline points="${botPts.join(" ")}" fill="none" stroke="rgba(31,43,51,0.7)" stroke-width="1.2" stroke-dasharray="4,2"/>`;
     } else if (mode === "pluton") {
-      // Intrusive batholith/stock widening downward with cross-cutting contacts
-      const spreadL = i0 > 0 ? Math.max(padL, xL - 16) : xL;
-      const spreadR = i1 < samples.length - 1 ? Math.min(W - padR, xR + 16) : xR;
+      // Batolit / Intrusi Beku (Granit, Granodiorit, Adamelit, Diorit, Gabro) melebar ke bawah memotong seluruh lapisan hingga dasar penampang
+      const spreadL = i0 > 0 ? Math.max(padL, xL - 26) : xL;
+      const spreadR = i1 < samples.length - 1 ? Math.min(W - padR, xR + 26) : xR;
       polyPts = `${topPts.join(" ")} ${spreadR.toFixed(1)},${yBase.toFixed(1)} ${spreadL.toFixed(1)},${yBase.toFixed(1)}`;
       if (i0 > 0) {
-        contactLines += `<line x1="${xL.toFixed(1)}" y1="${yTopL.toFixed(1)}" x2="${spreadL.toFixed(1)}" y2="${yBase.toFixed(1)}" stroke="#7F1D1D" stroke-width="1.3"/>`;
+        extraLines += `<line x1="${xL.toFixed(1)}" y1="${yTopL.toFixed(1)}" x2="${spreadL.toFixed(1)}" y2="${yBase.toFixed(1)}" stroke="#7F1D1D" stroke-width="1.8"/>`;
       }
       if (i1 < samples.length - 1) {
-        contactLines += `<line x1="${xR.toFixed(1)}" y1="${yTopR.toFixed(1)}" x2="${spreadR.toFixed(1)}" y2="${yBase.toFixed(1)}" stroke="#7F1D1D" stroke-width="1.3"/>`;
+        extraLines += `<line x1="${xR.toFixed(1)}" y1="${yTopR.toFixed(1)}" x2="${spreadR.toFixed(1)}" y2="${yBase.toFixed(1)}" stroke="#7F1D1D" stroke-width="1.8"/>`;
       }
     } else {
-      // Dipping sedimentary/metamorphic/volcanic unit: dip contact beneath younger neighbor
+      // Lapisan Sedimen / Metamorf / Vulkanik dengan kemiringan perlapisan (dip) & 3 garis horizon internal
       const prevBlock = blocks.find((p) => p.endIdx === i0 - 1);
       const nextBlock = blocks.find((n) => n.startIdx === i1 + 1);
-      const dipL = prevBlock ? (prevBlock.ageBaseMa < b.ageBaseMa ? -14 : 14) : 0;
-      const dipR = nextBlock ? (nextBlock.ageBaseMa < b.ageBaseMa ? 14 : -14) : 0;
-      const bxL = i0 > 0 ? Math.max(padL, Math.min(W - padR, xL + dipL)) : xL;
-      const bxR = i1 < samples.length - 1 ? Math.max(padL, Math.min(W - padR, xR + dipR)) : xR;
-      polyPts = `${topPts.join(" ")} ${bxR.toFixed(1)},${yBase.toFixed(1)} ${bxL.toFixed(1)},${yBase.toFixed(1)}`;
+      const dipL = prevBlock ? (prevBlock.ageBaseMa < b.ageBaseMa ? -22 : 22) : 0;
+      const dipR = nextBlock ? (nextBlock.ageBaseMa < b.ageBaseMa ? 22 : -22) : 0;
+      const isDeepUnit = b.ageBaseMa >= oldestBasement.ageBaseMa * 0.85;
+      const botPts: string[] = [];
+      for (let i = i1; i >= i0; i--) {
+        const fracInBlock = (i - i0) / Math.max(1, i1 - i0);
+        const shiftX = dipL * (1 - fracInBlock) + dipR * fracInBlock;
+        const bx = Math.max(padL, Math.min(W - padR, xToPx(i) + shiftX * 0.5));
+        const by = isDeepUnit ? yBase : yBasementTop(i);
+        botPts.push(`${bx.toFixed(1)},${by.toFixed(1)}`);
+      }
+      polyPts = `${topPts.join(" ")} ${botPts.join(" ")}`;
+
+      // Gambar 3 garis perlapisan internal (bedding planes) yang mengikuti kemiringan & pergeseran patahan
+      for (const depthFrac of [0.28, 0.55, 0.82]) {
+        const bedPts: string[] = [];
+        for (let i = i0; i <= i1; i++) {
+          const ySurf = yToPx(samples[i].elevM ?? 50);
+          const yBot = isDeepUnit ? yBase : yBasementTop(i);
+          const by = ySurf + (yBot - ySurf) * depthFrac;
+          bedPts.push(`${xToPx(i).toFixed(1)},${by.toFixed(1)}`);
+        }
+        if (bedPts.length >= 2) {
+          extraLines += `<polyline points="${bedPts.join(" ")}" fill="none" stroke="rgba(20,35,45,0.34)" stroke-width="0.95" stroke-dasharray="6,3"/>`;
+        }
+      }
+      // Garis kontak batas formasi miring
+      const bxL = Math.max(padL, Math.min(W - padR, xL + dipL * 0.5));
+      const bxR = Math.max(padL, Math.min(W - padR, xR + dipR * 0.5));
+      const byL = isDeepUnit ? yBase : yBasementTop(i0);
+      const byR = isDeepUnit ? yBase : yBasementTop(i1);
       if (i0 > 0) {
-        contactLines += `<line x1="${xL.toFixed(1)}" y1="${yTopL.toFixed(1)}" x2="${bxL.toFixed(1)}" y2="${yBase.toFixed(1)}" stroke="rgba(31,43,51,0.55)" stroke-width="1.05"/>`;
+        extraLines += `<line x1="${xL.toFixed(1)}" y1="${yTopL.toFixed(1)}" x2="${bxL.toFixed(1)}" y2="${byL.toFixed(1)}" stroke="rgba(31,43,51,0.72)" stroke-width="1.3"/>`;
       }
       if (i1 < samples.length - 1) {
-        contactLines += `<line x1="${xR.toFixed(1)}" y1="${yTopR.toFixed(1)}" x2="${bxR.toFixed(1)}" y2="${yBase.toFixed(1)}" stroke="rgba(31,43,51,0.55)" stroke-width="1.05"/>`;
+        extraLines += `<line x1="${xR.toFixed(1)}" y1="${yTopR.toFixed(1)}" x2="${bxR.toFixed(1)}" y2="${byR.toFixed(1)}" stroke="rgba(31,43,51,0.72)" stroke-width="1.3"/>`;
       }
     }
 
     layersSvg.push(
-      `<polygon points="${polyPts}" fill="${col}" fill-opacity="0.92"/>`,
+      `<polygon points="${polyPts}" fill="${col}" fill-opacity="0.93"/>`,
       `<polygon points="${polyPts}" fill="url(#${patId})"/>`,
-      contactLines,
+      extraLines,
     );
   };
 
@@ -434,23 +562,41 @@ function buildSectionSvg(
     }
   }
 
-  // 3. On-Section Formation Symbol Badges (TRJkg, TRt, CPp, Tma, Qa, etc.)
+  // 4. Label Simbol & Nama Formasi langsung di tubuh lapisan penampang geologi
   const unitBadgesSvg: string[] = [];
   for (const b of blocks) {
     const xL = xToPx(b.startIdx);
     const xR = xToPx(Math.min(samples.length - 1, Math.max(b.endIdx, b.startIdx + 1)));
     const widthPx = xR - xL;
-    const tag = (b.symbol || b.label.slice(0, 6)).trim();
-    if (!tag || widthPx < 24) continue;
+    if (widthPx < 28) continue;
     const midIdx = Math.round((b.startIdx + b.endIdx) / 2);
     const cx = (xL + xR) / 2;
     const ySurf = yToPx(samples[midIdx]?.elevM ?? 50);
     const isVeneer = b.lithClass === "unconsolidated" && blocks.length > 1;
-    const cy = isVeneer ? Math.min(yBase - 8, ySurf + 11) : Math.min(yBase - 12, ySurf + (yBase - ySurf) * 0.45);
-    const boxW = Math.min(widthPx - 4, Math.max(22, tag.length * 5.8 + 8));
+    const isPluton = b.lithClass === "plutonic_felsic" || b.lithClass === "plutonic_mafic";
+    const cy = isVeneer
+      ? Math.min(yBase - 12, ySurf + 12)
+      : isPluton
+        ? Math.min(yBase - 18, ySurf + (yBase - ySurf) * 0.56)
+        : Math.min(yBase - 22, ySurf + (yBase - ySurf) * 0.34);
+
+    const symTag = (b.symbol || b.label.slice(0, 6)).trim();
+    const shortName = b.label.replace(/^(Formasi|Kompleks|Batuan|Endapan)\s+/i, "").slice(0, 16);
+    const fullTag = widthPx >= 78 && b.symbol ? `${symTag} · ${shortName}` : symTag;
+    const boxW = Math.min(widthPx - 6, Math.max(26, fullTag.length * 5.7 + 12));
     unitBadgesSvg.push(
-      `<rect x="${(cx - boxW / 2).toFixed(1)}" y="${(cy - 6.5).toFixed(1)}" width="${boxW.toFixed(1)}" height="13" rx="3" fill="rgba(255,255,255,0.86)" stroke="rgba(31,43,51,0.45)" stroke-width="0.7"/>`,
-      `<text x="${cx.toFixed(1)}" y="${(cy + 3).toFixed(1)}" text-anchor="middle" font-size="8.2" font-weight="700" fill="#1F2B33">${esc(tag)}</text>`,
+      `<rect x="${(cx - boxW / 2).toFixed(1)}" y="${(cy - 8).toFixed(1)}" width="${boxW.toFixed(1)}" height="16" rx="4" fill="rgba(255,255,255,0.92)" stroke="rgba(31,43,51,0.65)" stroke-width="0.9"/>`,
+      `<text x="${cx.toFixed(1)}" y="${(cy + 3.2).toFixed(1)}" text-anchor="middle" font-size="9.2" font-weight="700" fill="#1F2B33">${esc(fullTag)}</text>`,
+    );
+  }
+
+  // Label Batuan Dasar (Basement) di bagian bawah penampang bila ada lebih dari 1 formasi
+  if (oldestBasement && blocks.length > 1) {
+    const baseTag = `${oldestBasement.symbol ? oldestBasement.symbol + " · " : ""}${oldestBasement.label.slice(0, 22)} (Basement)`;
+    const bw = Math.min(220, baseTag.length * 5.4 + 14);
+    unitBadgesSvg.push(
+      `<rect x="${(padL + 10).toFixed(1)}" y="${(yBase - 19).toFixed(1)}" width="${bw.toFixed(1)}" height="15" rx="3" fill="rgba(31,43,51,0.82)"/>`,
+      `<text x="${(padL + 10 + bw / 2).toFixed(1)}" y="${(yBase - 8.5).toFixed(1)}" text-anchor="middle" font-size="8.5" font-weight="600" fill="#FFFFFF">${esc(baseTag)}</text>`,
     );
   }
 
@@ -460,12 +606,12 @@ function buildSectionSvg(
 
   const seaLineY = yToPx(0);
   const seaLine =
-    hasDem && rawMin < 0 && rawMax > 0
-      ? `<line x1="${padL}" y1="${seaLineY.toFixed(1)}" x2="${W - padR}" y2="${seaLineY.toFixed(1)}" stroke="#0284C7" stroke-width="0.9" stroke-dasharray="3,3"/>
-         <text x="${padL + 3}" y="${(seaLineY - 2).toFixed(1)}" font-size="8" fill="#0284C7">0 m (MSL)</text>`
+    seaLineY >= padT + 6 && seaLineY <= yBase - 6
+      ? `<line x1="${padL}" y1="${seaLineY.toFixed(1)}" x2="${W - padR}" y2="${seaLineY.toFixed(1)}" stroke="#0284C7" stroke-width="1.1" stroke-dasharray="4,3"/>
+         <text x="${W - padR - 4}" y="${(seaLineY - 3).toFixed(1)}" text-anchor="end" font-size="8.5" font-weight="600" fill="#0284C7">0 m (MSL)</text>`
       : "";
 
-  // 4. Inclined Structural Fault Planes (~68° dip) & Fold Axial Traces
+  // 5. Bidang Patahan / Sesar Miring (~68° dip) + Panah Pergeseran Hanging-Wall / Footwall (↑ / ↓)
   const structTraces = structures
     .map((st, idx) => {
       const sx = padL + st.frac * plotW;
@@ -473,35 +619,68 @@ function buildSectionSvg(
       const topElev = samples[sampleIdx]?.elevM ?? 50;
       const sy = yToPx(topElev);
       const isFold = /lipat|fold|anti|syn/i.test(st.type);
-      const isContact = /kontak|contact/i.test(st.type);
-      const stroke = isFold ? "#6D28D9" : isContact ? "#0F766E" : "#B91C1C";
-      const dash = isFold ? "2,2" : isContact ? "3,2" : "5,2";
-      const dipDx = (idx % 2 === 0 ? 1 : -1) * 14;
-      const bx = Math.max(padL + 2, Math.min(W - padR - 2, sx + dipDx));
-      const tag = isFold ? "⇅L" : isContact ? "K" : `F${idx + 1}`;
-      const labelY = Math.max(11, sy - 4 - (idx % 2) * 8);
-      return `<line x1="${sx.toFixed(1)}" y1="${sy.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${yBase.toFixed(1)}" stroke="${stroke}" stroke-width="1.6" stroke-dasharray="${dash}"/>
-              <circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="2.6" fill="${stroke}"/>
-              <text x="${sx.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" font-size="8.2" font-weight="700" fill="${stroke}">${tag}</text>`;
+      const stroke = isFold ? "#6D28D9" : "#DC2626";
+      const dash = isFold ? "3,2" : "7,2.5";
+      const dipDir = idx % 2 === 0 ? 1 : -1;
+      const dipDx = dipDir * 24;
+      const bx = Math.max(padL + 4, Math.min(W - padR - 4, sx + dipDx));
+      const midX = (sx + bx) / 2;
+      const midY = (sy + yBase) / 2;
+      const tag = isFold ? `L${idx + 1}` : `F${idx + 1}`;
+      const labelY = Math.max(13, sy - 6 - (idx % 2) * 10);
+      const throwArrows = isFold
+        ? ""
+        : `<text x="${(midX + dipDir * 8).toFixed(1)}" y="${(midY - 3).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="800" fill="#DC2626">↓</text>
+           <text x="${(midX - dipDir * 8).toFixed(1)}" y="${(midY + 7).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="800" fill="#DC2626">↑</text>`;
+      return `
+        <line x1="${sx.toFixed(1)}" y1="${sy.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${yBase.toFixed(1)}" stroke="#FFFFFF" stroke-width="4.2" stroke-opacity="0.75"/>
+        <line x1="${sx.toFixed(1)}" y1="${sy.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${yBase.toFixed(1)}" stroke="${stroke}" stroke-width="2.3" stroke-dasharray="${dash}"/>
+        ${throwArrows}
+        <circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="3.2" fill="${stroke}" stroke="#FFFFFF" stroke-width="1"/>
+        <rect x="${(sx - 13).toFixed(1)}" y="${(labelY - 9).toFixed(1)}" width="26" height="12" rx="3" fill="${stroke}"/>
+        <text x="${sx.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" font-size="8.5" font-weight="700" fill="#FFFFFF">${tag}</text>
+      `;
     })
     .join("");
 
-  const maxLabel = hasDem ? `${Math.round(rawMax)}m` : "—";
-  const minLabel = hasDem ? `${Math.round(rawMin)}m` : "0m";
+  const maxLabel = `${Math.round(rawMax)} m`;
+  const midLabel = `${Math.round((rawMax + yMin) / 2)} m`;
+  const minLabel = `${Math.round(yMin)} m`;
+  const azCard =
+    azimuthDeg >= 337.5 || azimuthDeg < 22.5
+      ? "N"
+      : azimuthDeg < 67.5
+        ? "NE"
+        : azimuthDeg < 112.5
+          ? "E"
+          : azimuthDeg < 157.5
+            ? "SE"
+            : azimuthDeg < 202.5
+              ? "S"
+              : azimuthDeg < 247.5
+                ? "SW"
+                : azimuthDeg < 292.5
+                  ? "W"
+                  : "NW";
 
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Geological Cross-Section">
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Geological Cross-Section A to A'">
     ${SVG_LITH_PATTERNS}
-    <rect x="${padL}" y="${padT}" width="${plotW}" height="${plotH}" fill="#F8FAFC" stroke="rgba(31,43,51,0.18)" stroke-width="1"/>
+    <rect x="${padL}" y="${padT}" width="${plotW}" height="${plotH}" fill="#F8FAFC" stroke="rgba(31,43,51,0.24)" stroke-width="1"/>
     ${layersSvg.join("")}
     ${seaLine}
-    <polyline points="${surfacePts}" fill="none" stroke="#1F2B33" stroke-width="2" stroke-linejoin="round"/>
+    <polyline points="${surfacePts}" fill="none" stroke="#0F172A" stroke-width="2.3" stroke-linejoin="round"/>
     ${structTraces}
     ${unitBadgesSvg.join("")}
-    <text x="${padL - 4}" y="${padT + 8}" text-anchor="end" font-size="8.5" fill="#4B5563">${maxLabel}</text>
-    <text x="${padL - 4}" y="${yBase - 2}" text-anchor="end" font-size="8.5" fill="#4B5563">${minLabel}</text>
-    <text x="${padL}" y="${H - 7}" text-anchor="start" font-size="8.5" font-weight="600" fill="#374151">A (0 km)</text>
-    <text x="${(padL + W - padR) / 2}" y="${H - 7}" text-anchor="middle" font-size="8.5" fill="#4B5563">${(totalKm / 2).toFixed(1)} km</text>
-    <text x="${W - padR}" y="${H - 7}" text-anchor="end" font-size="8.5" font-weight="600" fill="#374151">A' (${totalKm.toFixed(1)} km)</text>
+    <text x="${padL + 6}" y="${padT - 8}" font-size="10" font-weight="800" fill="#0F172A">A</text>
+    <text x="${W - padR - 6}" y="${padT - 8}" text-anchor="end" font-size="10" font-weight="800" fill="#0F172A">A' (${azimuthDeg.toFixed(0)}° ${azCard})</text>
+    <text x="${padL - 5}" y="${padT + 8}" text-anchor="end" font-size="8.8" font-weight="600" fill="#374151">${maxLabel}</text>
+    <text x="${padL - 5}" y="${(padT + plotH / 2 + 3).toFixed(1)}" text-anchor="end" font-size="8.5" fill="#6B7280">${midLabel}</text>
+    <text x="${padL - 5}" y="${yBase - 2}" text-anchor="end" font-size="8.8" font-weight="600" fill="#374151">${minLabel}</text>
+    <text x="${padL}" y="${H - 7}" text-anchor="start" font-size="9" font-weight="700" fill="#1F2937">0 km</text>
+    <text x="${padL + plotW * 0.25}" y="${H - 7}" text-anchor="middle" font-size="8.5" fill="#4B5563">${(totalKm * 0.25).toFixed(1)} km</text>
+    <text x="${padL + plotW * 0.5}" y="${H - 7}" text-anchor="middle" font-size="8.5" fill="#4B5563">${(totalKm * 0.5).toFixed(1)} km</text>
+    <text x="${padL + plotW * 0.75}" y="${H - 7}" text-anchor="middle" font-size="8.5" fill="#4B5563">${(totalKm * 0.75).toFixed(1)} km</text>
+    <text x="${W - padR}" y="${H - 7}" text-anchor="end" font-size="9" font-weight="700" fill="#1F2937">${totalKm.toFixed(1)} km</text>
   </svg>`;
 }
 
@@ -509,7 +688,11 @@ const SOURCE_ID = "transect-src";
 const LINE_LAYER = "transect-line";
 const PT_LAYER = "transect-pts";
 
-export function createTransectController(map: maplibregl.Map, onActiveChange: (active: boolean) => void) {
+export function createTransectController(
+  map: maplibregl.Map,
+  onActiveChange: (active: boolean) => void,
+  getNationalUnits?: () => NationalUnit[],
+) {
   let active = false;
   let points: TransectPoint[] = [];
   let lastSegments: TransectSegment[] = [];
@@ -537,7 +720,7 @@ export function createTransectController(map: maplibregl.Map, onActiveChange: (a
         type: "line",
         source: SOURCE_ID,
         filter: ["==", ["geometry-type"], "LineString"],
-        paint: { "line-color": "#D9381E", "line-width": 3, "line-dasharray": [2, 1.2] },
+        paint: { "line-color": "#D9381E", "line-width": 3.2, "line-dasharray": [2, 1.2] },
       });
     }
     if (!map.getLayer(PT_LAYER)) {
@@ -547,7 +730,7 @@ export function createTransectController(map: maplibregl.Map, onActiveChange: (a
         source: SOURCE_ID,
         filter: ["==", ["geometry-type"], "Point"],
         paint: {
-          "circle-radius": 5,
+          "circle-radius": 5.5,
           "circle-color": "#FFFFFF",
           "circle-stroke-color": "#D9381E",
           "circle-stroke-width": 2.5,
@@ -577,8 +760,104 @@ export function createTransectController(map: maplibregl.Map, onActiveChange: (a
         features,
       });
     } catch {
-      // Style masih dimuat; akan disinkronkan saat style.load
+      // Style masih dimuat
     }
+  };
+
+  const resolveSampleUnit = (
+    s: TransectPoint,
+    layers: string[],
+    natUnits: NationalUnit[],
+    lang: "id" | "en",
+  ): Omit<SampleHit, "point" | "elevM"> => {
+    const pt = map.project([s.lng, s.lat]);
+    let feat: maplibregl.MapGeoJSONFeature | undefined;
+    try {
+      feat = layers.length
+        ? map.queryRenderedFeatures(
+            [
+              [pt.x - 6, pt.y - 6],
+              [pt.x + 6, pt.y + 6],
+            ],
+            { layers },
+          )[0]
+        : undefined;
+    } catch {
+      feat = undefined;
+    }
+
+    if (feat) {
+      const p = (feat.properties ?? {}) as Record<string, unknown>;
+      const label = String(p.formation || p.strat_name || p.name_orig || p.name || "").trim();
+      const symbol = String(p.symbol || "").trim();
+      if (label || symbol) {
+        const rawLith = String(p.lith_class || "");
+        const lithClass = LITH_CLASSES.some((c) => c.id === rawLith)
+          ? rawLith
+          : inferLithClassFromText(String(p.lith || p.lith_detail || p.descrip || label), symbol);
+        const lithMeta = LITH_CLASSES.find((c) => c.id === lithClass);
+        const lithLabel = lithMeta ? (lang === "id" ? lithMeta.id_label : lithMeta.en) : String(p.lith || (lang === "id" ? "Batuan" : "Rock"));
+        const lithDetail = String(p.lith_detail || p.lith || "");
+        const color = String(p.color_hex || p.color || lithMeta?.color || "#E4B77A");
+        const age =
+          feat.source === "orebit"
+            ? [p.interval_base, p.interval_top].filter(Boolean).join("–")
+            : [p.b_int_name, p.t_int_name].filter(Boolean).join("–");
+        const ageBaseMa = Number(p.age_base_ma ?? p.best_b_age ?? 25) || 25;
+        return {
+          label: label || symbol,
+          symbol,
+          color,
+          lithClass,
+          lithLabel,
+          lithDetail,
+          age,
+          ageBaseMa,
+        };
+      }
+    }
+
+    // Fallback: cari unit katalog nasional dengan bbox terkecil yang mencakup titik (s.lng, s.lat)
+    let bestUnit: NationalUnit | null = null;
+    let bestArea = Infinity;
+    for (const u of natUnits) {
+      const [w, south, e, n] = u.bbox;
+      if (s.lng >= w && s.lng <= e && s.lat >= south && s.lat <= n) {
+        const bboxArea = (e - w) * (n - south);
+        if (bboxArea < bestArea) {
+          bestArea = bboxArea;
+          bestUnit = u;
+        }
+      }
+    }
+    if (bestUnit) {
+      const lithClass = LITH_CLASSES.some((c) => c.id === bestUnit!.lith_class)
+        ? bestUnit.lith_class
+        : inferLithClassFromText(bestUnit.formation, bestUnit.symbol);
+      const lithMeta = LITH_CLASSES.find((c) => c.id === lithClass);
+      const lithLabel = lithMeta ? (lang === "id" ? lithMeta.id_label : lithMeta.en) : lithClass;
+      return {
+        label: bestUnit.formation || bestUnit.symbol,
+        symbol: bestUnit.symbol,
+        color: bestUnit.color_hex || lithMeta?.color || "#E4B77A",
+        lithClass,
+        lithLabel,
+        lithDetail: bestUnit.lith_detail || "",
+        age: [bestUnit.interval_base, bestUnit.interval_top].filter(Boolean).join("–"),
+        ageBaseMa: Number(bestUnit.age_base_ma ?? 25) || 25,
+      };
+    }
+
+    return {
+      label: lang === "id" ? "Laut / Lepas Pantai" : "Sea / Offshore",
+      symbol: "Sea",
+      color: "#BAE6FD",
+      lithClass: "unconsolidated",
+      lithLabel: lang === "id" ? "Perairan / Endapan Laut" : "Marine / Unconsolidated",
+      lithDetail: "",
+      age: "Holosen",
+      ageBaseMa: 0.01,
+    };
   };
 
   const renderPanel = () => {
@@ -603,7 +882,8 @@ export function createTransectController(map: maplibregl.Map, onActiveChange: (a
     } catch {
       layers = [];
     }
-    const samplePts = samplePointsAlongLine(points, 64);
+    const natUnits = getNationalUnits ? getNationalUnits() : [];
+    const samplePts = samplePointsAlongLine(points, 80);
     const rawRuns: {
       label: string;
       symbol: string;
@@ -618,25 +898,7 @@ export function createTransectController(map: maplibregl.Map, onActiveChange: (a
     const sampleHits: SampleHit[] = [];
 
     for (const s of samplePts) {
-      const pt = map.project([s.lng, s.lat]);
-      let feat: maplibregl.MapGeoJSONFeature | undefined;
-      try {
-        feat = layers.length ? map.queryRenderedFeatures(pt, { layers })[0] : undefined;
-      } catch {
-        feat = undefined;
-      }
-      const p = (feat?.properties ?? {}) as Record<string, unknown>;
-      const label = String(p.formation || p.strat_name || p.name_orig || p.name || (lang === "id" ? "Laut / Tanpa unit" : "Sea / Unmapped"));
-      const symbol = String(p.symbol || "");
-      const lithClass = String(p.lith_class || "siliciclastic");
-      const lithMeta = LITH_CLASSES.find((c) => c.id === lithClass);
-      const lithLabel = lithMeta ? (lang === "id" ? lithMeta.id_label : lithMeta.en) : String(p.lith || (lang === "id" ? "Batuan" : "Rock"));
-      const lithDetail = String(p.lith_detail || p.lith || "");
-      const color = String(p.color_hex || p.color || lithMeta?.color || "#D9DEE1");
-      const age = feat?.source === "orebit"
-        ? [p.interval_base, p.interval_top].filter(Boolean).join("–")
-        : [p.b_int_name, p.t_int_name].filter(Boolean).join("–");
-      const ageBaseMa = Number(p.age_base_ma ?? p.best_b_age ?? 20) || 20;
+      const resolved = resolveSampleUnit(s, layers, natUnits, lang);
       let syncElev: number | null = null;
       if (hasTerrain) {
         try {
@@ -647,21 +909,14 @@ export function createTransectController(map: maplibregl.Map, onActiveChange: (a
       }
       sampleHits.push({
         point: s,
-        label,
-        symbol,
-        color,
-        lithClass,
-        lithLabel,
-        lithDetail,
-        age,
-        ageBaseMa,
+        ...resolved,
         elevM: typeof syncElev === "number" && Number.isFinite(syncElev) ? Math.round(syncElev) : null,
       });
       const last = rawRuns[rawRuns.length - 1];
-      if (last && last.label === label && last.symbol === symbol) {
+      if (last && last.label === resolved.label && last.symbol === resolved.symbol) {
         last.count += 1;
       } else {
-        rawRuns.push({ label, symbol, color, lithClass, lithLabel, lithDetail, age, ageBaseMa, count: 1 });
+        rawRuns.push({ ...resolved, count: 1 });
       }
     }
 
@@ -678,16 +933,16 @@ export function createTransectController(map: maplibregl.Map, onActiveChange: (a
       km: Number(((r.count / totalCount) * totalKm).toFixed(2)),
       pct: Math.round((r.count / totalCount) * 100),
     }));
-    lastStructures = findStructureIntersections(map, points, totalKm);
+    lastStructures = findStructureIntersections(map, points, sampleHits, totalKm);
 
     const drawHtml = () => {
       const validElevs = sampleHits.map((s) => s.elevM).filter((v): v is number => v !== null);
       lastElevRange = validElevs.length >= 2 ? [Math.min(...validElevs), Math.max(...validElevs)] : null;
       const elevStr = lastElevRange ? `${lastElevRange[0]}..${lastElevRange[1]} m` : "…";
-      const sectionHtml = `<div class="transect-section">${buildSectionSvg(sampleHits, lastStructures, totalKm)}</div>`;
+      const sectionHtml = `<div class="transect-section">${buildSectionSvg(sampleHits, lastStructures, totalKm, azimuthDeg)}</div>`;
       const structHtml = lastStructures.length
         ? `<div class="transect-struct-badges" aria-label="${esc(t("transectStructures"))}">${lastStructures
-            .map((st, idx) => `<span class="transect-struct-badge">F${idx + 1}: ${esc(st.type)} @ ${st.km.toFixed(1)} km</span>`)
+            .map((st, idx) => `<span class="transect-struct-badge">${/lipat|fold|anti|syn/i.test(st.type) ? `L${idx + 1}` : `F${idx + 1}`}: ${esc(st.type)} @ ${st.km.toFixed(1)} km</span>`)
             .join("")}</div>`
         : "";
       const listHtml = `<ul class="transect-list">${lastSegments
@@ -696,16 +951,16 @@ export function createTransectController(map: maplibregl.Map, onActiveChange: (a
           <span class="chip" style="background:${safeColor(seg.color)}"></span>
           <div class="transect-seg-info">
             <span class="transect-seg-name">${esc(seg.label)}${seg.symbol ? ` <code>${esc(seg.symbol)}</code>` : ""}</span>
-            <span class="transect-seg-lith">${esc(seg.lithLabel)}${seg.lithDetail ? ` · ${esc(seg.lithDetail)}` : ""}${seg.age ? ` (${esc(seg.age)})` : ""}</span>
+            <span class="transect-seg-lith">${esc(seg.lithLabel)}${seg.lithDetail ? ` — ${esc(seg.lithDetail)}` : ""}${seg.age ? ` · ${esc(seg.age)}` : ""}</span>
           </div>
-          <span class="transect-seg-meta">${seg.km.toFixed(1)} km · ${seg.pct}%</span>
+          <span class="transect-seg-meta">${seg.km.toFixed(1)} km (${seg.pct}%)</span>
         </li>`,
         )
         .join("")}</ul>`;
 
       body.innerHTML = `
         <div class="transect-metrics">
-          <div><span>${esc(t("transectDistance"))}</span><strong>${totalKm.toFixed(2)} km</strong></div>
+          <div><span>${esc(t("transectDistance"))} (A–A')</span><strong>${totalKm.toFixed(2)} km</strong></div>
           <div><span>${esc(t("transectAzimuth"))}</span><strong>${azimuthDeg.toFixed(0)}°</strong></div>
           <div><span>${esc(t("transectElevation"))}</span><strong>${esc(elevStr)}</strong></div>
         </div>

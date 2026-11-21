@@ -17,7 +17,7 @@ import {
   setLinesVisible,
 } from "./layers";
 import { renderLegend } from "./legend";
-import { initSearch, type NationalUnit } from "./search";
+import { getLoadedNationalUnits, initSearch, type NationalUnit } from "./search";
 import { readState, writeState, type ConfidenceFilter } from "./state";
 import { ERA_PRESETS } from "./timescale";
 import { createTransectController } from "./transect";
@@ -1136,15 +1136,20 @@ $("detailCopy").addEventListener("click", async () => {
 });
 
 // ---------- Alat ukur & Lintasan Geologi ----------
-const transect = createTransectController(map, (isActive) => {
-  if (isActive) {
-    hideDetail();
-    hoverTip.hidden = true;
-  }
-});
+const transect = createTransectController(
+  map,
+  (isActive) => {
+    if (isActive) {
+      hideDetail();
+      hoverTip.hidden = true;
+      if (isMobile()) setSnap("peek");
+    }
+  },
+  getLoadedNationalUnits,
+);
 
 // ---------- Impor SHP / GeoJSON (Cek Lokasi) ----------
-const shpImport = createShpImportController(map, pushViewHistory, toast);
+const shpImport = createShpImportController(map, pushViewHistory, toast, getLoadedNationalUnits);
 
 // ---------- Tentang & sumber ----------
 const about = $<HTMLDialogElement>("aboutDialog");

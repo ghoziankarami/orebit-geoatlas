@@ -1,60 +1,60 @@
 import { getLang } from "./i18n";
 
-/** Halaman "Tentang & sumber" (PRD F10): sumber data, lisensi, metodologi, cakupan 8 wilayah. */
+/** Halaman "Tentang & sumber": sumber data, lisensi, metodologi stratigrafi, cakupan 8 wilayah. */
 const CONTENT = {
   id: `
     <h2 id="aboutTitle">Tentang Orebit GeoAtlas</h2>
-    <p>GeoAtlas adalah atlas geologi multi-sumber untuk seluruh 8 wilayah kepulauan Indonesia (Sumatra, Bangka-Belitung, Jawa, Bali–Nusra, Kalimantan, Sulawesi, Maluku, dan Papua).
-    Proyek gratis dan terbuka dari <a href="https://orebit.id" target="_blank" rel="noopener">Orebit</a>, terinspirasi dari Macrostrat.
+    <p>GeoAtlas adalah atlas geologi interaktif untuk seluruh 8 wilayah kepulauan Indonesia (Sumatra, Bangka–Belitung, Jawa, Bali–Nusra, Kalimantan, Sulawesi, Maluku, dan Papua).
+    Dikembangkan oleh <a href="https://orebit.id" target="_blank" rel="noopener">Orebit</a> untuk eksplorasi geologi, pengecekan wilayah, dan pembuatan penampang geologi regional.
     <a href="https://github.com/ghoziankarami/orebit-geoatlas" target="_blank" rel="noopener">Lihat kode sumber di GitHub ↗</a>.</p>
 
     <h3>Sumber data</h3>
     <table>
-      <thead><tr><th>Sumber</th><th>Dipakai untuk</th><th>Lisensi</th></tr></thead>
+      <thead><tr><th>Sumber</th><th>Cakupan &amp; kegunaan</th><th>Lisensi</th></tr></thead>
       <tbody>
-        <tr><td><a href="https://macrostrat.org" target="_blank" rel="noopener">Macrostrat</a></td><td>Peta geologi dasar di semua zoom; sumber asli berbeda menurut unit dan ditampilkan pada detail unit</td><td>CC-BY 4.0</td></tr>
-        <tr><td><a href="https://geoportal.esdm.go.id/gis4/rest/services/BGS_PM/Geologi_Litologi/MapServer" target="_blank" rel="noopener">Layanan Geologi Litologi &amp; Struktur ESDM</a></td><td>Katalog &amp; harmonisasi 8 wilayah Indonesia (Pusat Survei Geologi, Badan Geologi)</td><td>Lisensi Terbuka PSG: wajib atribusi, tidak untuk diperjualbelikan</td></tr>
-        <tr><td><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> via <a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a></td><td>Peta dasar (Terang/Gelap) dan pencarian lokasi Nominatim</td><td>ODbL / OpenMapTiles</td></tr>
+        <tr><td><a href="https://geologi.esdm.go.id/geomap" target="_blank" rel="noopener">Peta Geologi Bersistem Indonesia (P3G / PSG, Badan Geologi)</a></td><td>Kompilasi lembar peta geologi regional skala 1:250.000 &amp; 1:1.000.000 (formasi, litologi, sesar, lipatan, dan subduksi) untuk 8 wilayah Indonesia</td><td>Atribusi sumber P3G / Pusat Survei Geologi, Badan Geologi</td></tr>
+        <tr><td><a href="https://macrostrat.org" target="_blank" rel="noopener">Macrostrat</a></td><td>Peta geologi tinjauan regional pada tingkat zoom global</td><td>CC-BY 4.0</td></tr>
+        <tr><td><a href="https://mapterhorn.com/attribution" target="_blank" rel="noopener">Mapterhorn Terrarium DTM</a> &amp; <a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a></td><td>Model elevasi digital (DEM/DTM) untuk penampang geologi bawah permukaan &amp; relief 3D, serta peta dasar OpenStreetMap</td><td>ODbL / OpenMapTiles</td></tr>
       </tbody>
     </table>
 
-    <h3>Transparansi tingkat kurasi (Confidence)</h3>
+    <h3>Metodologi stratigrafi &amp; penampang geologi</h3>
     <ol>
-      <li><strong>Terkurasi Manual (<code>curated</code>):</strong> Diverifikasi terhadap lembar peta Badan Geologi dan Leksikon Stratigrafi Indonesia (termasuk koreksi Granit Klabat Trias–Jura dan metasedimen Belitung).</li>
-      <li><strong>Pemetaan Otomatis (<code>auto</code>):</strong> Diturunkan secara deterministik oleh <code>auto_crosswalk.py</code> dari istilah umur dan kata kunci litologi sumber; tetap memerlukan tinjauan ahli geologi.</li>
-      <li><strong>Catatan Audit Literatur (<code>flagged</code>):</strong> Terdapat perbedaan antara atribut peta sumber dan publikasi pembanding (mis. Formasi Kluet: Trias vs Karbon–Perm).</li>
+      <li><strong>Standarisasi Skala Waktu (ICS):</strong> Setiap formasi dan satuan batuan diselaraskan ke rentang umur <em>International Chronostratigraphic Chart</em> (dalam jutaan tahun lalu / Ma) dari Kuarter hingga Prakambrium.</li>
+      <li><strong>Klasifikasi Litologi &amp; Struktur:</strong> Satuan batuan dikelompokkan ke dalam 8 kelas litologi utama (Endapan Permukaan, Karbonat, Sedimen Klastik, Vulkanik, Plutonik Felsik, Plutonik Mafik–Ultramafik, Metamorf, dan Melange) beserta struktur sesar, lipatan, kelurusan, dan kontak geologi.</li>
+      <li><strong>Penampang Geologi &amp; Cek Lokasi SHP:</strong> Menggabungkan profil topografi DTM, arsitektur perlapisan batuan berdasarkan hukum superposisi &amp; hubungan potong-memotong (<em>cross-cutting</em>), perpotongan bidang sesar, serta tumpang-susun (<em>overlay</em>) poligon SHP/GeoJSON/KML langsung di browser.</li>
     </ol>
 
-    <h3>Batasan</h3>
-    <p>Ini bukan peta resmi. Generalisasi dan harmonisasi bisa menggeser batas atau menyederhanakan unit.
-    Untuk keputusan teknis, selalu rujuk lembar asli Badan Geologi dan gunakan tombol <em>Lapor koreksi</em> bila menemukan ketidakcocokan.</p>
+    <h3>Batasan penggunaan</h3>
+    <p>Peta ini merupakan kompilasi skala regional dan bukan peta resmi untuk keputusan rekayasa tapak detail.
+    Selalu rujuk lembar peta geologi asli Badan Geologi untuk kajian teknis dan gunakan tombol <em>Lapor koreksi</em> bila menemukan ketidaksesuaian atribut.</p>
   `,
   en: `
     <h2 id="aboutTitle">About Orebit GeoAtlas</h2>
-    <p>GeoAtlas is a multi-source geologic atlas covering all 8 Indonesian archipelago regions (Sumatra, Bangka-Belitung, Java, Bali–Nusra, Kalimantan, Sulawesi, Maluku, and Papua).
-    A free, open-source project by <a href="https://orebit.id" target="_blank" rel="noopener">Orebit</a>, inspired by Macrostrat.
+    <p>GeoAtlas is an interactive regional geologic atlas covering all 8 Indonesian archipelago regions (Sumatra, Bangka–Belitung, Java, Bali–Nusra, Kalimantan, Sulawesi, Maluku, and Papua).
+    Built by <a href="https://orebit.id" target="_blank" rel="noopener">Orebit</a> for geological exploration, concession location checking, and regional geological cross-sections.
     <a href="https://github.com/ghoziankarami/orebit-geoatlas" target="_blank" rel="noopener">View source code on GitHub ↗</a>.</p>
 
     <h3>Data sources</h3>
     <table>
-      <thead><tr><th>Source</th><th>Used for</th><th>License</th></tr></thead>
+      <thead><tr><th>Source</th><th>Coverage &amp; usage</th><th>License</th></tr></thead>
       <tbody>
-        <tr><td><a href="https://macrostrat.org" target="_blank" rel="noopener">Macrostrat</a></td><td>Base geology at every zoom; original sources vary by unit and are shown in unit details</td><td>CC-BY 4.0</td></tr>
-        <tr><td><a href="https://geoportal.esdm.go.id/gis4/rest/services/BGS_PM/Geologi_Litologi/MapServer" target="_blank" rel="noopener">ESDM Geology &amp; Structure service</a></td><td>8-region Indonesian national catalog &amp; harmonization (Center for Geological Survey)</td><td>PSG Open License: attribution required, not for sale</td></tr>
-        <tr><td><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> via <a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a></td><td>Basemap (Light/Dark) and Nominatim place search</td><td>ODbL / OpenMapTiles</td></tr>
+        <tr><td><a href="https://geologi.esdm.go.id/geomap" target="_blank" rel="noopener">Systematic Geological Map of Indonesia (P3G / PSG, Geological Agency)</a></td><td>1:250,000 &amp; 1:1,000,000 regional geological map compilation (formations, lithologies, faults, folds, and subduction zones) across all 8 regions</td><td>Attribution to P3G / Center for Geological Survey</td></tr>
+        <tr><td><a href="https://macrostrat.org" target="_blank" rel="noopener">Macrostrat</a></td><td>Global-scale overview geology at low zoom levels</td><td>CC-BY 4.0</td></tr>
+        <tr><td><a href="https://mapterhorn.com/attribution" target="_blank" rel="noopener">Mapterhorn Terrarium DTM</a> &amp; <a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a></td><td>Digital elevation model (DEM/DTM) for subsurface geological cross-sections &amp; 3D terrain, plus OpenStreetMap basemaps</td><td>ODbL / OpenMapTiles</td></tr>
       </tbody>
     </table>
 
-    <h3>Curation confidence levels</h3>
+    <h3>Stratigraphic methodology &amp; geological cross-sections</h3>
     <ol>
-      <li><strong>Manually Curated (<code>curated</code>):</strong> Verified against Geological Agency map sheets and Indonesian Stratigraphic Lexicon (including Triassic–Jurassic Klabat Granite and Belitung metasediment corrections).</li>
-      <li><strong>Automated Mapping (<code>auto</code>):</strong> Deterministically derived by <code>auto_crosswalk.py</code> from source age terms and lithology keywords; requires geologist review.</li>
-      <li><strong>Literature Audit Note (<code>flagged</code>):</strong> Known conflict between source attributes and comparison publications (e.g. Kluet Formation: Triassic vs Carboniferous–Permian).</li>
+      <li><strong>ICS Chronostratigraphic Standardization:</strong> Every formation and rock unit is harmonized to the <em>International Chronostratigraphic Chart</em> age intervals (in Ma, from Quaternary to Precambrian).</li>
+      <li><strong>Lithological &amp; Structural Classification:</strong> Rock units are organized into 8 primary lithology classes (Unconsolidated, Carbonate, Siliciclastic, Volcanic, Felsic Plutonic, Mafic–Ultramafic Plutonic, Metamorphic, and Melange) alongside fault, fold, lineament, and contact structures.</li>
+      <li><strong>Geological Cross-Sections &amp; SHP Location Check:</strong> Combines DTM elevation profiles, subsurface stratigraphic superposition &amp; plutonic cross-cutting relationships, fault plane intersections, and client-side SHP/GeoJSON/KML polygon overlay.</li>
     </ol>
 
     <h3>Limitations</h3>
-    <p>This is not an official map. Generalization and harmonization can shift boundaries or simplify units.
-    For technical decisions, always refer to original Geological Agency sheets and use <em>Report correction</em> if you spot discrepancies.</p>
+    <p>This compilation is intended for regional geological overview and preliminary exploration, not site-specific engineering design.
+    Always consult original Geological Agency map sheets for technical decisions and use <em>Report correction</em> if you spot discrepancies.</p>
   `,
 } as const;
 
