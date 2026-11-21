@@ -770,13 +770,14 @@ export function createShpImportController(
 
   triggerBtn?.addEventListener("click", () => input?.click());
 
-  input?.addEventListener("change", async () => {
-    if (!input.files || !input.files.length) return;
+  // Satu jalur untuk tombol pilih berkas maupun drag-and-drop ke kanvas peta
+  const handleFiles = async (files: FileList) => {
+    if (!files.length) return;
     try {
       const c = map.getCenter();
       const fallbackZone = Math.max(46, Math.min(54, Math.floor((c.lng + 180) / 6) + 1));
       const fallbackSouth = c.lat <= 0;
-      const { name, rawFc, prjSpec } = await parseImportedFiles(input.files, fallbackZone, fallbackSouth);
+      const { name, rawFc, prjSpec } = await parseImportedFiles(files, fallbackZone, fallbackSouth);
       if (!rawFc.features.length) {
         toast(t("shpImportEmpty"));
         return;
@@ -797,10 +798,49 @@ export function createShpImportController(
       toast(t("shpImportSuccess"));
     } catch {
       toast(t("shpImportError"));
-    } finally {
-      input.value = "";
     }
+  };
+
+  input?.addEventListener("change", async () => {
+    if (!input.files) return;
+    await handleFiles(input.files);
+    input.value = "";
   });
+
+  // Drag-and-drop berkas .zip/.shp/.geojson/.kml langsung ke kanvas peta
+  const container = map.getContainer();
+  container.addEventListener("dragover", (e) => {
+    if (!e.dataTransfer?.types.includes("Files")) return;
+    e.preventDefault();
+    container.classList.add("shp-dragging");
+  });
+  container.addEventListener("dragleave", (e) => {
+    if (!container.contains(e.relatedTarget as Node | null)) container.classList.remove("shp-dragging");
+  });
+  container.addEventListener("drop", (e) => {
+    container.classList.remove("shp-dragging");
+    if (!e.dataTransfer?.files.length) return;
+    e.preventDefault();
+    void handleFiles(e.dataTransfer.files);
+  });
+
+  // Klik fitur impor → popup seluruh atribut .dbf (nilai di-escape sebelum masuk DOM)
+  const showFeatureAttributes = (e: maplibregl.MapLayerMouseEvent) => {
+    const props = Object.entries(e.features?.[0]?.properties ?? {})
+      .filter(([, v]) => v !== null && v !== "" && v !== undefined)
+      .slice(0, 14);
+    if (!props.length) return;
+    const rows = props.map(([k, v]) => `<tr><th>${esc(k)}</th><td>${esc(String(v))}</td></tr>`).join("");
+    new maplibregl.Popup({ maxWidth: "320px" })
+      .setLngLat(e.lngLat)
+      .setHTML(`<table class="shp-attr">${rows}</table>`)
+      .addTo(map);
+  };
+  for (const layerId of [IMPORT_FILL, IMPORT_LINE, IMPORT_PTS]) {
+    map.on("click", layerId, showFeatureAttributes);
+    map.on("mouseenter", layerId, () => (map.getCanvas().style.cursor = "pointer"));
+    map.on("mouseleave", layerId, () => (map.getCanvas().style.cursor = ""));
+  }
 
   focusBtn?.addEventListener("click", zoomToLayer);
 

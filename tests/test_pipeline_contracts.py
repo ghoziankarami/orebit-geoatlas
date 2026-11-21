@@ -6,6 +6,7 @@ from __future__ import annotations
 import csv
 import io
 import json
+import re
 import subprocess
 import sys
 import unittest
@@ -120,6 +121,19 @@ class TestPipelineContracts(unittest.TestCase):
             self.assertEqual(len(u["bbox"]), 4)
             self.assertLessEqual(u["age_top_ma"], u["age_base_ma"])
             self.assertIn(u["confidence"], {"curated", "auto", "flagged"})
+
+
+    def test_units_reference_has_no_empty_lith_detail_and_sharp_miocene(self) -> None:
+        rows = list(csv.DictReader((ROOT / "reference" / "units.csv").open(encoding="utf-8")))
+        self.assertEqual(len(rows), 2096)
+        empty = [r["unit_id"] for r in rows if not r["lith_detail"].strip()]
+        self.assertEqual(empty, [], "lith_detail kosong")
+        # Sub-kala Miosen ICS: Tml = Miosen Awal, Tmm = Miosen Tengah, Tmu = Miosen Akhir
+        expected = {"TML": (15.97, 23.03), "TMM": (11.63, 15.97), "TMU": (5.333, 11.63)}
+        for r in rows:
+            m = re.match(r"^(TML|TMM|TMU)(_|$)", r["unit_id"].upper())
+            if m:
+                self.assertEqual((float(r["age_top_ma"]), float(r["age_base_ma"])), expected[m.group(1)], r["unit_id"])
 
 
 if __name__ == "__main__":

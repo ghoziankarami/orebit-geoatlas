@@ -252,7 +252,7 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
 .transect-metrics > div { padding: 7px 8px; border-radius: 8px; background: var(--field); border: 1px solid var(--line); }
 .transect-metrics span { display: block; font-size: 10px; color: var(--ink-soft); }
 .transect-metrics strong { font-size: 13px; font-variant-numeric: tabular-nums; }
-.transect-section { margin-bottom: 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.transect-section { margin-bottom: 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 8px; overflow-x: auto; max-height: 62vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .transect-section svg { width: 100%; min-width: 540px; height: auto; display: block; }
 .transect-struct-badges { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
 .transect-struct-badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: rgba(220,38,38,.12); color: #991B1B; border: 1px solid rgba(220,38,38,.3); font-variant-numeric: tabular-nums; }
@@ -264,7 +264,9 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
 .transect-seg-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
 .transect-seg-lith { font-size: 11px; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .transect-seg-meta { flex: none; color: var(--ink-soft); font-variant-numeric: tabular-nums; font-weight: 600; }
-.transect-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.transect-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+.transect-ve { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--ink-soft); }
+.transect-ve select { font: inherit; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--field); color: inherit; }
 
 /* ---------- Impor SHP / GeoJSON ---------- */
 .shp-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
@@ -468,3 +470,8 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
   .toast { bottom: calc(164px + env(safe-area-inset-bottom, 0px)); }
 }
 @media (prefers-reduced-motion: reduce) { .panel { transition: none; } }
+
+.shp-dragging { outline: 3px dashed #E11D48; outline-offset: -8px; }
+.shp-attr { border-collapse: collapse; font-size: 12px; }
+.shp-attr th { text-align: left; padding: 2px 8px 2px 0; color: var(--ink-soft); font-weight: 600; vertical-align: top; }
+.shp-attr td { padding: 2px 0; word-break: break-word; }

@@ -17,11 +17,12 @@ globalThis.document = { documentElement: { lang: "id" } };
 globalThis.importMetaEnv = {};
 
 const tempDir = mkdtempSync(join(tmpdir(), "geoatlas-contracts-"));
-const modulesToCompile = ["config", "i18n", "timescale", "lithology", "layers", "state", "coords", "search", "detail", "transect"];
+const modulesToCompile = ["config", "i18n", "timescale", "lithology", "layers", "state", "coords", "search", "detail", "transect", "shp_import"];
 
 for (const name of modulesToCompile) {
   let src = readFileSync(resolve(ROOT, `app/src/${name}.ts`), "utf-8");
   src = src.replace(/import\.meta\.env/g, "globalThis.importMetaEnv");
+  src = src.replace(/import maplibregl from "maplibre-gl";/, "const maplibregl = globalThis.maplibregl ?? {};");
   src = src.replace(/from\s+"\.\/([^"]+)"/g, 'from "./$1.mjs"');
   const out = ts.transpileModule(src, {
     compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
@@ -119,6 +120,16 @@ try {
   assert.equal(parsed.topo, true);
   assert.equal(parsed.view3d, true);
   assert.equal(parsed.geologyOpacity, 60);
+
+  // 8. Impor SHP: reproyeksi UTM 48S ke WGS84 (known answer) dan deteksi .prj
+  const shp = await import(join(tempDir, "shp_import.mjs"));
+  const [lng0, lat0] = shp.utmToLngLat(500000, 10000000, 48, true);
+  assert.ok(Math.abs(lng0 - 105) < 1e-6, `UTM 48S central meridian lng=${lng0}`);
+  assert.ok(Math.abs(lat0) < 1e-6, `UTM 48S equator lat=${lat0}`);
+  assert.equal(shp.detectPrjSpec('PROJCS["WGS_1984_UTM_Zone_48S"]', 50, false).mode, "utm");
+  assert.equal(shp.detectPrjSpec('PROJCS["WGS_1984_UTM_Zone_48S"]', 50, false).zone, 48);
+  assert.equal(shp.detectPrjSpec('PROJCS["WGS_1984_UTM_Zone_48S"]', 50, false).isSouth, true);
+  assert.equal(shp.detectPrjSpec(null, 50, false).mode, "wgs84");
 
   console.log("✓ app contracts PASS (real module imports: UTM, i18n parity, searchNationalIndex, transect math, state roundtrip)");
 } finally {

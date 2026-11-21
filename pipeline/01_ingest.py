@@ -10,7 +10,7 @@ import pandas as pd
 import pyogrio
 
 from common import (BABEL_SHEET_NUMBERS, DESC_FIELDS, LINE_TYPE_FIELDS, NAME_FIELDS, RAW, REF, REGION_RAW_FILES,
-                    SYMBOL_FIELDS, VECTOR_GLOBS, out_dir, pick_field, pick_fields, read_csv, region_arg)
+                    SHEET_NAME_FIELDS, SHEET_NO_FIELDS, SYMBOL_FIELDS, VECTOR_GLOBS, out_dir, pick_field, pick_fields, read_csv, region_arg)
 
 ESDM_URL = "https://geoportal.esdm.go.id/gis4/rest/services/BGS_PM/Geologi_Litologi/MapServer"
 EXCLUDE_SYMBOLS = {"air", "danau", "laut", "water", "lake", "sea", "pulau", "waduk", "rawa", "sungai", "na"}
@@ -88,6 +88,13 @@ for f in files:
         gdf_u = gdf.loc[keep_mask]
         if gdf_u.empty:
             continue
+        # Lembar P3G 1:250.000 asli per poligon (mis. "421 BANDA ACEH"); kosong bila sumber tidak memuatnya.
+        sheet_nm, sheet_no = pick_field(cols, SHEET_NAME_FIELDS), pick_field(cols, SHEET_NO_FIELDS)
+        no_s = (clean(gdf_u[sheet_no]).str.replace(r"\.0$", "", regex=True) if sheet_no
+                else pd.Series("", index=gdf_u.index))
+        nm_s = clean(gdf_u[sheet_nm]) if sheet_nm else pd.Series("", index=gdf_u.index)
+        no_s = no_s.mask(no_s.isin(["-999", "-999.0"]), "")  # -999 = sentinel tanpa nomor lembar
+        sheet_s = (no_s + " " + nm_s.mask(nm_s == "-999", "")).str.strip()
         desc = (gdf_u[descs].apply(lambda r: " | ".join(v for v in clean(r) if v), axis=1) if descs
                 else pd.Series("", index=gdf_u.index))
         units.append(gpd.GeoDataFrame({
@@ -95,6 +102,7 @@ for f in files:
             "symbol_orig": sym_series.loc[keep_mask],
             "name_orig": clean(gdf_u[name]) if name else "",
             "desc_orig": desc,
+            "sheet_orig": sheet_s,
         }, geometry=gdf_u.geometry, crs=4326))
     elif geom_types & {"LineString", "MultiLineString"}:
         typ = pick_field(cols, LINE_TYPE_FIELDS)

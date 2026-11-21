@@ -10,7 +10,19 @@ src = read_csv("sources.csv").set_index("source_id")
 
 u = gpd.read_parquet(od / "04_units.parquet")
 first_src = u.source_id.str.split(";").str[0]
-u["sheet_name"] = first_src.map(src.sheet_name).fillna("")
+src_sheet = first_src.map(src.sheet_name).fillna("")
+sheet_orig = u.sheet_orig.fillna("") if "sheet_orig" in u.columns else pd.Series("", index=u.index)
+def sheet_label(raw: str) -> str:
+    """Ringkas daftar lembar gabungan (poligon hasil edge-match) menjadi 2 lembar pertama + jumlah sisa."""
+    parts = list(dict.fromkeys(p.strip() for p in raw.split(";") if p.strip()))
+    if not parts:
+        return ""
+    more = len(parts) - 2
+    return ", ".join(parts[:2]) + (f" dan {more} lembar lain" if more > 0 else "")
+
+
+u["sheet_name"] = [f"Peta Geologi Lembar {lbl}, Skala 1:250.000 — P3G" if (lbl := sheet_label(s)) else ss
+                   for s, ss in zip(sheet_orig, src_sheet)]
 u["source_url"] = first_src.map(src.url).fillna("")
 cols = [
     "poly_id", "unit_id", "region", "formation", "symbol_std", "lith_class", "lith_parent",

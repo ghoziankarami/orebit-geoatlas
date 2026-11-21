@@ -351,19 +351,26 @@ interface UnitBlock {
   ageBaseMa: number;
 }
 
+// Geometri dasar penampang (dipakai juga oleh hover sinkron di controller)
+const SEC_W = 820;
+const SEC_PAD_L = 48;
+const SEC_PAD_R = 18;
+
 function buildSectionSvg(
   samples: readonly SampleHit[],
   structures: readonly TransectStructureHit[],
   totalKm: number,
   azimuthDeg: number,
+  ve = 1,
 ): string {
   // Panoramic wide geological cross-section (3.1 : 1 horizontal ratio)
-  const W = 820;
-  const H = 268;
-  const padL = 48;
-  const padR = 18;
+  // Perbesaran Vertikal (VE): tinggi plot dikali VE, sehingga skala vertikal (m per piksel) ikut membesar.
+  const W = SEC_W;
+  const padL = SEC_PAD_L;
+  const padR = SEC_PAD_R;
   const padT = 26;
   const padB = 28;
+  const H = Math.round(268 + (Math.max(1, ve) - 1) * (268 - padT - padB));
   const plotW = W - padL - padR;
   const plotH = H - padT - padB;
 
@@ -663,7 +670,7 @@ function buildSectionSvg(
                   ? "W"
                   : "NW";
 
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Geological Cross-Section A to A'">
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Geological Cross-Section A to A' (VE ${ve}×)" data-ve="${ve}">
     ${SVG_LITH_PATTERNS}
     <rect x="${padL}" y="${padT}" width="${plotW}" height="${plotH}" fill="#F8FAFC" stroke="rgba(31,43,51,0.24)" stroke-width="1"/>
     ${layersSvg.join("")}
@@ -671,6 +678,7 @@ function buildSectionSvg(
     <polyline points="${surfacePts}" fill="none" stroke="#0F172A" stroke-width="2.3" stroke-linejoin="round"/>
     ${structTraces}
     ${unitBadgesSvg.join("")}
+    <line id="secCursor" x1="${padL}" y1="${padT}" x2="${padL}" y2="${yBase}" stroke="#0F172A" stroke-width="1" stroke-dasharray="2,2" visibility="hidden" pointer-events="none"/>
     <text x="${padL + 6}" y="${padT - 8}" font-size="10" font-weight="800" fill="#0F172A">A</text>
     <text x="${W - padR - 6}" y="${padT - 8}" text-anchor="end" font-size="10" font-weight="800" fill="#0F172A">A' (${azimuthDeg.toFixed(0)}° ${azCard})</text>
     <text x="${padL - 5}" y="${padT + 8}" text-anchor="end" font-size="8.8" font-weight="600" fill="#374151">${maxLabel}</text>
@@ -687,6 +695,8 @@ function buildSectionSvg(
 const SOURCE_ID = "transect-src";
 const LINE_LAYER = "transect-line";
 const PT_LAYER = "transect-pts";
+const HOVER_SOURCE = "transect-hover-src";
+const HOVER_LAYER = "transect-hover";
 
 export function createTransectController(
   map: maplibregl.Map,
@@ -706,6 +716,46 @@ export function createTransectController(
   const clearBtn = document.getElementById("transectClear") as HTMLButtonElement;
   const exportBtn = document.getElementById("transectExport") as HTMLButtonElement;
   const closeBtn = document.getElementById("transectClose") as HTMLButtonElement;
+  const veSelect = document.getElementById("transectVe") as HTMLSelectElement | null;
+  const svgExportBtn = document.getElementById("transectExportSvg") as HTMLButtonElement | null;
+  let redrawSection: (() => void) | null = null;
+
+  // Tampilkan titik hover penampang di peta (kosong = sembunyikan)
+  const setHoverPoint = (p: TransectPoint | null) => {
+    try {
+      if (!map.isStyleLoaded()) return;
+      ensureLayers();
+      const features = p
+        ? [{ type: "Feature" as const, properties: {}, geometry: { type: "Point" as const, coordinates: [p.lng, p.lat] } }]
+        : [];
+      (map.getSource(HOVER_SOURCE) as maplibregl.GeoJSONSource | undefined)?.setData({ type: "FeatureCollection", features });
+    } catch {
+      /* gaya peta belum siap; hover bersifat opsional */
+    }
+  };
+
+  // Kursor vertikal di SVG penampang mengikuti posisi sampel; marker di peta ikut berpindah
+  const bindSectionHover = (hits: readonly SampleHit[]) => {
+    const svgEl = body.querySelector<SVGSVGElement>(".transect-section svg");
+    if (!svgEl || hits.length < 2) return;
+    const cursor = svgEl.querySelector<SVGLineElement>("#secCursor");
+    const plotW = SEC_W - SEC_PAD_L - SEC_PAD_R;
+    svgEl.addEventListener("pointermove", (ev) => {
+      const r = svgEl.getBoundingClientRect();
+      const vx = ((ev.clientX - r.left) / r.width) * SEC_W;
+      const frac = Math.min(1, Math.max(0, (vx - SEC_PAD_L) / plotW));
+      const idx = Math.round(frac * (hits.length - 1));
+      const x = (SEC_PAD_L + (idx / (hits.length - 1)) * plotW).toFixed(1);
+      cursor?.setAttribute("x1", x);
+      cursor?.setAttribute("x2", x);
+      cursor?.setAttribute("visibility", "visible");
+      setHoverPoint(hits[idx]?.point ?? null);
+    });
+    svgEl.addEventListener("pointerleave", () => {
+      cursor?.setAttribute("visibility", "hidden");
+      setHoverPoint(null);
+    });
+  };
 
   const ensureLayers = () => {
     if (!map.getSource(SOURCE_ID)) {
@@ -721,6 +771,17 @@ export function createTransectController(
         source: SOURCE_ID,
         filter: ["==", ["geometry-type"], "LineString"],
         paint: { "line-color": "#D9381E", "line-width": 3.2, "line-dasharray": [2, 1.2] },
+      });
+    }
+    if (!map.getSource(HOVER_SOURCE)) {
+      map.addSource(HOVER_SOURCE, { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+    }
+    if (!map.getLayer(HOVER_LAYER)) {
+      map.addLayer({
+        id: HOVER_LAYER,
+        type: "circle",
+        source: HOVER_SOURCE,
+        paint: { "circle-radius": 7, "circle-color": "#0F172A", "circle-stroke-color": "#FFFFFF", "circle-stroke-width": 2 },
       });
     }
     if (!map.getLayer(PT_LAYER)) {
@@ -939,7 +1000,8 @@ export function createTransectController(
       const validElevs = sampleHits.map((s) => s.elevM).filter((v): v is number => v !== null);
       lastElevRange = validElevs.length >= 2 ? [Math.min(...validElevs), Math.max(...validElevs)] : null;
       const elevStr = lastElevRange ? `${lastElevRange[0]}..${lastElevRange[1]} m` : "…";
-      const sectionHtml = `<div class="transect-section">${buildSectionSvg(sampleHits, lastStructures, totalKm, azimuthDeg)}</div>`;
+      const ve = Math.max(1, Number(veSelect?.value) || 1);
+      const sectionHtml = `<div class="transect-section">${buildSectionSvg(sampleHits, lastStructures, totalKm, azimuthDeg, ve)}</div>`;
       const structHtml = lastStructures.length
         ? `<div class="transect-struct-badges" aria-label="${esc(t("transectStructures"))}">${lastStructures
             .map((st, idx) => `<span class="transect-struct-badge">${/lipat|fold|anti|syn/i.test(st.type) ? `L${idx + 1}` : `F${idx + 1}`}: ${esc(st.type)} @ ${st.km.toFixed(1)} km</span>`)
@@ -968,7 +1030,9 @@ export function createTransectController(
         ${structHtml}
         ${listHtml}
       `;
+      bindSectionHover(sampleHits);
     };
+    redrawSection = drawHtml;
 
     drawHtml();
 
@@ -997,6 +1061,7 @@ export function createTransectController(
   };
 
   const clear = () => {
+    setHoverPoint(null);
     points = [];
     lastSegments = [];
     lastStructures = [];
@@ -1011,6 +1076,22 @@ export function createTransectController(
   closeBtn.addEventListener("click", () => {
     setActive(false);
     clear();
+  });
+
+  veSelect?.addEventListener("change", () => redrawSection?.());
+
+  svgExportBtn?.addEventListener("click", () => {
+    const svgEl = body.querySelector(".transect-section svg");
+    if (!svgEl) return;
+    let xml = new XMLSerializer().serializeToString(svgEl);
+    if (!xml.includes("xmlns=")) xml = xml.replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg"');
+    const blob = new Blob([`<?xml version="1.0" encoding="UTF-8"?>\n${xml}`], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `orebit-geological-section-${new Date().toISOString().slice(0, 10)}.svg`;
+    a.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1500);
   });
 
   exportBtn.addEventListener("click", () => {

@@ -774,6 +774,8 @@ const TEXT_IDS: Record<string, Key> = {
   transectTitle: "transectTitle",
   transectClear: "transectClear",
   transectExport: "transectExportCsv",
+  transectExportSvg: "transectExportSvg",
+  transectVeLabel: "transectVe",
   snapPeek: "sheetSnapPeek",
   snapHalf: "sheetSnapHalf",
   snapFull: "sheetSnapFull",

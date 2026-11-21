@@ -156,6 +156,26 @@ class TestBrowserUIUX(unittest.TestCase):
             self.assertEqual(errors, [], f"Unexpected pageerrors: {errors}")
             browser.close()
 
+    def test_navigation_transect_import_and_about_contracts(self) -> None:
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            context = browser.new_context(viewport={"width": 1366, "height": 768}, locale="en-US")
+            page = context.new_page()
+            page.goto(self.base_url, wait_until="domcontentloaded")
+            page.wait_for_selector("#regionBar .region-chip")
+            # Tombol navigasi kamera & kompas, impor SHP
+            for sel in ("#navBack", "#compassNorthBtn", "#shpImportBtn"):
+                self.assertEqual(page.locator(sel).count(), 1, sel)
+            # Penampang: pemilih VE 1×/2×/5×/10× dan unduh SVG
+            self.assertEqual(page.locator("#transectVe option").count(), 4)
+            self.assertEqual(page.locator("#transectExportSvg").count(), 1)
+            # Dialog Tentang bebas jargon internal
+            page.locator("#aboutBtn").click()
+            about_text = page.locator("#aboutDialog").inner_text()
+            self.assertNotIn("auto_crosswalk", about_text)
+            self.assertNotIn("[AUTO]", about_text)
+            browser.close()
+
     def test_mobile_bottom_sheet_3_snap_and_no_overflow(self) -> None:
         with sync_playwright() as p:
             browser = p.chromium.launch()

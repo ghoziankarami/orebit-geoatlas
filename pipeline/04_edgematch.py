@@ -22,6 +22,7 @@ merged = u.dissolve(by="unit_key", aggfunc={
     **{c: "first" for c in keep if c != "unit_key"},
     "source_id": lambda s: ";".join(sorted(set(s))),
     "symbol_orig": lambda s: ";".join(sorted(set(s))),
+    "sheet_orig": lambda s: "; ".join(sorted({x for x in s if x})),
 }).explode(index_parts=False).reset_index()
 
 merged["area_km2"] = (merged.geometry.area / 1e6).round(2)
