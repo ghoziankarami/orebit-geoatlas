@@ -41,7 +41,19 @@ export interface AttitudeOverride {
   strikeAz?: number | null;
 }
 
+/** A strike/dip measured in the field (waypoint), already projected onto the section line. */
+export interface MeasuredAttitude {
+  frac: number;
+  strikeAz: number;
+  dipDeg: number;
+  /** "fault" measurements attach to faults; everything else to depositional/intrusive contacts. */
+  target: "fault" | "contact";
+  name: string;
+}
+
 export interface Boundary {
+  /** Name of the field measurement used for this contact, if any. */
+  source?: string;
   id: string;
   fracX: number;
   kind: ContactKind;
@@ -97,6 +109,42 @@ export function apparentDip(trueDipDeg: number, strikeAz: number | null, section
   return Math.max(1, ap);
 }
 
+/** Which section end a plane dips toward, from its strike (right-hand rule: dip direction = strike + 90°). */
+export function dipTowardFromStrike(strikeAz: number, sectionAz: number): DipToward {
+  return Math.cos(toRad(strikeAz + 90 - sectionAz)) >= 0 ? "B" : "A";
+}
+
+/**
+ * Project a map point onto a polyline (lng/lat, local equirectangular metres per segment).
+ * Returns distance along the line (km), perpendicular offset (m) and side (L/R looking from A to A').
+ */
+export function projectOntoLine(
+  line: ReadonlyArray<{ lng: number; lat: number }>,
+  p: { lng: number; lat: number },
+): { alongKm: number; offsetM: number; side: "L" | "R"; totalKm: number } {
+  const R = 6371008.8;
+  let best = { alongKm: 0, offsetM: Infinity, side: "R" as "L" | "R" };
+  let acc = 0;
+  for (let i = 1; i < line.length; i++) {
+    const a = line[i - 1];
+    const b = line[i];
+    const k = Math.cos(toRad((a.lat + b.lat) / 2));
+    const bx = toRad(b.lng - a.lng) * k * R;
+    const by = toRad(b.lat - a.lat) * R;
+    const px = toRad(p.lng - a.lng) * k * R;
+    const py = toRad(p.lat - a.lat) * R;
+    const len2 = bx * bx + by * by;
+    const len = Math.sqrt(len2);
+    const t = len2 > 0 ? Math.max(0, Math.min(1, (px * bx + py * by) / len2)) : 0;
+    const dx = px - t * bx;
+    const dy = py - t * by;
+    const d = Math.hypot(dx, dy);
+    if (d < best.offsetM) best = { alongKm: (acc + t * len) / 1000, offsetM: d, side: bx * py - by * px > 0 ? "L" : "R" };
+    acc += len;
+  }
+  return { ...best, totalKm: acc / 1000 };
+}
+
 /** Azimuth (deg, 0..360) of the direction from point a to b on a map (lng/lat, small distances). */
 export function lineAzimuth(ax: number, ay: number, bx: number, by: number): number {
   const dx = (bx - ax) * Math.cos(toRad((ay + by) / 2));
@@ -142,6 +190,8 @@ export function buildSectionModel(
   structures: readonly MappedStructure[],
   sectionAz: number,
   overrides: Readonly<Record<string, AttitudeOverride>> = {},
+  measured: readonly MeasuredAttitude[] = [],
+  measuredTolFrac = 0.05,
 ): SectionModel {
   const runs = buildRuns(samples);
   const n = Math.max(1, samples.length - 1);
@@ -175,20 +225,31 @@ export function buildSectionModel(
   });
   draft.sort((p, q) => p.frac - q.frac);
 
-  const boundaries: Boundary[] = draft.map((d, idx) => {
+  // Each field measurement is used once, by the nearest matching contact within the tolerance.
+  const usedM = new Set<number>();
+  const boundaries: Boundary[] = draft.map((d) => {
     const id = `c${Math.round(d.frac * 1000)}`;
     const ov = overrides[id] ?? {};
     const kind = ov.kind ?? d.kind;
-    const strikeAz = ov.strikeAz !== undefined ? ov.strikeAz : d.strike;
+    const target = kind === "fault" ? "fault" : "contact";
+    let mi = -1;
+    measured.forEach((m, i) => {
+      if (usedM.has(i) || m.target !== target) return;
+      const dist = Math.abs(m.frac - d.frac);
+      if (dist <= measuredTolFrac && (mi < 0 || dist < Math.abs(measured[mi].frac - d.frac))) mi = i;
+    });
+    const m = mi >= 0 ? measured[mi] : undefined;
+    if (m) usedM.add(mi);
+    // Precedence: manual entry in the section table > field measurement (waypoint) > default.
+    const strikeAz = ov.strikeAz !== undefined ? ov.strikeAz : m ? m.strikeAz : d.strike;
     const dipSet = typeof ov.dipDeg === "number" && Number.isFinite(ov.dipDeg);
-    const trueDip = dipSet ? Math.max(1, Math.min(90, ov.dipDeg as number)) : DEFAULT_DIP[kind];
-    // Default dip direction: a dipping depositional contact dips toward the younger unit (older beds lie beneath it);
-    // otherwise toward the end of the section.
-    const toward: DipToward = ov.toward ?? "B";
+    const trueDip = dipSet ? Math.max(1, Math.min(90, ov.dipDeg as number)) : m ? Math.max(1, Math.min(90, m.dipDeg)) : DEFAULT_DIP[kind];
+    const toward: DipToward = ov.toward ?? (m ? dipTowardFromStrike(m.strikeAz, sectionAz) : "B");
     return {
       id, fracX: d.frac, kind, trueDipDeg: trueDip,
       apparentDipDeg: apparentDip(trueDip, strikeAz, sectionAz), toward,
-      assumed: !dipSet, strikeAz, hiatusMa: d.hiatus, mapped: d.mapped, between: d.between,
+      assumed: !dipSet && !m, strikeAz, hiatusMa: d.hiatus, mapped: d.mapped, between: d.between,
+      ...(m && !dipSet ? { source: m.name } : {}),
     };
   });
 

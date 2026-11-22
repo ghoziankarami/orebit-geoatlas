@@ -149,9 +149,50 @@ try {
   assert.ok(gpx.includes("&lt;andesit&gt; &amp; &quot;kekar&quot;"), "GPX must escape XML");
   assert.equal((gpx.match(/<wpt /g) || []).length, 2);
   const csv = toCsv(wps).trim().split("\n");
-  assert.equal(csv[0], "name,lat,lon,elev_m,accuracy_m,unit,symbol,note,time");
+  assert.equal(csv[0], "name,kind,structure,strike,dip,lat,lon,elev_m,accuracy_m,unit,symbol,note,time");
   assert.equal(csv.length, 3);
   assert.ok(csv[1].includes('"Singkapan <andesit> & ""kekar"""'), "CSV must double quotes");
+  const { attitudeText, hasAttitude, kindOf } = await import(join(tempDir, "waypoints.mjs"));
+  const st = { ...wps[0], kind: "structure", structType: "bedding", strike: 30, dip: 45 };
+  assert.equal(kindOf(wps[0]), "outcrop", "legacy waypoints default to outcrop");
+  assert.equal(hasAttitude(st), true);
+  assert.equal(attitudeText(st), "030/45");
+  assert.equal(hasAttitude({ ...st, kind: "sample" }), false);
+  assert.ok(toCsv([st]).split("\n")[1].startsWith('"WP-002",structure,bedding,30,45,'));
+  assert.ok(toGpx([st]).includes("<type>structure</type>") && toGpx([st]).includes("bedding 030/45"));
+
+  {
+  // 8. Penampang: proyeksi waypoint ke garis, arah dip, dan prioritas ukuran lapangan
+  const secW = await import(join(tempDir, "section_model.mjs"));
+  const wline = [{ lng: 120, lat: 0 }, { lng: 120.01, lat: 0 }]; // ~1.11 km ke timur
+  const wprj = secW.projectOntoLine(wline, { lng: 120.005, lat: 0.0009 }); // ~100 m utara, di tengah
+  assert.ok(Math.abs(wprj.alongKm - wprj.totalKm / 2) < 0.002, `along ${wprj.alongKm}`);
+  assert.ok(Math.abs(wprj.offsetM - 100) < 1, `offset ${wprj.offsetM}`);
+  assert.equal(wprj.side, "L", "north of an eastward line is on the left");
+  assert.equal(secW.projectOntoLine(wline, { lng: 120.005, lat: -0.0009 }).side, "R");
+  // Strike 000 (dip ke timur) pada lintasan ke timur: miring ke A'; strike 180 (dip ke barat): ke A
+  assert.equal(secW.dipTowardFromStrike(0, 90), "B");
+  assert.equal(secW.dipTowardFromStrike(180, 90), "A");
+  const mkS = (label, base, top, lith = "siliciclastic") => ({ elevM: 10, label, symbol: label, color: "#ccc", lithClass: lith, ageBaseMa: base, ageTopMa: top });
+  const secSamples = [...Array(10)].map((_, i) => (i < 5 ? mkS("Muda", 5, 2.6) : mkS("Tua", 6, 5.2)));
+  const fieldMeas = [{ frac: 0.47, strikeAz: 180, dipDeg: 30, target: "contact", name: "WP-007" }];
+  const wm1 = secW.buildSectionModel(secSamples, [], 90, {}, fieldMeas, 0.05);
+  assert.equal(wm1.boundaries.length, 1);
+  assert.equal(wm1.boundaries[0].trueDipDeg, 30);
+  assert.equal(wm1.boundaries[0].assumed, false);
+  assert.equal(wm1.boundaries[0].source, "WP-007");
+  assert.equal(wm1.boundaries[0].toward, "A");
+  assert.ok(Math.abs(wm1.boundaries[0].apparentDipDeg - 30) < 0.01, "strike perpendicular to section: apparent = true dip");
+  // Isian manual menang atas ukuran lapangan; ukuran di luar toleransi diabaikan
+  const bid = wm1.boundaries[0].id;
+  const wm2 = secW.buildSectionModel(secSamples, [], 90, { [bid]: { dipDeg: 70 } }, fieldMeas, 0.05);
+  assert.equal(wm2.boundaries[0].trueDipDeg, 70);
+  assert.equal(wm2.boundaries[0].source, undefined);
+  const wm3 = secW.buildSectionModel(secSamples, [], 90, {}, [{ ...fieldMeas[0], frac: 0.9 }], 0.05);
+  assert.equal(wm3.boundaries[0].assumed, true);
+  // Ukuran sesar tidak dipakai untuk kontak biasa
+  const wm4 = secW.buildSectionModel(secSamples, [], 90, {}, [{ ...fieldMeas[0], target: "fault" }], 0.05);
+  assert.equal(wm4.boundaries[0].source, undefined);
 
   // 8. Impor SHP: reproyeksi UTM 48S ke WGS84 (known answer) dan deteksi .prj
   const shp = await import(join(tempDir, "shp_import.mjs"));
@@ -162,38 +203,38 @@ try {
   assert.equal(shp.detectPrjSpec('PROJCS["WGS_1984_UTM_Zone_48S"]', 50, false).zone, 48);
   assert.equal(shp.detectPrjSpec('PROJCS["WGS_1984_UTM_Zone_48S"]', 50, false).isSouth, true);
   assert.equal(shp.detectPrjSpec(null, 50, false).mode, "wgs84");
-
+  }
 
   // 6. Geological section model: apparent dip, contact classification, projection to depth
-  const sm = await import(join(tempDir, "section_model.mjs"));
+  const secm = await import(join(tempDir, "section_model.mjs"));
   const near = (a, b, e = 0.05) => assert.ok(Math.abs(a - b) <= e, `${a} !~ ${b}`);
-  near(sm.apparentDip(60, 90, 0), 60);                       // section perpendicular to strike: apparent = true
-  near(sm.apparentDip(60, 45, 0), Math.atan(Math.tan(60 * Math.PI / 180) * Math.sin(45 * Math.PI / 180)) * 180 / Math.PI);
-  assert.ok(sm.apparentDip(60, 0, 0) <= 1.01, "strike parallel to section -> ~0 apparent dip");
-  assert.equal(sm.apparentDip(90, 10, 0), 90);
+  near(secm.apparentDip(60, 90, 0), 60);                       // section perpendicular to strike: apparent = true
+  near(secm.apparentDip(60, 45, 0), Math.atan(Math.tan(60 * Math.PI / 180) * Math.sin(45 * Math.PI / 180)) * 180 / Math.PI);
+  assert.ok(secm.apparentDip(60, 0, 0) <= 1.01, "strike parallel to section -> ~0 apparent dip");
+  assert.equal(secm.apparentDip(90, 10, 0), 90);
   const young = { lithClass: "siliciclastic", ageBaseMa: 5, ageTopMa: 2 };
   const oldU = { lithClass: "siliciclastic", ageBaseMa: 40, ageTopMa: 30 };
-  assert.equal(sm.classifyContact(young, oldU, false).kind, "unconformity");   // 30 - 5 = 25 Ma hiatus
-  assert.equal(sm.classifyContact(young, oldU, false).hiatusMa, 25);
-  assert.equal(sm.classifyContact(young, { ...oldU, ageTopMa: 5 }, false).kind, "conformable");
-  assert.equal(sm.classifyContact(young, oldU, true).kind, "fault");           // faults only when mapped
-  assert.equal(sm.classifyContact({ ...young, lithClass: "plutonic_felsic" }, oldU, false).kind, "intrusive");
+  assert.equal(secm.classifyContact(young, oldU, false).kind, "unconformity");   // 30 - 5 = 25 Ma hiatus
+  assert.equal(secm.classifyContact(young, oldU, false).hiatusMa, 25);
+  assert.equal(secm.classifyContact(young, { ...oldU, ageTopMa: 5 }, false).kind, "conformable");
+  assert.equal(secm.classifyContact(young, oldU, true).kind, "fault");           // faults only when mapped
+  assert.equal(secm.classifyContact({ ...young, lithClass: "plutonic_felsic" }, oldU, false).kind, "intrusive");
   const mk = (label, age) => ({ elevM: 100, label, symbol: label, color: "#ccc", lithClass: "siliciclastic", ageBaseMa: age, ageTopMa: age - 3 });
   const secSamples = [...Array(10).fill(0).map(() => mk("A", 10)), ...Array(10).fill(0).map(() => mk("B", 20))];
-  const noFault = sm.buildSectionModel(secSamples, [], 90);
+  const noFault = secm.buildSectionModel(secSamples, [], 90);
   assert.equal(noFault.boundaries.length, 1);
   assert.notEqual(noFault.boundaries[0].kind, "fault", "age jump alone must not create a fault");
-  const withFault = sm.buildSectionModel(secSamples, [{ frac: 0.5, km: 5, type: "Sesar", strikeAz: 0 }], 90);
+  const withFault = secm.buildSectionModel(secSamples, [{ frac: 0.5, km: 5, type: "Sesar", strikeAz: 0 }], 90);
   assert.equal(withFault.boundaries[0].kind, "fault");
   assert.equal(withFault.boundaries[0].assumed, true);
   near(withFault.boundaries[0].apparentDipDeg, 60);
-  const dipped = sm.buildSectionModel(secSamples, [], 90, { [noFault.boundaries[0].id]: { dipDeg: 45, toward: "B" } });
+  const dipped = secm.buildSectionModel(secSamples, [], 90, { [noFault.boundaries[0].id]: { dipDeg: 45, toward: "B" } });
   assert.equal(dipped.boundaries[0].assumed, false);
   const geo = { padL: 0, plotW: 100, pxPerKm: 10, pxPerM: 0.01, yTop: 0, yFloor: 100, surfaceY: () => 0 };
-  const lay = sm.layoutSection(dipped, geo, 10);
+  const lay = secm.layoutSection(dipped, geo, 10);
   const path = lay.boundaries[0].path;
   assert.ok(path[path.length - 1][0] > path[0][0], "dip toward B moves the contact to the right with depth");
-  const vert = sm.layoutSection(noFault, geo, 10).boundaries[0].path;
+  const vert = secm.layoutSection(noFault, geo, 10).boundaries[0].path;
   near(vert[vert.length - 1][0], vert[0][0], 0.01);                            // unknown dip = vertical
 
   console.log("✓ app contracts PASS (real module imports: UTM, i18n parity, searchNationalIndex, transect math, state roundtrip)");

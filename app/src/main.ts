@@ -25,7 +25,7 @@ import { readState, writeState, type ConfidenceFilter } from "./state";
 import { ERA_PRESETS } from "./timescale";
 import { createTransectController } from "./transect";
 import { createGps } from "./gps";
-import { createWaypoints, WP_LAYER } from "./waypoints";
+import { attitudeText, createWaypoints, drawWpIcon, hasAttitude, KIND_COLOR, kindOf, STRUCT_COLOR, WP_LAYER } from "./waypoints";
 import { loadSession, restoreHashIfEmpty, saveSession } from "./session";
 import { createShpImportController } from "./shp_import";
 
@@ -420,6 +420,28 @@ function composeExport(): HTMLCanvasElement {
   ctx.fillText("N", 0, 14);
   ctx.restore();
 
+  // Titik GPS adalah DOM marker (tidak ada di kanvas WebGL): gambar ulang di posisi proyeksinya.
+  const fix = gps.lastFix();
+  if (fix) {
+    const pt = map.project([fix.lng, fix.lat]);
+    if (pt.x >= 0 && pt.y >= 0 && pt.x <= mapWidth && pt.y <= mapHeight) {
+      ctx.beginPath();
+      ctx.arc(pt.x, headerHeight + pt.y, 8, 0, Math.PI * 2);
+      ctx.fillStyle = "#1D7FE0";
+      ctx.fill();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "#FFFFFF";
+      ctx.stroke();
+    }
+  }
+
+  // Waypoint yang terlihat di peta → tabel di kolom legenda.
+  const canvasEl = map.getCanvas();
+  const visibleWps = wp.all().filter((w) => {
+    const pt = map.project([w.lng, w.lat]);
+    return pt.x >= 0 && pt.y >= 0 && pt.x <= canvasEl.clientWidth && pt.y <= canvasEl.clientHeight;
+  });
+
   // Skala bar grafis (km) terkalibrasi di pojok kiri bawah peta
   const metersPerPx = (156543.03392 * Math.cos((c.lat * Math.PI) / 180)) / 2 ** map.getZoom();
   const targetKm = (metersPerPx * 110) / 1000;
@@ -458,11 +480,14 @@ function composeExport(): HTMLCanvasElement {
   ctx.font = "700 14px Instrument Sans, sans-serif";
   ctx.fillText(legendTitle, legendX + 20, headerHeight + 34, legendWidth - 36);
   let itemY = headerHeight + 65;
-  const rowHeight = items.length ? Math.min(27, Math.max(11, (mapHeight - 86) / items.length)) : 27;
-  const legendBottom = headerHeight + mapHeight - 8;
+  const wpRows = Math.min(visibleWps.length, 14);
+  const wpBlockH = visibleWps.length ? Math.min(mapHeight * 0.5, 54 + wpRows * 17) : 0;
+  const geoH = mapHeight - wpBlockH;
+  const rowHeight = items.length ? Math.min(27, Math.max(11, (geoH - 86) / items.length)) : 27;
+  const legendBottom = headerHeight + geoH - 8;
   ctx.save();
   ctx.beginPath();
-  ctx.rect(legendX + 8, headerHeight + 48, legendWidth - 16, Math.max(0, mapHeight - 56));
+  ctx.rect(legendX + 8, headerHeight + 48, legendWidth - 16, Math.max(0, geoH - 56));
   ctx.clip();
   for (const item of items) {
     const spans = [...item.querySelectorAll("span")];
@@ -494,6 +519,39 @@ function composeExport(): HTMLCanvasElement {
     if (itemY > legendBottom) break;
   }
   ctx.restore();
+
+  if (visibleWps.length) {
+    const top = headerHeight + geoH;
+    ctx.strokeStyle = "#d6dde1";
+    ctx.beginPath();
+    ctx.moveTo(legendX + 16, top);
+    ctx.lineTo(legendX + legendWidth - 16, top);
+    ctx.stroke();
+    ctx.fillStyle = "#1f3b48";
+    ctx.font = "700 13px Instrument Sans, sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText(`${t("wpLegend")} (${visibleWps.length})`, legendX + 20, top + 24);
+    let y = top + 46;
+    for (const w of visibleWps.slice(0, wpRows)) {
+      ctx.save();
+      ctx.translate(legendX + 28, y - 4);
+      if (hasAttitude(w)) ctx.rotate((Number(w.strike) * Math.PI) / 180);
+      drawWpIcon(ctx, kindOf(w), 13, w.structType ?? "bedding", hasAttitude(w) && Number(w.dip) >= 89);
+      ctx.restore();
+      ctx.fillStyle = hasAttitude(w) ? STRUCT_COLOR[w.structType ?? "bedding"] : KIND_COLOR[kindOf(w)];
+      ctx.font = "700 11px Instrument Sans, sans-serif";
+      ctx.fillText(w.name, legendX + 44, y, 82);
+      ctx.fillStyle = "#41535c";
+      ctx.font = "500 10px Instrument Sans, sans-serif";
+      const att = attitudeText(w);
+      ctx.fillText(`${w.lat.toFixed(5)}, ${w.lng.toFixed(5)}${att ? ` · ${att}` : ""}`, legendX + 128, y, legendWidth - 146);
+      y += 17;
+    }
+    if (visibleWps.length > wpRows) {
+      ctx.fillStyle = "#64747c";
+      ctx.fillText(`+${visibleWps.length - wpRows}…`, legendX + 44, y);
+    }
+  }
 
   const footerY = headerHeight + mapHeight;
   ctx.fillStyle = "#f4f6f4";
@@ -770,10 +828,16 @@ const TEXT_IDS: Record<string, Key> = {
   transectExport: "transectExportPng",
   transectExportSvg: "transectExportSvg",
   transectVeLabel: "transectVe",
+  transectWpBufLabel: "transectWpBuf",
   transectEdit: "transectEdit",
   "t-wpTitle": "wpTitle",
   "t-wpHint": "wpHint",
   "t-wpName": "wpName",
+  "t-wpKindTitle": "wpKindTitle",
+  "t-wpStructType": "wpStructType",
+  "t-wpStrike": "wpStrike",
+  "t-wpDip": "wpDip",
+  "t-wpRhr": "wpRhr",
   "t-wpNote": "wpNote",
   wpSave: "wpSave",
   wpDelete: "wpDelete",
@@ -1168,7 +1232,7 @@ const transect = createTransectController(
   },
   getLoadedNationalUnits,
   (pts) => saveSession({ transect: pts }),
-  { getFix: () => gps.lastFix(), ensureOn: () => gps.ensureOn(), toast: (m) => toast(m) },
+  { getFix: () => gps.lastFix(), ensureOn: () => gps.ensureOn(), toast: (m) => toast(m), getWaypoints: () => wp.all() },
 );
 
 // ---------- GPS lapangan ----------
@@ -1187,6 +1251,7 @@ const wp = createWaypoints(map, {
   toast,
   saveBlob,
   getFix: () => gps.lastFix(),
+  onChange: () => transect.refresh(),
   unitAt: (lng, lat) => {
     const ql = queryLayers();
     const pt = map.project([lng, lat]);

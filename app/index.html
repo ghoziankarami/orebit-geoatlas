@@ -171,6 +171,13 @@
       <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3 L13 13 M13 3 L3 13" /></svg>
     </button>
     <p class="detail-kicker" id="wpPanelTitle">Waypoint</p>
+    <div class="wp-field"><span id="t-wpKindTitle"></span><div class="wp-kind" id="wpKind" role="group"></div></div>
+    <div class="wp-struct" id="wpStruct" hidden>
+      <label class="wp-field"><span id="t-wpStructType"></span><select id="wpStructType"></select></label>
+      <label class="wp-field"><span id="t-wpStrike"></span><input id="wpStrike" type="number" inputmode="numeric" min="0" max="360" step="1" placeholder="030" /></label>
+      <label class="wp-field"><span id="t-wpDip"></span><input id="wpDip" type="number" inputmode="numeric" min="0" max="90" step="1" placeholder="45" /></label>
+      <p class="opacity-hint wp-rhr" id="t-wpRhr"></p>
+    </div>
     <label class="wp-field"><span id="t-wpName"></span><input id="wpName" type="text" maxlength="60" autocomplete="off" enterkeyhint="done" /></label>
     <label class="wp-field"><span id="t-wpNote"></span><textarea id="wpNote" rows="3" maxlength="1000"></textarea></label>
     <div id="wpMeta" class="wp-meta"></div>
@@ -196,6 +203,14 @@
           <option value="2">2×</option>
           <option value="5">5×</option>
           <option value="10">10×</option>
+        </select>
+      </label>
+      <label class="transect-ve"><span id="transectWpBufLabel"></span>
+        <select id="transectWpBuf">
+          <option value="250">250 m</option>
+          <option value="500" selected>500 m</option>
+          <option value="1000">1 km</option>
+          <option value="2000">2 km</option>
         </select>
       </label>
       <button type="button" class="btn" id="transectEdit"></button>

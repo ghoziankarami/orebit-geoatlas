@@ -270,8 +270,8 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
   .transect-section { max-height: 40vh; }
   #transectBody .att-row { grid-template-columns: 1fr 1fr; }
   #transectBody .att-name { grid-column: 1 / -1; }
-  .transect-actions { grid-template-columns: auto repeat(4, minmax(0, max-content)); justify-content: end; align-items: center; }
-  .transect-ve { grid-column: auto; justify-content: flex-start; margin-right: auto; }
+  .transect-actions { grid-template-columns: auto auto repeat(4, minmax(0, max-content)); justify-content: end; align-items: center; }
+  .transect-ve { grid-column: auto; justify-content: flex-start; }
 }
 
 /* ---------- Bar mode gambar lintasan (ringkas, peta tetap bebas diketuk) ---------- */
@@ -610,3 +610,19 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
   .draw-actions { flex-wrap: wrap; }
   .draw-actions .draw-gps { flex: 1 1 100%; white-space: nowrap; }
 }
+
+.wp-kind { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+.wp-kind button { display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 52px; padding: 5px 2px; border: 1px solid var(--line); border-radius: 9px; background: var(--paper); font-size: 10.5px; font-weight: 600; color: var(--ink); cursor: pointer; }
+.wp-kind button canvas { width: 18px; height: 18px; }
+.wp-kind button[aria-pressed="true"] { border-color: #E8590C; background: #FFF4EC; box-shadow: inset 0 0 0 1px #E8590C; }
+.wp-struct { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 0 8px; align-items: end; }
+.wp-struct .wp-rhr { grid-column: 1 / -1; margin-top: 6px; }
+.wp-panel select { font: inherit; font-size: 14px; color: var(--ink); width: 100%; padding: 9px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--field); }
+.wp-item { position: relative; padding-left: 28px; }
+.wp-dot { position: absolute; left: 10px; top: 50%; width: 10px; height: 10px; margin-top: -5px; border-radius: 50%; }
+@media (max-width: 760px) { .wp-panel select { font-size: 16px; } }
+
+.transect-wp-list { list-style: none; margin: 0; padding: 0 0 2px; display: grid; gap: 6px; }
+.transect-wp-list li { position: relative; padding-left: 18px; display: flex; flex-direction: column; font-size: 12px; }
+.transect-wp-list li .wp-dot { left: 2px; top: 7px; margin: 0; }
+.transect-wp-list span { color: var(--ink-soft); font-size: 11px; font-variant-numeric: tabular-nums; }

@@ -7,13 +7,31 @@ import { QUERY_LAYERS, styleReady } from "./layers";
 import { LITH_CLASSES } from "./lithology";
 import type { NationalUnit } from "./search";
 import {
+  apparentDip,
   buildSectionModel,
+  dipTowardFromStrike,
   layoutSection,
   lineAzimuth,
+  projectOntoLine,
   type AttitudeOverride,
   type ContactKind,
+  type DipToward,
+  type MeasuredAttitude,
   type SectionModel,
 } from "./section_model";
+import { attitudeText, hasAttitude, KIND_COLOR, kindOf, STRUCT_COLOR, type Waypoint } from "./waypoints";
+
+/** Waypoint projected onto the section, ready to draw. */
+interface SectionMark {
+  frac: number;
+  name: string;
+  color: string;
+  offsetM: number;
+  side: "L" | "R";
+  att: string;
+  appDipDeg: number | null;
+  toward: DipToward;
+}
 
 export interface TransectPoint {
   lng: number;
@@ -330,6 +348,7 @@ function buildSectionSvg(
   totalKm: number,
   azimuthDeg: number,
   ve = 1,
+  marks: readonly SectionMark[] = [],
 ): string {
   const W = SEC_W;
   const padL = SEC_PAD_L;
@@ -448,6 +467,41 @@ function buildSectionSvg(
     }
   }
 
+  // Waypoint lapangan: pin + nama di atas permukaan; struktur terukur diberi garis dip semu ke bawah.
+  const markSvg: string[] = [];
+  const sorted = [...marks].sort((a, b) => a.frac - b.frac);
+  let lastX = -1e9;
+  let tier = 0;
+  for (const m of sorted) {
+    const x = padL + Math.max(0, Math.min(1, m.frac)) * plotW;
+    const y = surfaceY(m.frac);
+    tier = x - lastX < 54 ? (tier + 1) % 3 : 0;
+    lastX = x;
+    const pinY = Math.max(padT + 4, y - 16 - tier * 13);
+    if (m.appDipDeg !== null) {
+      const dir = m.toward === "B" ? 1 : -1;
+      const L = 30;
+      let dx = 0;
+      let dy = 1;
+      if (m.appDipDeg < 89.5) {
+        const k = (dir * (1 / Math.tan((m.appDipDeg * Math.PI) / 180)) * (pxPerKm / 1000)) / pxPerM;
+        const norm = Math.hypot(k, 1);
+        dx = k / norm;
+        dy = 1 / norm;
+      }
+      markSvg.push(
+        `<line x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${(x + dx * L).toFixed(1)}" y2="${(y + dy * L).toFixed(1)}" stroke="#FFFFFF" stroke-width="4.4" stroke-linecap="round"/>`,
+        `<line x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${(x + dx * L).toFixed(1)}" y2="${(y + dy * L).toFixed(1)}" stroke="${m.color}" stroke-width="2.2" stroke-linecap="round"/>`,
+        `<text x="${(x + dx * L + (dir > 0 ? 3 : -3)).toFixed(1)}" y="${(y + dy * L + 3).toFixed(1)}" text-anchor="${dir > 0 ? "start" : "end"}" font-size="8.2" font-weight="700" fill="${m.color}" stroke="#FFFFFF" stroke-width="2.2" paint-order="stroke">${Math.round(m.appDipDeg)}°</text>`,
+      );
+    }
+    markSvg.push(
+      `<line x1="${x.toFixed(1)}" y1="${pinY.toFixed(1)}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="${m.color}" stroke-width="1.2"/>`,
+      `<circle cx="${x.toFixed(1)}" cy="${pinY.toFixed(1)}" r="4.2" fill="${m.color}" stroke="#FFFFFF" stroke-width="1.6"/>`,
+      `<text x="${(x + 6).toFixed(1)}" y="${(pinY + 3).toFixed(1)}" font-size="8.6" font-weight="800" fill="#1F2B33" stroke="#FFFFFF" stroke-width="2.6" paint-order="stroke">${esc(m.name)}${m.att ? ` ${esc(m.att)}` : ""}</text>`,
+    );
+  }
+
   const seaLineY = yToPx(0);
   const seaLine =
     seaLineY >= padT + 6 && seaLineY <= yBase - 6
@@ -477,6 +531,7 @@ function buildSectionSvg(
     ${seaLine}
     <polyline points="${surfacePts}" fill="none" stroke="#0F172A" stroke-width="2.3" stroke-linejoin="round"/>
     ${badgeSvg.join("")}
+    ${markSvg.join("")}
     <text x="${(W - padR - 6).toFixed(1)}" y="${(yBase - 8).toFixed(1)}" text-anchor="end" font-size="8.5" font-style="italic" fill="#374151">${esc(inferred)}</text>
     <line id="secCursor" x1="${padL}" y1="${padT}" x2="${padL}" y2="${yBase}" stroke="#0F172A" stroke-width="1" stroke-dasharray="2,2" visibility="hidden" pointer-events="none"/>
     <text x="${padL + 6}" y="${padT - 8}" font-size="10" font-weight="800" fill="#0F172A">A</text>
@@ -524,7 +579,12 @@ export function createTransectController(
   onActiveChange: (active: boolean) => void,
   getNationalUnits?: () => NationalUnit[],
   onPointsChange?: (points: TransectPoint[]) => void,
-  gpsHooks?: { getFix: () => TransectPoint | null; ensureOn: () => void; toast: (msg: string) => void },
+  gpsHooks?: {
+    getFix: () => TransectPoint | null;
+    ensureOn: () => void;
+    toast: (msg: string) => void;
+    getWaypoints?: () => readonly Waypoint[];
+  },
 ) {
   let active = false;
   let points: TransectPoint[] = [];
@@ -541,6 +601,7 @@ export function createTransectController(
   const exportBtn = document.getElementById("transectExport") as HTMLButtonElement;
   const closeBtn = document.getElementById("transectClose") as HTMLButtonElement;
   const veSelect = document.getElementById("transectVe") as HTMLSelectElement | null;
+  const bufSelect = document.getElementById("transectWpBuf") as HTMLSelectElement | null;
   const svgExportBtn = document.getElementById("transectExportSvg") as HTMLButtonElement | null;
   let redrawSection: (() => void) | null = null;
 
@@ -829,9 +890,31 @@ export function createTransectController(
       lastElevRange = validElevs.length >= 2 ? [Math.min(...validElevs), Math.max(...validElevs)] : null;
       const elevStr = lastElevRange ? `${lastElevRange[0]}..${lastElevRange[1]} m` : "…";
       const ve = Math.max(1, Number(veSelect?.value) || 1);
-      const model = buildSectionModel(sampleHits, lastStructures, azimuthDeg, overrides);
+      // Waypoint dalam jarak buffer diproyeksikan ke garis; struktur terukur ikut membentuk model.
+      const bufM = Math.max(50, Number(bufSelect?.value) || 500);
+      const marks: SectionMark[] = [];
+      const measured: MeasuredAttitude[] = [];
+      for (const w of gpsHooks?.getWaypoints?.() ?? []) {
+        const pr = projectOntoLine(points, w);
+        if (pr.offsetM > bufM || pr.totalKm <= 0) continue;
+        const frac = pr.alongKm / pr.totalKm;
+        const att = hasAttitude(w);
+        const st = w.structType ?? "bedding";
+        marks.push({
+          frac,
+          name: w.name,
+          color: att ? STRUCT_COLOR[st] : KIND_COLOR[kindOf(w)],
+          offsetM: pr.offsetM,
+          side: pr.side,
+          att: attitudeText(w),
+          appDipDeg: att ? apparentDip(Number(w.dip), Number(w.strike), azimuthDeg) : null,
+          toward: att ? dipTowardFromStrike(Number(w.strike), azimuthDeg) : "B",
+        });
+        if (att && st !== "joint") measured.push({ frac, strikeAz: Number(w.strike), dipDeg: Number(w.dip), target: st === "fault" ? "fault" : "contact", name: w.name });
+      }
+      const model = buildSectionModel(sampleHits, lastStructures, azimuthDeg, overrides, measured, Math.min(0.15, Math.max(0.02, 0.5 / Math.max(0.01, totalKm))));
       const X = SECTION_TXT[lang];
-      const sectionHtml = `<div class="transect-section">${buildSectionSvg(sampleHits, model, totalKm, azimuthDeg, ve)}</div>`;
+      const sectionHtml = `<div class="transect-section">${buildSectionSvg(sampleHits, model, totalKm, azimuthDeg, ve, marks)}</div>`;
       let fNo = 0;
       const tagOf = (k: ContactKind) => (k === "fault" ? `F${++fNo}` : k === "intrusive" ? "I" : k === "unconformity" ? "U" : "C");
       const kindOpts = (cur: ContactKind) =>
@@ -840,7 +923,7 @@ export function createTransectController(
         .map((b) => {
           const ov = overrides[b.id] ?? {};
           return `<div class="att-row" data-id="${b.id}">
-            <span class="att-name"><b>${tagOf(b.kind)}</b> ${esc(b.between[0])}${b.between[1] !== b.between[0] ? ` | ${esc(b.between[1])}` : ""}<small>${(b.fracX * totalKm).toFixed(1)} km${b.hiatusMa ? ` · ${X.hiatus} ${b.hiatusMa} Ma` : ""}${b.mapped ? ` · ${X.mapped}` : ""}</small></span>
+            <span class="att-name"><b>${tagOf(b.kind)}</b> ${esc(b.between[0])}${b.between[1] !== b.between[0] ? ` | ${esc(b.between[1])}` : ""}<small>${(b.fracX * totalKm).toFixed(1)} km${b.hiatusMa ? ` · ${X.hiatus} ${b.hiatusMa} Ma` : ""}${b.mapped ? ` · ${X.mapped}` : ""}${b.source ? ` · ${esc(b.source)} (${esc(t("transectMeasured"))})` : ""}</small></span>
             <label>${X.kind}<select data-att="kind">${kindOpts(b.kind)}</select></label>
             <label>${X.dip}<input type="number" inputmode="numeric" min="1" max="90" step="1" data-att="dip" value="${typeof ov.dipDeg === "number" ? ov.dipDeg : ""}" placeholder="${b.trueDipDeg}*"></label>
             <label>${X.toward}<select data-att="toward"><option value="A"${b.toward === "A" ? " selected" : ""}>A</option><option value="B"${b.toward === "B" ? " selected" : ""}>A'</option></select></label>
@@ -851,6 +934,14 @@ export function createTransectController(
       const structHtml = model.boundaries.length
         ? `<details class="transect-att"${window.matchMedia("(max-width: 760px)").matches ? "" : " open"}><summary>${esc(X.attTitle)}</summary><p class="muted">${esc(X.attNote)}</p>${rowsHtml}</details>`
         : "";
+      const markHtml = `<details class="transect-att transect-wp"${marks.length ? " open" : ""}><summary>${esc(t("transectWpTitle"))} (${marks.length})</summary>${
+        marks.length
+          ? `<ul class="transect-wp-list">${[...marks]
+              .sort((a, b) => a.frac - b.frac)
+              .map((m) => `<li><i class="wp-dot" style="background:${m.color}"></i><strong>${esc(m.name)}</strong><span>${(m.frac * totalKm).toFixed(2)} km · ${Math.round(m.offsetM)} m ${m.side === "L" ? "kiri/left" : "kanan/right"}${m.att ? ` · ${esc(m.att)}${m.appDipDeg !== null ? ` → ${Math.round(m.appDipDeg)}° (${m.toward === "B" ? "A'" : "A"})` : ""}` : ""}</span></li>`)
+              .join("")}</ul>`
+          : `<p class="muted">${esc(t("transectWpNone"))}</p>`
+      }</details>`;
       const legendHtml = `<div class="transect-legend" aria-label="${esc(X.lgd)}">${(["fault", "intrusive", "unconformity", "conformable"] as ContactKind[])
         .map((k) => {
           const st = k === "fault" ? 'stroke="#DC2626" stroke-width="2.3" stroke-dasharray="7,2.5"' : k === "intrusive" ? 'stroke="#7F1D1D" stroke-width="1.9"' : k === "unconformity" ? 'stroke="#1F2B33" stroke-width="1.5" stroke-dasharray="9,3,2,3"' : 'stroke="#334155" stroke-width="1.2"';
@@ -878,6 +969,7 @@ export function createTransectController(
         </div>
         ${sectionHtml}
         ${legendHtml}
+        ${markHtml}
         ${structHtml}
         ${listHtml}
       `;
@@ -1050,6 +1142,7 @@ export function createTransectController(
   });
 
   veSelect?.addEventListener("change", () => redrawSection?.());
+  bufSelect?.addEventListener("change", () => redrawSection?.());
 
   const download = (blob: Blob, ext: string) => {
     const url = URL.createObjectURL(blob);
