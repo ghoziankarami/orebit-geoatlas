@@ -19,7 +19,7 @@ globalThis.document = { documentElement: { lang: "id" } };
 globalThis.importMetaEnv = {};
 
 const tempDir = mkdtempSync(join(tmpdir(), "geoatlas-contracts-"));
-const modulesToCompile = ["config", "i18n", "timescale", "lithology", "layers", "state", "coords", "search", "detail", "transect", "section_model", "shp_import", "gps", "waypoints", "detail", "install"];
+const modulesToCompile = ["config", "i18n", "timescale", "lithology", "layers", "state", "coords", "search", "detail", "transect", "section_model", "shp_import", "gps", "waypoints", "install"];
 
 for (const name of modulesToCompile) {
   let src = readFileSync(resolve(ROOT, `app/src/${name}.ts`), "utf-8");
