@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Orebit (Ghozian Islam Karami)
 """Gabungkan poligon dengan crosswalk → unit baku, umur (Ma), litologi, confidence, warna.
 
 Keluaran: 03_units.parquet

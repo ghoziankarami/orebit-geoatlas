@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Orebit (Ghozian Islam Karami)
 import type { ExpressionSpecification } from "maplibre-gl";
 
 /**

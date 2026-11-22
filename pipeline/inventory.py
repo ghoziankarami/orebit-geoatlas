@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Orebit (Ghozian Islam Karami)
 """Tambahkan simbol unik yang belum ada ke reference/crosswalk.csv untuk dikurasi."""
 import geopandas as gpd
 import pandas as pd

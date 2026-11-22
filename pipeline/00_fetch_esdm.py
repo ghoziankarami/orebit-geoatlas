@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Orebit (Ghozian Islam Karami)
 """Tarik poligon Peta Geologi & garis struktur dari layanan ArcGIS REST publik ESDM (Pusat Survei Geologi).
 
 Layanan : https://geoportal.esdm.go.id/gis4/rest/services/BGS_PM/Geologi_Litologi/MapServer/0

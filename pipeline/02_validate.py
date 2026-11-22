@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Orebit (Ghozian Islam Karami)
 """Perbaiki geometri dan buat laporan QA per sumber memakai proyeksi Equal-Area EPSG:6933.
 
 Keluaran: 02_units.parquet, 02_lines.parquet, qa_report.csv

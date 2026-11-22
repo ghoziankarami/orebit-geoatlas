@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Orebit (Ghozian Islam Karami)
 """Baca semua vektor mentah satu wilayah, seragamkan kolom, reproyeksi ke EPSG:4326.
 
 Masukan : data/raw/<wilayah>/**/*.shp|*.geojson|*.gpkg

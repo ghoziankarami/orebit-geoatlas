@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Orebit (Ghozian Islam Karami)
 import type { ColorMode } from "./layers";
 import type { Lang } from "./i18n";
 import { CONFIG, type BasemapId } from "./config";

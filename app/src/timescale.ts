@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Orebit (Ghozian Islam Karami)
 /**
  * Periode & Epoch ICS untuk legenda mode umur serta chip preset era.
  */

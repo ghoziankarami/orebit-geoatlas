@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Orebit (Ghozian Islam Karami)
 """Ekspor GeoJSONSeq ramping untuk tippecanoe dan perbarui indeks pencarian nasional."""
 import geopandas as gpd
 import pandas as pd

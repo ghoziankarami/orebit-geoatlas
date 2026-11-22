@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Orebit (Ghozian Islam Karami)
 import type maplibregl from "maplibre-gl";
 import { CONFIG } from "./config";
 import { t } from "./i18n";

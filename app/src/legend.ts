@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Orebit (Ghozian Islam Karami)
 import type { ColorMode } from "./layers";
 import { getLang, t } from "./i18n";
 import { LITH_CLASSES, LITH_PARENT_GROUPS } from "./lithology";

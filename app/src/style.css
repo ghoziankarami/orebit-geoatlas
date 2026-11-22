@@ -25,6 +25,7 @@ a:hover { color: var(--tin-dark); }
 svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; stroke-linecap: round; }
 
 /* ---------- Tombol umum ---------- */
+[hidden] { display: none !important; }
 .btn {
   display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 12px;
   border-radius: 8px; border: 1px solid var(--line); background: var(--paper); color: var(--ink);
@@ -237,6 +238,18 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
 .reference-meta { padding-left: 1px; }
 .reference-source { margin-bottom: 0; }
 
+/* ---------- Atribut struktur penampang ---------- */
+.transect-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0 0 10px; font-size: 11px; color: var(--ink-soft); }
+.transect-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.transect-att { margin-bottom: 10px; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px 10px; background: #fff; }
+.transect-att summary { min-height: 34px; display: flex; align-items: center; cursor: pointer; font-size: 13px; font-weight: 650; }
+.transect-att > p { margin: 0 0 8px; font-size: 11.5px; line-height: 1.45; }
+.att-row { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.5fr) minmax(0, .8fr) minmax(0, .9fr) minmax(0, .8fr); gap: 6px 8px; align-items: end; padding: 8px 0; border-top: 1px dashed var(--line); }
+.att-name { font-size: 12px; line-height: 1.3; overflow-wrap: anywhere; }
+.att-name small { display: block; color: var(--ink-soft); font-size: 10.5px; }
+.att-row label { display: grid; gap: 2px; font-size: 10.5px; color: var(--ink-soft); }
+.att-row select, .att-row input { min-width: 0; height: 32px; font-size: 12px; border: 1px solid var(--line); border-radius: 6px; padding: 0 6px; background: var(--paper); color: var(--ink); }
+
 /* ---------- Panel Transek Geologi (Wide Panoramic Cross-Section Dock) ---------- */
 .transect-panel {
   position: absolute; top: var(--detail-top, 64px); right: 14px;
@@ -407,8 +420,8 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
   .panel[data-snap="peek"] .brand,
   .panel[data-snap="peek"] .active-filter-bar,
   .panel[data-snap="peek"] .panel-controls { display: none; }
-  .panel[data-snap="half"] { height: 54vh; max-height: 54vh; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
-  .panel[data-snap="full"] { height: 86vh; max-height: 86vh; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+  .panel[data-snap="half"] { height: 54vh; height: 54dvh; max-height: 54dvh; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+  .panel[data-snap="full"] { height: 86vh; height: 86dvh; max-height: 86dvh; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 
   .sheet-top-bar {
     display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 36px; flex: none;
@@ -450,15 +463,22 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
   .map-ctrls.is-3d .rotation-group, .rotation-group { display: none; }
   .tools-menu > summary { width: 38px; height: 40px; border-radius: 10px; }
   .tools-popover { width: 184px; }
-  .map-foot { right: auto; left: 10px; bottom: calc(160px + env(safe-area-inset-bottom, 0px)); align-items: flex-start; }
+  .map-foot { right: auto; left: 10px; bottom: calc(var(--sheet-h, 160px) + 6px); align-items: flex-start; }
   .foot-top { justify-content: flex-start; }
   .map-foot .attrib { display: none; }
 
+  /* Popups sit directly above the bottom sheet (its height is published as --sheet-h) so nothing is clipped. */
   .detail, .transect-panel {
-    left: 8px; right: 8px; top: 58px; width: auto; max-height: calc(100% - 284px - env(safe-area-inset-bottom, 0px));
+    left: 8px; right: 8px; top: auto; bottom: calc(var(--sheet-h, 160px) + 70px); width: auto;
+    max-height: calc(100vh - var(--sheet-h, 160px) - 148px); max-height: calc(100dvh - var(--sheet-h, 160px) - 148px);
     border-radius: 12px; padding: 12px 14px 14px; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
   }
   .transect-head h2 { font-size: 14.5px; }
+  .transect-actions { position: sticky; bottom: -14px; z-index: 2; background: var(--paper); padding: 10px 0 6px; border-top: 1px solid var(--line); }
+  .transect-actions .btn { min-height: 44px; }
+  .att-row { grid-template-columns: 1fr 1fr; }
+  .att-name { grid-column: 1 / -1; }
+  .att-row select, .att-row input { height: 40px; font-size: 16px; }
   .transect-metrics > div { padding: 5px 6px; }
   .transect-metrics strong { font-size: 12px; }
   .transect-list { max-height: 125px; }
@@ -467,7 +487,8 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
   .detail .inline-src { display: none; }
   .detail-actions { bottom: -16px; margin: 14px -16px -16px; padding: 12px 16px 16px; }
   .detail-actions .btn { min-width: 0; min-height: 44px; padding: 0 8px; white-space: nowrap; }
-  .toast { bottom: calc(164px + env(safe-area-inset-bottom, 0px)); }
+  .toast { bottom: calc(var(--sheet-h, 160px) + 10px); }
+  .panel[data-snap="full"] ~ .detail, .panel[data-snap="full"] ~ .transect-panel { visibility: hidden; }
 }
 @media (prefers-reduced-motion: reduce) { .panel { transition: none; } }
 

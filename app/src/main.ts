@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Orebit (Ghozian Islam Karami)
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Protocol } from "pmtiles";
@@ -983,6 +985,10 @@ let currentSnap: SnapPoint = "peek";
 function setSnap(snap: SnapPoint) {
   currentSnap = snap;
   panel.dataset.snap = snap;
+  document.documentElement.style.setProperty(
+    "--sheet-h",
+    snap === "peek" ? "calc(154px + env(safe-area-inset-bottom, 0px))" : snap === "half" ? "54dvh" : "86dvh",
+  );
   panel.classList.toggle("collapsed", snap === "peek");
   $("sheetHandle").setAttribute("aria-expanded", String(snap !== "peek"));
   document.querySelectorAll<HTMLButtonElement>("#sheetSnapBtns button").forEach((b) => {

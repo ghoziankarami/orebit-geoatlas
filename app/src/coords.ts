@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Orebit (Ghozian Islam Karami)
 /**
  * Utilitas konversi koordinat WGS84 (lat, lon) ke UTM (Universal Transverse Mercator)
  * untuk seluruh kepulauan Indonesia (Zona 46N–54N dan 46M–54M).

@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use Orebit GeoAtlas, please cite it as below."
+title: "Orebit GeoAtlas: interactive multi-source geological atlas of Indonesia"
+type: software
+authors:
+  - given-names: "Ghozian Islam"
+    family-names: "Karami"
+    affiliation: "Orebit"
+license: MIT
+repository-code: "https://github.com/ghoziankarami/orebit-geoatlas"
+url: "https://atlas.orebit.id"
+keywords:
+  - geology
+  - geological map
+  - Indonesia
+  - maplibre
+  - pmtiles

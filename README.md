@@ -75,7 +75,7 @@ tandai sambungan bermasalah) → `05_export` (GeoJSONSeq) → `06_tile.sh` (PMTi
 
 Peta ini bukan peta resmi dan tidak dimaksudkan untuk keputusan teknis tanpa pemeriksaan lembar asli. Data layanan Geologi Litologi ESDM berstatus Mei 2018; cakupan rinci saat ini Bangka-Belitung dan Sumatra. Skala layanan tidak dinyatakan dalam metadata pipeline. Atribusi lengkap dan catatan pemrosesan tersedia di **Tentang & sumber** pada aplikasi. Data mentah GeoMap tidak disimpan di repo ini.
 
-Tile Macrostrat berlisensi CC-BY 4.0 dan dapat mengandung sumber asli dengan ketentuan atribusinya sendiri. Basemap menggunakan OpenStreetMap/OpenFreeMap/OpenMapTiles; terrain mengikuti atribusi Mapterhorn. Lisensi MIT pada repo ini hanya berlaku untuk kode, bukan data pihak ketiga.
+Tile Macrostrat berlisensi CC-BY 4.0 dan dapat mengandung sumber asli dengan ketentuan atribusinya sendiri. Basemap menggunakan OpenStreetMap/OpenFreeMap/OpenMapTiles; terrain mengikuti atribusi Mapterhorn. Lisensi MIT pada repo ini hanya berlaku untuk kode, bukan data pihak ketiga; salinan dan turunan kode wajib menyertakan `LICENSE` dan [NOTICE](NOTICE). Nama "Orebit" dan "GeoAtlas" serta logonya tidak dilisensikan untuk fork atau produk pesaing ([TRADEMARKS.md](TRADEMARKS.md)). Rincian lisensi komponen dan data: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Untuk sitasi, gunakan [CITATION.cff](CITATION.cff).
 
 ## Kontribusi
 

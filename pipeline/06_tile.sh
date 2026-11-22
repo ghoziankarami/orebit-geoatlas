@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Orebit (Ghozian Islam Karami)
 # Bangun PMTiles dari GeoJSONSeq. Butuh tippecanoe ≥ 2.17 (https://github.com/felt/tippecanoe).
 set -euo pipefail
 REGION="${1:?Pemakaian: 06_tile.sh <wilayah>}"

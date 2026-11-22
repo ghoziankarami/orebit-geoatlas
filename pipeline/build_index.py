@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Orebit (Ghozian Islam Karami)
 """Bangun katalog indeks pencarian nasional deterministik (app/public/data/indonesia-units-index.json).
 
 Membaca `reference/*.csv` (dan `data/out/*/units.geojsonl` bila tersedia untuk bbox poligon aktual),

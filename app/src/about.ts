@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Orebit (Ghozian Islam Karami)
 import { getLang } from "./i18n";
 
 /** Halaman "Tentang & sumber": sumber data, lisensi, metodologi stratigrafi, cakupan 8 wilayah. */

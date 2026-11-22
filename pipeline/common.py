@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Orebit (Ghozian Islam Karami)
 """Utilitas bersama pipeline Orebit GeoAtlas."""
 from __future__ import annotations
 

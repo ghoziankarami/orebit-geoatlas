@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Orebit (Ghozian Islam Karami)
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -17,7 +19,7 @@ globalThis.document = { documentElement: { lang: "id" } };
 globalThis.importMetaEnv = {};
 
 const tempDir = mkdtempSync(join(tmpdir(), "geoatlas-contracts-"));
-const modulesToCompile = ["config", "i18n", "timescale", "lithology", "layers", "state", "coords", "search", "detail", "transect", "shp_import"];
+const modulesToCompile = ["config", "i18n", "timescale", "lithology", "layers", "state", "coords", "search", "detail", "transect", "section_model", "shp_import"];
 
 for (const name of modulesToCompile) {
   let src = readFileSync(resolve(ROOT, `app/src/${name}.ts`), "utf-8");
@@ -130,6 +132,39 @@ try {
   assert.equal(shp.detectPrjSpec('PROJCS["WGS_1984_UTM_Zone_48S"]', 50, false).zone, 48);
   assert.equal(shp.detectPrjSpec('PROJCS["WGS_1984_UTM_Zone_48S"]', 50, false).isSouth, true);
   assert.equal(shp.detectPrjSpec(null, 50, false).mode, "wgs84");
+
+
+  // 6. Geological section model: apparent dip, contact classification, projection to depth
+  const sm = await import(join(tempDir, "section_model.mjs"));
+  const near = (a, b, e = 0.05) => assert.ok(Math.abs(a - b) <= e, `${a} !~ ${b}`);
+  near(sm.apparentDip(60, 90, 0), 60);                       // section perpendicular to strike: apparent = true
+  near(sm.apparentDip(60, 45, 0), Math.atan(Math.tan(60 * Math.PI / 180) * Math.sin(45 * Math.PI / 180)) * 180 / Math.PI);
+  assert.ok(sm.apparentDip(60, 0, 0) <= 1.01, "strike parallel to section -> ~0 apparent dip");
+  assert.equal(sm.apparentDip(90, 10, 0), 90);
+  const young = { lithClass: "siliciclastic", ageBaseMa: 5, ageTopMa: 2 };
+  const oldU = { lithClass: "siliciclastic", ageBaseMa: 40, ageTopMa: 30 };
+  assert.equal(sm.classifyContact(young, oldU, false).kind, "unconformity");   // 30 - 5 = 25 Ma hiatus
+  assert.equal(sm.classifyContact(young, oldU, false).hiatusMa, 25);
+  assert.equal(sm.classifyContact(young, { ...oldU, ageTopMa: 5 }, false).kind, "conformable");
+  assert.equal(sm.classifyContact(young, oldU, true).kind, "fault");           // faults only when mapped
+  assert.equal(sm.classifyContact({ ...young, lithClass: "plutonic_felsic" }, oldU, false).kind, "intrusive");
+  const mk = (label, age) => ({ elevM: 100, label, symbol: label, color: "#ccc", lithClass: "siliciclastic", ageBaseMa: age, ageTopMa: age - 3 });
+  const secSamples = [...Array(10).fill(0).map(() => mk("A", 10)), ...Array(10).fill(0).map(() => mk("B", 20))];
+  const noFault = sm.buildSectionModel(secSamples, [], 90);
+  assert.equal(noFault.boundaries.length, 1);
+  assert.notEqual(noFault.boundaries[0].kind, "fault", "age jump alone must not create a fault");
+  const withFault = sm.buildSectionModel(secSamples, [{ frac: 0.5, km: 5, type: "Sesar", strikeAz: 0 }], 90);
+  assert.equal(withFault.boundaries[0].kind, "fault");
+  assert.equal(withFault.boundaries[0].assumed, true);
+  near(withFault.boundaries[0].apparentDipDeg, 60);
+  const dipped = sm.buildSectionModel(secSamples, [], 90, { [noFault.boundaries[0].id]: { dipDeg: 45, toward: "B" } });
+  assert.equal(dipped.boundaries[0].assumed, false);
+  const geo = { padL: 0, plotW: 100, pxPerKm: 10, pxPerM: 0.01, yTop: 0, yFloor: 100, surfaceY: () => 0 };
+  const lay = sm.layoutSection(dipped, geo, 10);
+  const path = lay.boundaries[0].path;
+  assert.ok(path[path.length - 1][0] > path[0][0], "dip toward B moves the contact to the right with depth");
+  const vert = sm.layoutSection(noFault, geo, 10).boundaries[0].path;
+  near(vert[vert.length - 1][0], vert[0][0], 0.01);                            // unknown dip = vertical
 
   console.log("✓ app contracts PASS (real module imports: UTM, i18n parity, searchNationalIndex, transect math, state roundtrip)");
 } finally {

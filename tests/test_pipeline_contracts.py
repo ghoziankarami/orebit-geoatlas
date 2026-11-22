@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Orebit (Ghozian Islam Karami)
 """Suite kontrak pipeline & data geologi nasional Orebit GeoAtlas (8 wilayah)."""
 
 from __future__ import annotations

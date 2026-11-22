@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Orebit (Ghozian Islam Karami)
 """Klasifikasi OTOMATIS crosswalk untuk baris yang unit_id-nya masih kosong.
 
 BUKAN pengganti kurasi manual (lihat docs/kurasi-crosswalk.md) — ini best-effort mekanis untuk
