@@ -55,16 +55,16 @@ export const attitudeText = (w: Waypoint): string =>
 
 /**
  * Validasi isian strike/dip. Kosong = tidak diukur (null). Dip di luar 0–90 atau strike bukan angka ditolak,
- * bukan dipotong diam-diam. Strike dinormalkan ke 0..360 (−30 → 330).
+ * bukan dipotong diam-diam. Strike di luar 0–360 juga ditolak; 360 disimpan sebagai 0.
  */
 export function parseAttitude(strikeRaw: string, dipRaw: string): { ok: true; strike: number | null; dip: number | null } | { ok: false; field: "strike" | "dip"; key: Key } {
   const s = strikeRaw.trim();
   const d = dipRaw.trim();
   const st = s === "" ? null : Number(s);
-  if (st !== null && !Number.isFinite(st)) return { ok: false, field: "strike", key: "wpStrikeErr" };
+  if (st !== null && (!Number.isFinite(st) || st < 0 || st > 360)) return { ok: false, field: "strike", key: "wpStrikeErr" };
   const dp = d === "" ? null : Number(d);
   if (dp !== null && (!Number.isFinite(dp) || dp < 0 || dp > 90)) return { ok: false, field: "dip", key: "wpDipErr" };
-  return { ok: true, strike: st === null ? null : ((st % 360) + 360) % 360, dip: dp };
+  return { ok: true, strike: st === null ? null : st % 360, dip: dp };
 }
 
 /** Arah foto 0..360; kosong = null. */
@@ -366,7 +366,19 @@ export function createWaypoints(
     photoUrls = [];
   };
 
-  /** Render ulang daftar foto waypoint dari IndexedDB; thumbnail memakai object URL yang dicabut saat ditutup. */
+  const photoItemHtml = (m: PhotoMeta) => {
+    const az = m.azimuth === null ? "" : String(m.azimuth);
+    return `<li class="wp-photo" data-pid="${esc(m.id)}"><img alt="" width="72" height="72" /><div class="wp-photo-fields"><input type="text" maxlength="200" data-k="caption" value="${esc(m.caption)}" placeholder="${esc(t("wpPhotoCaption"))}" aria-label="${esc(t("wpPhotoCaption"))}" /><input type="number" inputmode="decimal" min="0" max="360" step="1" data-k="az" value="${esc(az)}" placeholder="${esc(t("wpPhotoAzimuth"))}" aria-label="${esc(t("wpPhotoAzimuth"))}" /><button type="button" class="btn wp-clear" data-del="${esc(m.id)}">${esc(t("wpPhotoDelete"))}</button></div></li>`;
+  };
+  const setThumb = (pid: string, blob: Blob) => {
+    const li = photoGrid.querySelector<HTMLLIElement>(`li.wp-photo[data-pid="${CSS.escape(pid)}"]`);
+    if (!li) return;
+    const url = URL.createObjectURL(blob);
+    photoUrls.push(url);
+    li.querySelector("img")!.src = url;
+  };
+
+  /** Render penuh dari IndexedDB, hanya saat panel dibuka; thumbnail memakai object URL yang dicabut saat ditutup. */
   const renderPhotos = async (w: Waypoint) => {
     const seq = ++photoSeq;
     revokePhotoUrls();
@@ -374,22 +386,19 @@ export function createWaypoints(
     if (seq !== photoSeq) return;
     const byId = new Map(metas.map((m) => [m.id, m] as const));
     const ordered = (w.photos ?? []).map((pid) => byId.get(pid)).filter((m): m is PhotoMeta => Boolean(m));
-    photoGrid.innerHTML = ordered.length
-      ? ordered
-          .map((m) => {
-            const az = m.azimuth === null ? "" : String(m.azimuth);
-            return `<li class="wp-photo" data-pid="${esc(m.id)}"><img alt="" width="72" height="72" /><div class="wp-photo-fields"><input type="text" maxlength="200" data-k="caption" value="${esc(m.caption)}" placeholder="${esc(t("wpPhotoCaption"))}" aria-label="${esc(t("wpPhotoCaption"))}" /><input type="number" inputmode="decimal" min="0" max="360" step="1" data-k="az" value="${esc(az)}" placeholder="${esc(t("wpPhotoAzimuth"))}" aria-label="${esc(t("wpPhotoAzimuth"))}" /><button type="button" class="btn wp-clear" data-del="${esc(m.id)}">${esc(t("wpPhotoDelete"))}</button></div></li>`;
-          })
-          .join("")
-      : `<li class="muted wp-photo-empty">${esc(t("wpPhotoEmpty"))}</li>`;
-    for (const li of Array.from(photoGrid.querySelectorAll<HTMLLIElement>("li.wp-photo"))) {
-      const blob = await getPhoto(li.dataset.pid ?? "");
+    photoGrid.innerHTML = ordered.length ? ordered.map(photoItemHtml).join("") : `<li class="muted wp-photo-empty">${esc(t("wpPhotoEmpty"))}</li>`;
+    for (const m of ordered) {
+      const blob = await getPhoto(m.id);
       if (seq !== photoSeq) return;
-      if (!blob) continue;
-      const url = URL.createObjectURL(blob);
-      photoUrls.push(url);
-      li.querySelector("img")!.src = url;
+      if (blob) setThumb(m.id, blob);
     }
+  };
+
+  /** Tambah satu item tanpa menyentuh item lain, sehingga keterangan yang sedang diketik tidak hilang. */
+  const appendPhoto = (m: PhotoMeta, blob: Blob) => {
+    photoGrid.querySelector(".wp-photo-empty")?.remove();
+    photoGrid.insertAdjacentHTML("beforeend", photoItemHtml(m));
+    setThumb(m.id, blob);
   };
 
   /** Foto dikompres lalu disimpan; hanya masuk ke waypoint bila penyimpanan berhasil. */
@@ -423,12 +432,11 @@ export function createWaypoints(
         }
         cur.photos = [...(cur.photos ?? []), id];
         save();
+        if (openId === wid) appendPhoto(meta, blob);
       } catch {
         opts.toast(t("wpPhotoError"));
       }
     }
-    const cur = wps.find((x) => x.id === wid);
-    if (openId === wid && cur) void renderPhotos(cur);
   };
 
   const save = () => {
@@ -516,7 +524,13 @@ export function createWaypoints(
   $("wpSave").addEventListener("click", () => {
     const w = wps.find((x) => x.id === openId);
     if (w) {
-      const att: ReturnType<typeof parseAttitude> = editKind === "structure" ? parseAttitude(strikeIn.value, dipIn.value) : { ok: true, strike: null, dip: null };
+      // validity.badInput: teks yang tidak bisa dibaca input number (value-nya "") harus ditolak, bukan disimpan sebagai null.
+      let att: ReturnType<typeof parseAttitude> = { ok: true, strike: null, dip: null };
+      if (editKind === "structure") {
+        if (strikeIn.validity.badInput) att = { ok: false, field: "strike", key: "wpStrikeErr" };
+        else if (dipIn.validity.badInput) att = { ok: false, field: "dip", key: "wpDipErr" };
+        else att = parseAttitude(strikeIn.value, dipIn.value);
+      }
       strikeErr.textContent = !att.ok && att.field === "strike" ? t(att.key) : "";
       strikeErr.hidden = strikeErr.textContent === "";
       dipErr.textContent = !att.ok && att.field === "dip" ? t(att.key) : "";

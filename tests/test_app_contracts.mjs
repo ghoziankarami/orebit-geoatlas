@@ -162,7 +162,10 @@ try {
   // 7b. Validasi strike/dip (ditolak, bukan dipotong) dan arah foto
   const { parseAttitude, parseAzimuth } = await import(join(tempDir, "waypoints.mjs"));
   assert.deepEqual(parseAttitude("30", "45"), { ok: true, strike: 30, dip: 45 });
-  assert.deepEqual(parseAttitude("-30", ""), { ok: true, strike: 330, dip: null }, "negative strike normalises to 330");
+  assert.deepEqual(parseAttitude("-30", ""), { ok: false, field: "strike", key: "wpStrikeErr" }, "strike below 0 must be rejected, not wrapped");
+  assert.deepEqual(parseAttitude("400", "45"), { ok: false, field: "strike", key: "wpStrikeErr" }, "strike above 360 must be rejected");
+  assert.deepEqual(parseAttitude("360", "45"), { ok: true, strike: 0, dip: 45 }, "360 is accepted and stored as 0");
+  assert.deepEqual(parseAttitude("0", ""), { ok: true, strike: 0, dip: null });
   assert.deepEqual(parseAttitude("", "90"), { ok: true, strike: null, dip: 90 });
   assert.deepEqual(parseAttitude("30", "120"), { ok: false, field: "dip", key: "wpDipErr" }, "dip above 90 must be rejected");
   assert.deepEqual(parseAttitude("30", "-1"), { ok: false, field: "dip", key: "wpDipErr" });

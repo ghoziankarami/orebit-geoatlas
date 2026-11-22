@@ -299,8 +299,14 @@ class TestBrowserUIUX(unittest.TestCase):
             self.assertTrue(all(max(r["w"], r["h"]) <= 1600 for r in records), records)
             self.assertIn((1600, 1200), [(r["w"], r["h"]) for r in records])
 
-            # Keterangan dan arah foto disimpan saat isian kehilangan fokus
+            # M2: batch kedua tidak merender ulang grid; keterangan yang sedang diketik tetap ada
             first = page.locator("#wpPhotoGrid li.wp-photo").nth(0)
+            first.locator('input[data-k="caption"]').fill("Sedang diketik")
+            page.locator("#wpPhotoGal").set_input_files([str(small)])
+            page.wait_for_function("document.querySelectorAll('#wpPhotoGrid li.wp-photo').length === 3")
+            self.assertEqual(page.locator("#wpPhotoGrid li.wp-photo").nth(0).locator('input[data-k="caption"]').input_value(), "Sedang diketik")
+            page.wait_for_function(thumbs_loaded_js)
+            # Keterangan dan arah foto disimpan saat isian kehilangan fokus
             first.locator('input[data-k="caption"]').fill("Singkapan utara")
             first.locator('input[data-k="az"]').fill("90")
             first.locator('input[data-k="az"]').press("Tab")
@@ -309,12 +315,12 @@ class TestBrowserUIUX(unittest.TestCase):
             self.assertEqual(page.locator("#wpCount").inner_text(), "1")
             self.assertGreaterEqual(page.locator("#wpList .wp-cam").count(), 1)
 
-            # Reload: dua thumbnail, keterangan, dan arah tetap ada
+            # Reload: tiga thumbnail, keterangan, dan arah tetap ada
             page.goto(self.app_url, wait_until="domcontentloaded")
             page.wait_for_selector("#regionBar .region-chip")
             page.locator("#wpList .wp-item").first.click()
             page.locator("#wpPanel").wait_for(state="visible")
-            page.wait_for_function("document.querySelectorAll('#wpPhotoGrid li.wp-photo').length === 2")
+            page.wait_for_function("document.querySelectorAll('#wpPhotoGrid li.wp-photo').length === 3")
             page.wait_for_function(thumbs_loaded_js)
             self.assertEqual(page.locator("#wpPhotoGrid li.wp-photo").nth(0).locator('input[data-k="caption"]').input_value(), "Singkapan utara")
             self.assertEqual(page.locator("#wpPhotoGrid li.wp-photo").nth(0).locator('input[data-k="az"]').input_value(), "90")
@@ -332,14 +338,43 @@ class TestBrowserUIUX(unittest.TestCase):
             page.locator("#wpPanel").wait_for(state="hidden")
             self.assertIn("030/45", page.locator("#wpList").inner_text())
 
+            # L1: strike 400 ditolak dengan pesan; M1: isian tak terbaca (badInput) ditolak dan nilai lama tidak tertimpa
+            page.locator("#wpList .wp-item").first.click()
+            page.locator("#wpPanel").wait_for(state="visible")
+            page.locator("#wpStrike").fill("400")
+            page.locator("#wpDip").fill("45")
+            page.locator("#wpSave").click()
+            self.assertTrue(page.locator("#wpPanel").is_visible())
+            self.assertTrue(page.locator("#wpStrikeErr").is_visible())
+            self.assertIn("0–360", page.locator("#wpStrikeErr").inner_text())
+            page.locator("#wpStrike").fill("")
+            page.locator("#wpStrike").press_sequentially("e")
+            page.locator("#wpSave").click()
+            self.assertTrue(page.locator("#wpPanel").is_visible())
+            self.assertTrue(page.locator("#wpStrikeErr").is_visible())
+            page.locator("#wpStrike").fill("30")
+            page.locator("#wpDip").fill("")
+            page.locator("#wpDip").press_sequentially("e")
+            page.locator("#wpSave").click()
+            self.assertTrue(page.locator("#wpPanel").is_visible())
+            self.assertTrue(page.locator("#wpDipErr").is_visible())
+            # Tutup tanpa simpan lalu buka lagi: nilai lama 030/45 harus masih ada
+            page.locator("#wpClose").click()
+            page.locator("#wpList .wp-item").first.click()
+            page.locator("#wpPanel").wait_for(state="visible")
+            self.assertEqual(page.locator("#wpStrike").input_value(), "30")
+            self.assertEqual(page.locator("#wpDip").input_value(), "45")
+            self.assertIn("030/45", page.locator("#wpList").inner_text())
+
             # Hapus waypoint: dibatalkan di dialog -> data tetap; dikonfirmasi -> foto ikut terhapus
+            page.locator("#wpClose").click()
             page.locator("#wpList .wp-item").first.click()
             page.locator("#wpPanel").wait_for(state="visible")
             page.once("dialog", lambda d: d.dismiss())
             page.locator("#wpDelete").click()
             page.wait_for_timeout(300)
             self.assertTrue(page.locator("#wpPanel").is_visible())
-            self.assertEqual(len(page.evaluate(stored_js)), 2)
+            self.assertEqual(len(page.evaluate(stored_js)), 3)
             page.once("dialog", lambda d: d.accept())
             page.locator("#wpDelete").click()
             page.locator("#wpPanel").wait_for(state="hidden")
