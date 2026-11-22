@@ -185,6 +185,9 @@ export function initSearch(map: maplibregl.Map, hooks: SearchHooks) {
   let localTimer: number | undefined;
   let placeTimer: number | undefined;
   let latestQuery = "";
+  // Kunci hasil unit/formasi yang sedang tampil: bila sama, hanya grup "Lokasi" yang diganti
+  // agar tombol yang sedang diketuk tidak diganti elemen baru saat geocoding datang belakangan.
+  let shownKey = "";
 
   // Mulai preload indeks nasional secara senyap di latar
   void loadNationalIndex();
@@ -193,6 +196,7 @@ export function initSearch(map: maplibregl.Map, hooks: SearchHooks) {
     window.clearTimeout(localTimer);
     window.clearTimeout(placeTimer);
     latestQuery = "";
+    shownKey = "";
     box.hidden = true;
     activeIdx = -1;
   };
@@ -207,6 +211,30 @@ export function initSearch(map: maplibregl.Map, hooks: SearchHooks) {
     places: Place[],
     showEmpty: boolean,
   ) => {
+    const key = latestQuery + "|" + nationalHits.map((u) => u.unit_id).join(",") + "|" + viewportHits.map((h) => h.name).join(",");
+    const placeGroup = () =>
+      places.length
+        ? group(
+            t("resultsPlace"),
+            places.map((p) =>
+              resultButton(p.display_name, undefined, () => {
+                const [s, n, w, e2] = p.boundingbox.map(Number);
+                map.fitBounds([[w, s], [e2, n]], { maxZoom: 12, padding: 40 });
+                close();
+              }),
+            ),
+          )
+        : null;
+    if (key === shownKey && !box.hidden && (nationalHits.length || viewportHits.length)) {
+      box.querySelector("[data-group=places]")?.remove();
+      const pg = placeGroup();
+      if (pg) {
+        pg.dataset.group = "places";
+        box.append(pg);
+      }
+      return;
+    }
+    shownKey = key;
     box.innerHTML = "";
     activeIdx = -1;
 
@@ -249,19 +277,10 @@ export function initSearch(map: maplibregl.Map, hooks: SearchHooks) {
       );
     }
 
-    if (places.length) {
-      box.append(
-        group(
-          t("resultsPlace"),
-          places.map((p) =>
-            resultButton(p.display_name, undefined, () => {
-              const [s, n, w, e2] = p.boundingbox.map(Number);
-              map.fitBounds([[w, s], [e2, n]], { maxZoom: 12, padding: 40 });
-              close();
-            }),
-          ),
-        ),
-      );
+    const pg = placeGroup();
+    if (pg) {
+      pg.dataset.group = "places";
+      box.append(pg);
     }
 
     if (!nationalHits.length && !viewportHits.length && !places.length) {
