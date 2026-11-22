@@ -26,7 +26,7 @@ export interface ZipEntry {
 
 /** Membangun arsip ZIP utuh di memori. Melempar bila melewati batas ZIP32 (tanpa ZIP64). */
 export function buildZip(entries: readonly ZipEntry[], when: Date = new Date()): Uint8Array<ArrayBuffer> {
-  if (entries.length > 0xffff) throw new Error("zip: too many entries");
+  if (entries.length >= 0xffff) throw new Error("zip: too many entries (limit 65534)");
   const enc = new TextEncoder();
   const time = (when.getHours() << 11) | (when.getMinutes() << 5) | (when.getSeconds() >> 1);
   const date = ((Math.max(when.getFullYear(), 1980) - 1980) << 9) | ((when.getMonth() + 1) << 5) | when.getDate();

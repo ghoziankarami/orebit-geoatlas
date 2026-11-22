@@ -38,6 +38,29 @@ SNAPSHOT_JS = """async () => {
 }"""
 
 
+THUMBS_OK_JS = "[...document.querySelectorAll('#wpPhotoGrid img')].every(i => i.complete && i.naturalWidth > 0)"
+
+
+def add_wp(page, x: int, y: int, name: str, kind: str = "outcrop", note: str = "", strike: str = "", dip: str = "", photos: list[Path] | None = None) -> None:
+    """Menambah satu waypoint lewat UI: tempatkan di peta, isi panel, lalu simpan."""
+    page.locator("#wpBtn").click()
+    page.mouse.click(x, y)
+    page.locator("#wpPanel").wait_for(state="visible")
+    page.locator("#wpName").fill(name)
+    page.locator(f'#wpKind button[data-kind="{kind}"]').click()
+    if kind == "structure":
+        page.locator("#wpStrike").fill(strike)
+        page.locator("#wpDip").fill(dip)
+    if note:
+        page.locator("#wpNote").fill(note)
+    for i, f in enumerate(photos or [], start=1):
+        page.locator("#wpPhotoGal").set_input_files([str(f)])
+        page.wait_for_function(f"document.querySelectorAll('#wpPhotoGrid li.wp-photo').length === {i}")
+    page.wait_for_function(THUMBS_OK_JS)
+    page.locator("#wpSave").click()
+    page.locator("#wpPanel").wait_for(state="hidden")
+
+
 def write_png(path: Path, w: int, h: int, rgb: tuple[int, int, int]) -> None:
     import struct
     import zlib
@@ -437,36 +460,19 @@ class TestBrowserUIUX(unittest.TestCase):
 
             page.on("dialog", on_dialog)
 
-            def add_wp(x: int, y: int, name: str, kind: str = "outcrop", note: str = "", strike: str = "", dip: str = "", photos: list[Path] | None = None) -> None:
-                page.locator("#wpBtn").click()
-                page.mouse.click(x, y)
-                page.locator("#wpPanel").wait_for(state="visible")
-                page.locator("#wpName").fill(name)
-                page.locator(f'#wpKind button[data-kind="{kind}"]').click()
-                if kind == "structure":
-                    page.locator("#wpStrike").fill(strike)
-                    page.locator("#wpDip").fill(dip)
-                if note:
-                    page.locator("#wpNote").fill(note)
-                for i, f in enumerate(photos or [], start=1):
-                    page.locator("#wpPhotoGal").set_input_files([str(f)])
-                    page.wait_for_function(f"document.querySelectorAll('#wpPhotoGrid li.wp-photo').length === {i}")
-                page.wait_for_function(thumbs_ok_js)
-                page.locator("#wpSave").click()
-                page.locator("#wpPanel").wait_for(state="hidden")
-
-            thumbs_ok_js = "[...document.querySelectorAll('#wpPhotoGrid img')].every(i => i.complete && i.naturalWidth > 0)"
             page.goto(self.app_url + "#map=9/-0.95/119.9", wait_until="domcontentloaded")
             page.wait_for_selector("#regionBar .region-chip")
-            add_wp(800, 400, "S-1", kind="structure", strike="30", dip="45", photos=[big, small])
-            add_wp(600, 300, "O-2", note="Catatan, dengan koma")
-            add_wp(700, 500, "P-3", kind="sample")
+            add_wp(page, 800, 400, "S-1", kind="structure", strike="30", dip="45", photos=[big, small])
+            add_wp(page, 600, 300, "O-2", note="Catatan, dengan koma")
+            add_wp(page, 700, 500, "P-3", kind="sample")
             self.assertEqual(page.locator("#wpCount").inner_text(), "3")
 
             # Lintasan dipasang lewat sesi lalu app dibuka ulang, supaya ikut terekspor
             page.evaluate("localStorage.setItem('geoatlas.session.v1', JSON.stringify({transect:[{lng:119.8,lat:-0.9},{lng:119.9,lat:-0.95}]}))")
             page.goto(self.app_url, wait_until="domcontentloaded")
             page.wait_for_selector("#regionBar .region-chip")
+            # Lintasan dipulihkan di style.load bersama toast "sesi dipulihkan"; tunggu toast agar ekspor tidak mendahului pemulihan
+            page.wait_for_function("!document.getElementById('toast').hidden")
             snap1 = page.evaluate(SNAPSHOT_JS)
             self.assertEqual(len(snap1["wps"]), 3)
             self.assertEqual(len(snap1["photos"]), 2)
@@ -554,6 +560,127 @@ class TestBrowserUIUX(unittest.TestCase):
             self.assertEqual(page.evaluate(SNAPSHOT_JS), before_bad)
 
             self.assertEqual(dialogs, [], f"unexpected dialogs: {dialogs}")
+            self.assertEqual(errors, [], f"Unexpected pageerrors: {errors}")
+            browser.close()
+
+    def test_field_package_conflicts(self) -> None:
+        """Revisi WP-30 (H1/T1): edit keterangan/foto menaikkan updatedAt dan ikut ekspor; paket lama dengan isi berbeda
+        menjadi konflik yang harus dikonfirmasi (dan konfirmasi ditolak tidak mengubah apa pun); lintasan berbeda meminta konfirmasi."""
+        import json
+        import tempfile
+        import zipfile
+
+        tmp = Path(tempfile.mkdtemp(prefix="geoatlas-conflict-"))
+        photo = tmp / "foto.png"
+        write_png(photo, 800, 600, (200, 60, 20))
+
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            context = browser.new_context(viewport={"width": 1366, "height": 768}, locale="id-ID", accept_downloads=True)
+            page = context.new_page()
+            errors: list[str] = []
+            dialogs: list[str] = []
+            policy = {"accept": False}
+            page.on("pageerror", lambda err: errors.append(str(err)))
+
+            def on_dialog(dlg) -> None:
+                if "Hapus semua" in dlg.message:
+                    dlg.accept()
+                    return
+                dialogs.append(dlg.message)
+                if policy["accept"]:
+                    dlg.accept()
+                else:
+                    dlg.dismiss()
+
+            page.on("dialog", on_dialog)
+
+            def export(name: str) -> Path:
+                with page.expect_download() as dl:
+                    page.locator("#wpExportPkg").click()
+                out = tmp / name
+                dl.value.save_as(str(out))
+                return out
+
+            def package_updated_at(path: Path) -> dict[str, str]:
+                project = json.loads(zipfile.ZipFile(path).read("project.json"))
+                return {w["name"]: w["updatedAt"] for w in project["waypoints"]}
+
+            def import_file(path: Path, expect_dialogs: int) -> None:
+                page.locator("#wpImportFile").set_input_files(str(path))
+                for _ in range(60):
+                    if len(dialogs) >= expect_dialogs:
+                        break
+                    page.wait_for_timeout(100)
+                self.assertEqual(len(dialogs), expect_dialogs, f"dialogs so far: {dialogs}")
+
+            page.goto(self.app_url + "#map=9/-0.95/119.9", wait_until="domcontentloaded")
+            page.wait_for_selector("#regionBar .region-chip")
+            add_wp(page, 800, 400, "S-1", kind="structure", strike="30", dip="45", photos=[photo])
+            add_wp(page, 600, 300, "O-2", note="Awal")
+            page.evaluate("localStorage.setItem('geoatlas.session.v1', JSON.stringify({transect:[{lng:119.8,lat:-0.9},{lng:119.9,lat:-0.95}]}))")
+            page.goto(self.app_url, wait_until="domcontentloaded")
+            page.wait_for_selector("#regionBar .region-chip")
+            page.wait_for_function("!document.getElementById('toast').hidden")  # lintasan sudah dipulihkan
+
+            pkg_a = export("a.zip")  # paket lama
+
+            # Edit keterangan O-2 dan keterangan foto S-1 (tanpa mengubah teks waypoint lain)
+            page.locator("#wpList .wp-item", has_text="O-2").click()
+            page.locator("#wpPanel").wait_for(state="visible")
+            page.locator("#wpNote").fill("Diubah")
+            page.locator("#wpSave").click()
+            page.locator("#wpPanel").wait_for(state="hidden")
+            page.locator("#wpList .wp-item", has_text="S-1").click()
+            page.locator("#wpPanel").wait_for(state="visible")
+            page.wait_for_function("document.querySelectorAll('#wpPhotoGrid li.wp-photo').length === 1")
+            caption = page.locator('#wpPhotoGrid li.wp-photo input[data-k="caption"]').first
+            caption.fill("Keterangan baru")
+            caption.press("Tab")
+            page.wait_for_timeout(300)
+            page.locator("#wpSave").click()
+            page.locator("#wpPanel").wait_for(state="hidden")
+
+            pkg_b = export("b.zip")  # paket setelah edit
+            old = package_updated_at(pkg_a)
+            new = package_updated_at(pkg_b)
+            self.assertGreater(new["O-2"], old["O-2"], "editing a note must raise updatedAt")
+            self.assertGreater(new["S-1"], old["S-1"], "editing a photo caption must raise updatedAt")
+
+            # Paket lama (isi berbeda, updatedAt lebih tua) = konflik. Konfirmasi ditolak: tidak ada yang berubah.
+            before = page.evaluate(SNAPSHOT_JS)
+            import_file(pkg_a, expect_dialogs=1)
+            self.assertIn("berbeda", dialogs[-1])
+            self.assertIn("akan dihapus", dialogs[-1], "confirmation must say local photos not in the file are deleted")
+            self.assertEqual(page.evaluate(SNAPSHOT_JS), before, "declined confirmation must not apply anything")
+
+            # Paket yang sama dengan isi lokal: dilewati tanpa konfirmasi
+            policy["accept"] = True
+            import_file(pkg_b, expect_dialogs=1)
+            page.wait_for_function("document.getElementById('toast').textContent.includes('0 ditambah')")
+            self.assertEqual(page.evaluate(SNAPSHOT_JS), before)
+
+            # Lintasan berbeda meminta konfirmasi (waypoint tidak berubah)
+            project_zip = zipfile.ZipFile(pkg_b)
+            pkg_c = tmp / "c.zip"
+            with zipfile.ZipFile(pkg_c, "w", zipfile.ZIP_STORED) as dst:
+                for info in project_zip.infolist():
+                    data = project_zip.read(info.filename)
+                    if info.filename == "project.json":
+                        project = json.loads(data)
+                        project["transect"] = [{"lng": 120.0, "lat": -1.0}]
+                        data = json.dumps(project).encode("utf-8")
+                    dst.writestr(info.filename, data)
+            policy["accept"] = False
+            before_tr = page.evaluate(SNAPSHOT_JS)
+            import_file(pkg_c, expect_dialogs=2)
+            self.assertIn("Lintasan", dialogs[-1])
+            self.assertEqual(page.evaluate(SNAPSHOT_JS), before_tr, "declined transect confirmation must keep the transect")
+            policy["accept"] = True
+            import_file(pkg_c, expect_dialogs=3)
+            page.wait_for_function("document.getElementById('toast').textContent.includes('Impor selesai')")
+            self.assertEqual(page.evaluate(SNAPSHOT_JS)["transect"], [{"lng": 120.0, "lat": -1.0}])
+
             self.assertEqual(errors, [], f"Unexpected pageerrors: {errors}")
             browser.close()
 

@@ -304,9 +304,33 @@ try {
   assert.equal(fpPlan.next.length, 3);
   assert.equal(fpPlan.next.find((w) => w.id === "b").note, "baru");
   assert.deepEqual([...fpPlan.touched].sort(), ["b", "c"]);
+  // Isi berbeda dengan id sama: konflik eksplisit (bukan diam-diam memilih salah satu); rencana tetap memuat versi lokal sampai dikonfirmasi
   const fpOlder = mergeWaypoints([fpBase("x", "2026-11-23T00:00:00.000Z", { note: "lokal" })], [fpBase("x", "2026-11-22T00:00:00.000Z", { note: "paket" })], "package");
-  assert.equal(fpOlder.next[0].note, "lokal", "older package version must not overwrite local data");
-  assert.deepEqual([fpOlder.updated, fpOlder.skipped], [0, 1]);
+  assert.deepEqual([fpOlder.updated, fpOlder.conflicts, fpOlder.skipped], [0, 1, 0], "older package version with different content is a conflict");
+  assert.equal(fpOlder.replaced[0].note, "lokal", "the local version is kept in the plan until the user confirms");
+
+  // H1: updatedAt menentukan urutan; edit lokal yang lebih baru tidak diam-diam tertimpa paket lama
+  const h1Edited = fpBase("e", "2026-11-22T06:00:00.000Z", { note: "diedit", updatedAt: "2026-11-24T10:00:00.000Z" });
+  const h1Old = fpBase("e", "2026-11-22T06:00:00.000Z", { note: "lama", updatedAt: "2026-11-22T06:00:00.000Z" });
+  assert.deepEqual(mergeWaypoints([h1Edited], [h1Old], "package").conflicts, 1, "older export vs newer device edit is a conflict");
+  assert.deepEqual([mergeWaypoints([h1Old], [h1Edited], "package").updated], [1], "newer package version by updatedAt is an update");
+  assert.equal(mergeWaypoints([h1Edited], [{ ...h1Edited }], "package").skipped, 1, "identical content is skipped");
+  const h1Back = await readFieldFile(new File([(await buildFieldPackage([h1Edited], [], "")).zip], "h1.zip"));
+  assert.equal(h1Back.waypoints[0].updatedAt, h1Edited.updatedAt, "updatedAt survives export and import");
+
+  // M4 & T1: dua titik tanpa nama di koordinat sama (keterangan berbeda) tetap dua; dedup hanya terhadap data lokal
+  const fpTwin = (note) => fpBase("t" + note, "2026-11-22T06:00:00.000Z", { name: "", lat: -0.85, lng: 119.85, note });
+  const twins = mergeWaypoints([], [fpTwin("A"), fpTwin("B")], "external");
+  assert.equal(twins.added, 2, "two unnamed points at the same coordinates stay two");
+  assert.equal(new Set(twins.next.map((w) => w.name)).size, 2, "each gets its own name");
+  assert.equal(mergeWaypoints([], [fpTwin("A"), fpTwin("A")], "external").added, 2, "rows inside one file are not deduplicated against each other");
+  const extLocal = mergeWaypoints([{ ...gpxIn[0] }], gpxIn, "external");
+  assert.deepEqual([extLocal.added, extLocal.skipped], [2, 1], "point already present locally (name, coords, note, time) is skipped");
+
+  // L3: ZIP menolak 65535 entri atau lebih (batas ZIP32 entri)
+  const manyEntries = (n) => Array.from({ length: n }, (_, i) => ({ name: `f${i}`, data: new Uint8Array(0) }));
+  assert.throws(() => zipM.buildZip(manyEntries(0xffff)), /too many/, "65535 entries rejected");
+  assert.ok(zipM.buildZip(manyEntries(0xfffe)).length > 0, "65534 entries allowed");
   // Pihak ketiga: nama+koordinat sama dilewati; nama kosong diberi nomor berikutnya
   const fpExt = mergeWaypoints([fpBase("p", "t", { name: "WP-001" })], [fpBase("q", "t", { name: "WP-001" }), fpBase("r", "t", { name: "", lat: -0.8, lng: 119.9 })], "external");
   assert.deepEqual([fpExt.added, fpExt.skipped], [1, 1]);
@@ -328,6 +352,11 @@ try {
     transect: [{ lng: 119.8, lat: -0.9 }],
   };
   const fpWithPhoto = [{ name: "photos/WP-001_1.jpg", data: fpPhoto }];
+  // M1: elevasi dan akurasi hanya ditolak bila non-finite atau negatif; tidak ada batas atas
+  const m1 = await readFieldFile(pkgFile({ ...fpGood, waypoints: [{ ...fpGood.waypoints[0], accM: 150000, elevM: 12000 }] }, fpWithPhoto));
+  assert.deepEqual([m1.waypoints[0].accM, m1.waypoints[0].elevM], [150000, 12000], "no upper bound on accM/elevM");
+  await assert.rejects(readFieldFile(pkgFile({ ...fpGood, waypoints: [{ ...fpGood.waypoints[0], accM: -1 }] }, fpWithPhoto)), (e) => e.key === "wpImportErr", "negative accM rejected");
+  await assert.rejects(readFieldFile(pkgFile({ ...fpGood, waypoints: [{ ...fpGood.waypoints[0], elevM: -5 }] }, fpWithPhoto)), (e) => e.key === "wpImportErr", "negative elevM rejected");
   const fpRead = await readFieldFile(pkgFile(fpGood, fpWithPhoto));
   assert.equal(fpRead.kind, "package");
   assert.deepEqual(fpRead.waypoints[0], fpGood.waypoints[0], "package waypoint restored field by field");

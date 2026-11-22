@@ -32,6 +32,8 @@ export interface Waypoint {
   unit: string;
   symbol: string;
   time: string;
+  /** Waktu perubahan terakhir: editor, tambah/hapus foto, keterangan atau arah foto. Dipakai impor dan pengingat cadangan. */
+  updatedAt?: string;
   /** Id foto (IndexedDB `geoatlas-photos`); opsional, data lama tanpa field ini tetap sah. */
   photos?: string[];
 }
@@ -435,6 +437,7 @@ export function createWaypoints(
           continue;
         }
         cur.photos = [...(cur.photos ?? []), id];
+        cur.updatedAt = new Date().toISOString();
         save();
         if (openId === wid) appendPhoto(meta, blob);
       } catch {
@@ -448,6 +451,13 @@ export function createWaypoints(
     draw();
     renderList();
     opts.onChange?.();
+  };
+  /** Menandai waypoint yang sedang dibuka sebagai berubah (keterangan/arah foto) lalu menyimpan. */
+  const touchOpen = () => {
+    const w = wps.find((x) => x.id === openId);
+    if (!w) return;
+    w.updatedAt = new Date().toISOString();
+    save();
   };
 
   const open = (id: string) => {
@@ -493,6 +503,7 @@ export function createWaypoints(
         elev = null;
       }
     }
+    const now = new Date().toISOString();
     const w: Waypoint = {
       id: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
       name: nextName(wps),
@@ -504,7 +515,8 @@ export function createWaypoints(
       accM: fix?.acc ?? null,
       unit: u?.name ?? "",
       symbol: u?.symbol ?? "",
-      time: new Date().toISOString(),
+      time: now,
+      updatedAt: now,
     };
     wps.push(w);
     save();
@@ -546,6 +558,7 @@ export function createWaypoints(
       }
       w.name = nameIn.value.trim() || w.name;
       w.note = noteIn.value.trim();
+      w.updatedAt = new Date().toISOString();
       w.kind = editKind;
       if (editKind === "structure") {
         w.structType = structSel.value as StructType;
@@ -585,12 +598,14 @@ export function createWaypoints(
     const el = e.target as HTMLInputElement;
     const pid = el.closest<HTMLElement>(".wp-photo")?.dataset.pid;
     if (!pid) return;
-    if (el.dataset.k === "caption") await updatePhotoMeta(pid, { caption: el.value.trim() });
+    let ok = false;
+    if (el.dataset.k === "caption") ok = await updatePhotoMeta(pid, { caption: el.value.trim() });
     else if (el.dataset.k === "az") {
       const a = parseAzimuth(el.value);
       if (!a.ok) opts.toast(t("wpAzErr"));
-      else await updatePhotoMeta(pid, { azimuth: a.value });
+      else ok = await updatePhotoMeta(pid, { azimuth: a.value });
     }
+    if (ok) touchOpen();
   });
   photoGrid.addEventListener("click", async (e) => {
     const pid = (e.target as HTMLElement).closest<HTMLElement>("[data-del]")?.dataset.del;
@@ -599,6 +614,7 @@ export function createWaypoints(
     // Berkas dihapus dulu; bila gagal, foto tetap tercatat di waypoint.
     if (!(await deletePhotos([pid]))) return;
     w.photos = (w.photos ?? []).filter((x) => x !== pid);
+    w.updatedAt = new Date().toISOString();
     save();
     const li = photoGrid.querySelector<HTMLElement>(`[data-pid="${CSS.escape(pid)}"]`);
     const src = li?.querySelector("img")?.src ?? "";

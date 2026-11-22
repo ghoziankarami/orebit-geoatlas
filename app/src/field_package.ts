@@ -5,7 +5,7 @@
 // (waypoint baru; baris yang sama persis dengan yang sudah ada dilewati). Skema lain ditolak; tidak ada data yang berubah bila galat.
 import { esc } from "./detail";
 import { t, type Key } from "./i18n";
-import { deletePhotos, getPhoto, listPhotoMeta, putPhoto, type PhotoMeta } from "./photos";
+import { deletePhotos, getPhoto, listPhotoMeta, putPhoto, updatePhotoMeta, type PhotoMeta } from "./photos";
 import { csvRow, CSV_HEADER, hasAttitude, kindOf, nextName, STRUCT_TYPES, WP_KINDS, attitudeText, toGpx, type StructType, type Waypoint, type WpKind } from "./waypoints";
 import type { TransectPoint } from "./transect";
 import { unzipEntries } from "./shp_import";
@@ -194,7 +194,7 @@ export interface Incoming {
   transect: TransectPoint[];
 }
 
-const KNOWN_WP_KEYS = new Set(["id", "name", "note", "kind", "structType", "strike", "dip", "lat", "lng", "elevM", "accM", "unit", "symbol", "time", "photos"]);
+const KNOWN_WP_KEYS = new Set(["id", "name", "note", "kind", "structType", "strike", "dip", "lat", "lng", "elevM", "accM", "unit", "symbol", "time", "updatedAt", "photos"]);
 const bad = (): never => {
   throw new FieldImportError("wpImportErr");
 };
@@ -202,6 +202,12 @@ const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object
 const finiteOrNull = (v: unknown, lo: number, hi: number): number | null => {
   if (v === null || v === undefined) return null;
   if (typeof v !== "number" || !Number.isFinite(v) || v < lo || v > hi) return bad();
+  return v;
+};
+/** Elevasi dan akurasi: hanya non-finite dan negatif yang ditolak; tidak ada batas atas. */
+const nonNegOrNull = (v: unknown): number | null => {
+  if (v === null || v === undefined) return null;
+  if (typeof v !== "number" || !Number.isFinite(v) || v < 0) return bad();
   return v;
 };
 const str = (v: unknown): string => (typeof v === "string" ? v : bad());
@@ -220,8 +226,8 @@ function parseWaypoint(raw: unknown): Waypoint {
     note: str(raw.note),
     lat: finiteOrNull(raw.lat, -90, 90) ?? bad(),
     lng: finiteOrNull(raw.lng, -180, 180) ?? bad(),
-    elevM: finiteOrNull(raw.elevM, -1000, 10000),
-    accM: finiteOrNull(raw.accM, 0, 100000),
+    elevM: nonNegOrNull(raw.elevM),
+    accM: nonNegOrNull(raw.accM),
     unit: str(raw.unit),
     symbol: str(raw.symbol),
     time: validTime(raw.time),
@@ -236,6 +242,7 @@ function parseWaypoint(raw: unknown): Waypoint {
   }
   if (raw.strike !== undefined) clean.strike = finiteOrNull(raw.strike, 0, 360);
   if (raw.dip !== undefined) clean.dip = finiteOrNull(raw.dip, 0, 90);
+  if (raw.updatedAt !== undefined) clean.updatedAt = validTime(raw.updatedAt);
   if (raw.photos !== undefined) {
     if (!Array.isArray(raw.photos) || !raw.photos.every((p) => typeof p === "string" && p.length > 0)) bad();
     clean.photos = raw.photos;
@@ -441,7 +448,7 @@ const newId = () => `${Date.now().toString(36)}${Math.random().toString(36).slic
 
 /** Waypoint pihak ketiga: jenis "other", nama kosong dibiarkan dan diberi nomor saat digabung. */
 function externalWaypoint(v: { name: string; note: string; lat: number; lng: number; elevM: number | null; time?: string }): Waypoint {
-  return {
+  const w: Waypoint = {
     id: newId(),
     name: v.name,
     note: v.note,
@@ -454,6 +461,8 @@ function externalWaypoint(v: { name: string; note: string; lat: number; lng: num
     symbol: "",
     time: v.time ?? new Date().toISOString(),
   };
+  EXT_SOURCE_TIME.set(w, v.time ?? null);
+  return w;
 }
 
 /** Membaca berkas impor menurut ekstensinya. Galat dilempar sebagai FieldImportError dengan kunci pesan. */
@@ -478,10 +487,19 @@ export async function readFieldFile(file: File): Promise<Incoming> {
 /** Kanonik untuk membandingkan dua waypoint tanpa terpengaruh urutan field. */
 const canon = (w: Waypoint) => JSON.stringify(Object.keys(w).sort().map((k) => [k, (w as unknown as Record<string, unknown>)[k]]));
 
+/** Waktu perubahan: updatedAt bila ada; data lama tanpa updatedAt memakai waktu pembuatan. */
+export const stampOf = (w: Waypoint): number => Date.parse(w.updatedAt ?? w.time);
+
+/** Waktu sumber titik pihak ketiga (null bila berkas tidak mencantumkannya); tidak ikut disimpan. */
+const EXT_SOURCE_TIME = new WeakMap<Waypoint, string | null>();
+
 export interface MergePlan {
   next: Waypoint[];
   added: number;
+  /** Id sama, isi berbeda, dan paket lebih baru (updatedAt). Diganti hanya setelah konfirmasi. */
   updated: number;
+  /** Id sama, isi berbeda, dan versi perangkat sama atau lebih baru. Konflik eksplisit: diganti hanya setelah konfirmasi. */
+  conflicts: number;
   skipped: number;
   /** Id waypoint yang ditambahkan atau diganti; hanya foto mereka yang perlu ditulis. */
   touched: Set<string>;
@@ -489,17 +507,24 @@ export interface MergePlan {
   replaced: Waypoint[];
 }
 
+/** Titik pihak ketiga dianggap sama dengan titik lokal bila koordinat dan keterangan sama, nama sama (kecuali nama kosong), dan waktu sama bila berkas mencantumkannya. */
+const sameExternal = (w: Waypoint, inc: Waypoint): boolean => {
+  if (w.lat.toFixed(7) !== inc.lat.toFixed(7) || w.lng.toFixed(7) !== inc.lng.toFixed(7)) return false;
+  if ((w.note ?? "") !== inc.note) return false;
+  if (inc.name !== "" && w.name !== inc.name) return false;
+  const src = EXT_SOURCE_TIME.get(inc) ?? null;
+  return src === null || w.time === src;
+};
+
 /**
- * Paket: id sama -> versi dengan `time` lebih baru menang (isi identik dilewati); id baru ditambahkan.
- * Pihak ketiga: ditambahkan sebagai waypoint baru, kecuali sudah ada dengan nama dan koordinat yang sama persis.
+ * Paket: id sama dan isi identik -> dilewati; id sama dan isi berbeda -> updated bila paket lebih baru, conflicts bila tidak;
+ * id baru -> ditambahkan. Updated dan conflicts diganti hanya setelah konfirmasi; tidak ada versi yang dipilih diam-diam.
+ * Pihak ketiga: dicocokkan hanya dengan data lokal (bukan dengan baris lain di berkas yang sama); yang cocok dilewati.
  */
 export function mergeWaypoints(local: readonly Waypoint[], incoming: readonly Waypoint[], kind: "package" | "external"): MergePlan {
   const next = local.slice();
   const byId = new Map(next.map((w, i) => [w.id, i] as const));
-  const dupKeys = new Set(local.map((w) => `${w.name}|${w.lat.toFixed(7)}|${w.lng.toFixed(7)}`));
-  // Titik tanpa nama dicocokkan lewat koordinat saja: nama barunya dibuat saat digabung, jadi impor ulang tidak menggandakannya.
-  const coordKeys = new Set(local.map((w) => `${w.lat.toFixed(7)}|${w.lng.toFixed(7)}`));
-  const plan: MergePlan = { next, added: 0, updated: 0, skipped: 0, touched: new Set(), replaced: [] };
+  const plan: MergePlan = { next, added: 0, updated: 0, conflicts: 0, skipped: 0, touched: new Set(), replaced: [] };
   for (const inc of incoming) {
     if (kind === "package") {
       const i = byId.get(inc.id);
@@ -508,24 +533,24 @@ export function mergeWaypoints(local: readonly Waypoint[], incoming: readonly Wa
         byId.set(inc.id, next.length - 1);
         plan.added++;
         plan.touched.add(inc.id);
-      } else if (Date.parse(inc.time) > Date.parse(next[i].time) && canon(inc) !== canon(next[i])) {
-        plan.replaced.push(next[i]);
+      } else if (canon(inc) === canon(next[i])) {
+        plan.skipped++;
+      } else {
+        const old = next[i];
+        plan.replaced.push(old);
         next[i] = inc;
-        plan.updated++;
+        if (stampOf(inc) > stampOf(old)) plan.updated++;
+        else plan.conflicts++;
         plan.touched.add(inc.id);
-      } else plan.skipped++;
+      }
       continue;
     }
-    const coord = `${inc.lat.toFixed(7)}|${inc.lng.toFixed(7)}`;
-    const key = `${inc.name}|${coord}`;
-    if (inc.name === "" ? coordKeys.has(coord) : dupKeys.has(key)) {
+    if (local.some((w) => sameExternal(w, inc))) {
       plan.skipped++;
       continue;
     }
-    dupKeys.add(key);
-    coordKeys.add(coord);
     const w = { ...inc, name: inc.name || nextName(next) };
-    dupKeys.add(`${w.name}|${coord}`);
+    EXT_SOURCE_TIME.set(w, EXT_SOURCE_TIME.get(inc) ?? null);
     next.push(w);
     plan.added++;
     plan.touched.add(w.id);
@@ -652,19 +677,35 @@ export function createFieldPackage(opts: FieldPkgOpts) {
     if (!incoming.waypoints.length && !incoming.transect.length) return opts.toast(t("wpImportNone"));
     const local = opts.host.all();
     const plan = mergeWaypoints(local, incoming.waypoints, incoming.kind);
+    const replacing = plan.updated + plan.conflicts;
     const localPts = opts.transect.points();
     const transectOverwrite = incoming.transect.length > 0 && localPts.length > 0 && !samePts(localPts, incoming.transect);
-    if (plan.updated > 0 || transectOverwrite) {
+    if (replacing > 0 || transectOverwrite) {
       const parts: string[] = [];
       if (plan.updated > 0) parts.push(t("wpImportConfirmWp").replace("{u}", String(plan.updated)));
+      if (plan.conflicts > 0) parts.push(t("wpImportConfirmConflict").replace("{c}", String(plan.conflicts)));
+      if (replacing > 0) parts.push(t("wpImportConfirmPhotos"));
       if (transectOverwrite) parts.push(t("wpImportConfirmTr"));
+      // Konfirmasi ditolak: tidak ada yang ditulis, tidak ada waypoint, foto, atau lintasan yang berubah.
       if (!confirm(parts.join(" "))) return;
     }
 
-    // Foto ditulis lebih dulu; bila satu gagal, yang sudah tersimpan dihapus dan data waypoint tidak diubah.
+    // Foto baru ditulis lebih dulu. Foto yang id-nya sudah ada di perangkat tidak ditulis ulang dan tidak masuk daftar
+    // rollback, jadi galat di tengah tidak menghapus foto lokal yang sudah ada.
     const stored: string[] = [];
+    const haveByWp = new Map<string, Set<string>>();
     for (const p of incoming.photos) {
       if (!plan.touched.has(p.meta.wpId)) continue;
+      let have = haveByWp.get(p.meta.wpId);
+      if (!have) {
+        have = new Set((await listPhotoMeta(p.meta.wpId)).map((m) => m.id));
+        haveByWp.set(p.meta.wpId, have);
+      }
+      if (have.has(p.meta.id)) {
+        // Foto sudah ada: bytes tidak ditulis ulang; keterangan dan arah ikut versi paket yang dikonfirmasi.
+        await updatePhotoMeta(p.meta.id, { caption: p.meta.caption, azimuth: p.meta.azimuth });
+        continue;
+      }
       if (!(await putPhoto(p.blob, p.meta))) {
         await deletePhotos(stored);
         return;
@@ -677,7 +718,7 @@ export function createFieldPackage(opts: FieldPkgOpts) {
     const orphans = plan.replaced.flatMap((w) => w.photos ?? []).filter((id) => !keep.has(id));
     if (orphans.length) await deletePhotos(orphans);
     if (incoming.transect.length) opts.transect.set(incoming.transect);
-    opts.toast(t("wpImportDone").replace("{a}", String(plan.added)).replace("{u}", String(plan.updated)).replace("{s}", String(plan.skipped)));
+    opts.toast(t("wpImportDone").replace("{a}", String(plan.added)).replace("{u}", String(replacing)).replace("{s}", String(plan.skipped)));
     refresh();
   }
 
@@ -685,7 +726,7 @@ export function createFieldPackage(opts: FieldPkgOpts) {
   function refresh() {
     const wps = opts.host.all();
     const last = loadBackupAt();
-    const due = wps.length > 0 && (last === null || wps.some((w) => Date.parse(w.time) > Date.parse(last)));
+    const due = wps.length > 0 && (last === null || wps.some((w) => stampOf(w) > Date.parse(last)));
     pkgBtn.textContent = t("wpExportPkg");
     kmzBtn.textContent = t("wpExportKmz");
     shareBtn.textContent = t("wpShare");
