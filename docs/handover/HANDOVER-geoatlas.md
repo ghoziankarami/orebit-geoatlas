@@ -25,4 +25,5 @@ Dokumen ini mencatat `ACTIVE CHECKPOINT` tunggal untuk kelanjutan sesi manusia m
   - Rebuild 8 wilayah + `data/out/all/all.pmtiles` (320 MB) & index 2.130 entri SELESAI (lokal, di `data/out/`, gitignored).
 - **Penghalang (STOP-TANYA):**
   - `HUM-01` (`WP-19`): menunggu sesi uji usability ≥5 peserta nyata.
-- **Satu Langkah Berikutnya (Next Action):** Pilih arah berikutnya: rilis tile DAT/UI lanjutan atau penyelesaian `HUM-01`. Rollback: `current` ke `releases/20261121T160417Z-38e566e`.
+- **Gelombang H dibuka 23 Nov 2026** dari [Audit Produksi & Lapangan](../audits/audit-produksi-lapangan-2026-11-23.md): `local-ci --full` PASS 8/8 di `ad239fb`; coverage unit baseline 29%; tombol pasang PWA tak terlihat di HP (header di bawah sheet `peek` + `preventDefault` menekan infobar Chrome).
+- **Satu Langkah Berikutnya (Next Action):** Jalankan gelombang H1 paralel (`WP-28`, `WP-29`, `WP-32`, `WP-34`) via `python3 ops/scripts/agents/wp.py workflow WP-28 WP-29 WP-32 WP-34 --exec-model flash --review-model pro`. Rollback: `current` ke `releases/20261121T160417Z-38e566e`.

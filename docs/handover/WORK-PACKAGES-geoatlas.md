@@ -18,7 +18,7 @@ Dibuat 21 November 2026 dari `main` (`faed4d7`). Mengikuti [standar work package
 - **No-PR merge tetap cepat dan terbaca mesin:** PR bersifat opsional untuk risiko `LOW`/`MEDIUM` sehingga tidak memperlambat kerja. Setiap merge no-PR **WAJIB** menggunakan format commit message `Merge WP-NN: <judul>` dan tetap mensyaratkan verdict `PASS` dari reviewer independen (bukan *self-declared*).
 - **Bukti penutupan wajib:** Setiap WP yang selesai **WAJIB** memiliki satu baris bukti di [arsip penyelesaian](../geoatlas-completed.md) dan pembaruan `## ACTIVE CHECKPOINT` di [HANDOVER-geoatlas.md](HANDOVER-geoatlas.md).
 
-## Rencana Gelombang Paralel (Wave A–E)
+## Rencana Gelombang Paralel (Wave A–H)
 
 | Gelombang | Work Packages | Bisa Paralel? | Lane yang Dipakai | Fokus Utama |
 |---|---|---|---|---|
@@ -29,6 +29,7 @@ Dibuat 21 November 2026 dari `main` (`faed4d7`). Mengikuti [standar work package
 | **Gelombang E — Sertifikasi, Deploy & Audit 100/100** | `WP-17`, `WP-18`, `WP-19`, `WP-20` | **Berurutan (Gate Rilis)** | `TEST`, `REL`, `HUMAN`, `DOCS` | Sertifikasi `local-ci.sh --full --write-receipt`; deploy VPS `atlas.orebit.id`; uji usability `HUM-01` ≥5 peserta; audit final 45/45 cek (100/100) |
 | **Gelombang F — Senior Geologist Workstation & Data P3G** | `WP-21`, `WP-22`, `WP-23`, `WP-24`, `WP-25` | **Ya (`PIPE→DATA` paralel dengan `TOOLS`, `MAP`, `UIX`)** | `PIPE`, `DATA`, `TOOLS`, `MAP`, `UIX` | Ekstraksi `NM_LEMBAR`/`NO_LEMBAR` P3G 1:250k per poligon; sintesis `lith_detail` 2.096 unit & presisi sub-kala ICS; penampang geologi bawah permukaan panoramik (`VE`, 3 horizon, patahan + *throw*, ekspor SVG); impor SHP UTM 46N–54S + *drag-drop* + atribut `.dbf`; navigasi `Back`/`Northing Up` + pembersihan jargon internal + optimasi seluler |
 | **Gelombang G — Sertifikasi Workstation & Rilis Produksi v3** | `WP-26`, `WP-27` | **Berurutan (Gate Rilis)** | `TEST`, `REL` | Suite kontrak & Playwright E2E untuk penampang geologi, SHP UTM, & navigasi; rebuild `all-v3.pmtiles` & deploy produksi `atlas.orebit.id` |
+| **Gelombang H — Produksi Lapangan v4** | H1: `WP-28`, `WP-29`, `WP-32`, `WP-34` · H2: `WP-30`, `WP-31` · H3: `WP-33` → `WP-35` | **H1 paralel (4 lane disjoint)**, H2 paralel, H3 berurutan | `UIX`, `TOOLS`, `TEST`, `DOCS`, `MAP`, `REL` | [Audit 23 Nov 2026](../audits/audit-produksi-lapangan-2026-11-23.md): tombol pasang di HP + iOS + in-app browser; foto waypoint; Paket Lapangan zip + impor kembali; geologi offline; coverage 29% → ≥60%; E2E pengguna baru + smoke produksi; rilis v4 |
 
 ---
 
@@ -66,6 +67,14 @@ Urutan baris adalah urutan prioritas dan topologis (setiap dependensi selalu ber
 | WP-25 | Navigasi kamera Back dan Northing Up 2D/3D, pembersihan jargon internal, dan optimasi seluler | `ux/navigation-clean-about-mobile` | UIX | UIX-06 | UIX-06 | WP-15 | G4 | deepseek-flash | claude-sonnet-5-5 | — | MEDIUM | browser |
 | WP-26 | Suite pengujian kontrak dan Playwright E2E untuk penampang geologi, SHP UTM, dan navigasi | `test/geologist-workstation-e2e` | TEST | TEST-03 | TEST-03 | WP-22, WP-23, WP-24, WP-25 | G4 | gpt-luna-6 | claude-sonnet-5-5 | — | HIGH | full |
 | WP-27 | Rebuild nasional all-v3.pmtiles dengan provenance lembar P3G dan deploy produksi atlas.orebit.id | `release/national-atlas-v3` | REL | REL-02 | REL-02 | WP-26 | G4 | gpt-luna-6 | gpt-sol-6-1, pemilik | — | RELEASE | full |
+| WP-28 | Pemasangan PWA terlihat di HP, petunjuk iOS Safari, banner in-app browser, dan penyimpanan persisten | `ux/pwa-install-mobile` | UIX | PWA-01 | PWA-01 | — | G4 | gpt-luna-6 | claude-sonnet-5-5 | — | MEDIUM | browser |
+| WP-29 | Foto lapangan per waypoint dengan kompresi, IndexedDB, keterangan, dan validasi strike/dip | `feat/waypoint-field-photos` | TOOLS | FLD-01 | FLD-01 | — | G4 | gpt-luna-6 | claude-opus-5-5 | — | HIGH | browser |
+| WP-30 | Paket Lapangan zip (GeoJSON, GPX, CSV, foto, KMZ), Bagikan, dan impor kembali round-trip | `feat/field-package-export-import` | TOOLS | FLD-02, FLD-03 | FLD-02, FLD-03 | WP-29 | G4 | gpt-luna-6 | claude-opus-5-5 | — | HIGH | browser |
+| WP-31 | Geologi offline: cache Range PMTiles di service worker dan simpan area untuk offline | `feat/offline-geology-area` | MAP | PWA-02 | PWA-02 | WP-28 | G4 | gpt-luna-6 | claude-opus-5-5 | — | HIGH | browser |
+| WP-32 | Perintah coverage berulang dan tes unit modul murni hingga coverage 60 persen | `test/coverage-pure-modules` | TEST | TEST-04 | TEST-04 | — | G4 | deepseek-flash | claude-sonnet-5-5 | — | MEDIUM | targeted |
+| WP-33 | E2E pengguna baru untuk foto, Paket Lapangan, pemasangan, offline, dan smoke produksi | `test/new-user-e2e-prod-smoke` | TEST | TEST-05 | TEST-05 | WP-30, WP-31, WP-32 | G4 | gpt-luna-6 | claude-sonnet-5-5 | — | HIGH | full |
+| WP-34 | Panduan pengguna pemasangan desktop, Android, iOS, LinkedIn, serta penyimpanan dan cadangan data | `docs/user-install-data-guide` | DOCS | DOC-02 | DOC-02 | — | G6 | deepseek-flash | claude-sonnet-5-5 | — | LOW | targeted |
+| WP-35 | Rilis produksi v4 lapangan ke atlas.orebit.id dengan receipt exact-SHA dan smoke produksi | `release/field-v4` | REL | REL-03 | REL-03 | WP-33, WP-34 | G4 | gpt-luna-6 | gpt-sol-6-1, pemilik | pemilik: setujui deploy kandidat ke atlas.orebit.id | RELEASE | full |
 <!-- END wp-registry -->
 
 ---
@@ -630,3 +639,199 @@ Branch `release/national-atlas-v3` · Lane `REL` · Gerbang `G4` · Exec `gpt-lu
 **Tes:** `bash ops/scripts/ci/local-ci.sh --full --write-receipt`
 
 **STOP-TANYA:** tidak ada.
+
+---
+
+## Gelombang H — Produksi Lapangan v4
+
+Sumber: [Audit Produksi & Lapangan 23 Nov 2026](../audits/audit-produksi-lapangan-2026-11-23.md). Aplikasi sudah publik, jadi setiap WP wajib bebas `pageerror`/`console.error` di Playwright dan tidak boleh merusak data waypoint yang sudah tersimpan di perangkat pengguna (`geoatlas.waypoints.v1`, `geoatlas.session.v1`).
+
+**Aturan berkas bersama Gelombang H (wajib, mencegah konflik merge paralel):** `app/src/i18n.ts`, `app/src/style.css`, dan `app/app/index.html` disentuh oleh beberapa WP. Setiap WP **hanya menambah** blok baru di akhir bagian terkait, diawali komentar `/* WP-NN */` (CSS/TS) atau `<!-- WP-NN -->` (HTML), dan tidak mengubah/memformat ulang baris milik WP lain. Kunci i18n baru ditambahkan di akhir `dict.id` **dan** `dict.en` (paritas dijaga `test_app_contracts.mjs`). Tanpa dependensi npm baru di semua WP Gelombang H.
+
+### WP-28 — Pemasangan PWA terlihat di HP, petunjuk iOS Safari, banner in-app browser, dan penyimpanan persisten
+
+Branch `ux/pwa-install-mobile` · Lane `UIX` · Gerbang `G4` · Exec `gpt-luna-6` · Review `claude-sonnet-5-5`
+
+**Tujuan:** Pengguna HP menemukan cara memasang GeoAtlas tanpa membaca dokumentasi. Hari ini `beforeinstallprompt` di-`preventDefault()` sehingga mini-infobar Chrome hilang, sementara `#installBtn` berada di header bottom sheet yang di luar layar saat `peek` (audit §3). iOS Safari dan in-app browser LinkedIn tidak punya jalur pasang sama sekali.
+
+**Lingkup file:** `app/src/main.ts` (blok `// ---------- PWA` saja), `app/app/index.html`, `app/src/style.css`, `app/src/i18n.ts`, berkas baru `app/src/install.ts`; baris `PWA-01` di `docs/PLAN-geoatlas.md`. Branch: `ux/pwa-install-mobile`. Tidak menyentuh `app/public/sw.js` (milik `WP-31`).
+
+**Langkah:**
+1. Pindahkan logika PWA dari `main.ts` ke `app/src/install.ts` (fungsi murni `detectInstallContext(ua, standalone)` → `"installed" | "prompt" | "ios-safari" | "ios-other" | "in-app" | "unsupported"`; deteksi in-app: `LinkedInApp`, `FBAN|FBAV`, `Instagram`, `Line/`, `WhatsApp`, `; wv)`). `main.ts` hanya memanggil `initInstall()`.
+2. HP (`isMobile()`): tampilkan chip "Pasang aplikasi" yang **terlihat di posisi `peek`** (di baris atas sheet, sebelah kotak cari, atau sebagai FAB kecil di atas tombol GPS), bukan di header. Desktop: tombol header tetap.
+3. `ios-safari` (bukan standalone): chip membuka lembar petunjuk 3 langkah (ikon Bagikan → Tambahkan ke Layar Utama → buka dari layar utama). `ios-other` (Chrome/Firefox iOS): petunjuk "buka di Safari".
+4. `in-app`: banner tipis di atas peta "Buka di Chrome/Safari agar bisa dipasang & GPS berfungsi" + tombol **Salin tautan** (Clipboard API, fallback `prompt`). Banner bisa ditutup; status ditutup disimpan di `localStorage` key `geoatlas.ui.v1`.
+5. Chip/banner disembunyikan saat `display-mode: standalone`, setelah `appinstalled`, atau setelah ditutup pengguna (jangan muncul ulang < 14 hari).
+6. Panggil `navigator.storage?.persist?.()` sekali setelah `appinstalled` atau saat aplikasi berjalan standalone; abaikan galat.
+
+**Selesai bila (DoD):**
+- [ ] Playwright Pixel 7 (412×839) dengan event `beforeinstallprompt` sintetis: chip pasang punya bounding box di dalam viewport tanpa menggeser sheet (`PWA-01`).
+- [ ] UA iPhone Safari → petunjuk iOS tampil; UA berisi `LinkedInApp` → banner in-app + tombol Salin tautan tampil; mode `standalone` → tidak ada chip/banner (`PWA-01`).
+- [ ] `detectInstallContext` diuji ≥ 8 UA di `tests/test_app_contracts.mjs`; nol `pageerror` (`PWA-01`).
+
+**Tes:** `cd app && npm run build`, `node tests/test_app_contracts.mjs`, `python3 tests/test_browser_uiux.py`
+
+**STOP-TANYA:** tidak ada.
+
+### WP-29 — Foto lapangan per waypoint dengan kompresi, IndexedDB, keterangan, dan validasi strike/dip
+
+Branch `feat/waypoint-field-photos` · Lane `TOOLS` · Gerbang `G4` · Exec `gpt-luna-6` · Review `claude-opus-5-5`
+
+**Tujuan:** Waypoint bisa membawa dokumentasi lapangan (masukan pengguna pasca-peluncuran): beberapa foto per titik dari kamera atau galeri, tersimpan aman di perangkat dan tidak memenuhi `localStorage`.
+
+**Lingkup file:** `app/src/waypoints.ts`, berkas baru `app/src/photos.ts`, `app/app/index.html` (blok `#wpPanel`), `app/src/style.css`, `app/src/i18n.ts`; baris `FLD-01` di `docs/PLAN-geoatlas.md`. Branch: `feat/waypoint-field-photos`.
+
+**Langkah:**
+1. `app/src/photos.ts`: IndexedDB `geoatlas-photos` (store `photos`, key `id`), API `putPhoto(blob, meta)`, `getPhoto(id)`, `deletePhotos(ids)`, `listPhotoMeta(wpId)`. Meta: `{ id, wpId, caption, azimuth: number|null, takenAt, w, h, bytes }`. Semua galat IndexedDB ditangkap dan ditampilkan lewat `toast`, tidak pernah melempar ke UI.
+2. Fungsi murni `fitSize(w, h, max=1600)` dan `compressImage(file)` (canvas → `image/jpeg` kualitas 0.82; gunakan `createImageBitmap(file, { imageOrientation: "from-image" })` agar foto HP tidak terputar). Tolak berkas non-gambar dan > 25 MB dengan pesan.
+3. `Waypoint` mendapat `photos?: string[]` (opsional, kompatibel mundur dengan data lama). Di `#wpPanel`: tombol **Ambil foto** (`<input type="file" accept="image/*" capture="environment">`) dan **Dari galeri** (`accept="image/*" multiple`, tanpa `capture`), grid thumbnail (object URL, di-`revoke` saat panel ditutup), isian keterangan + azimuth opsional per foto, tombol hapus foto.
+4. Hapus waypoint / Hapus semua juga menghapus fotonya di IndexedDB. Tampilkan ikon kamera kecil di daftar waypoint bila punya foto.
+5. Validasi terlihat: dip di luar 0–90 atau strike bukan angka → pesan di bawah isian dan **Simpan** ditolak (hari ini dip 120 dipotong diam-diam ke 90). Strike negatif tetap dinormalkan (−30 → 330).
+
+**Selesai bila (DoD):**
+- [ ] Playwright: tambah waypoint, unggah 2 gambar fixture (salah satunya 4000×3000), reload → 2 thumbnail tetap ada; ukuran tersimpan sisi panjang ≤ 1600 px (`FLD-01`).
+- [ ] Hapus waypoint menghapus record foto IndexedDB (dicek via `page.evaluate`); waypoint lama tanpa `photos` tetap terbuka normal (`FLD-01`).
+- [ ] Dip `120` menampilkan pesan dan tidak tersimpan; `fitSize` diuji unit (`FLD-01`).
+
+**Tes:** `cd app && npm run build`, `node tests/test_app_contracts.mjs`, `python3 tests/test_browser_uiux.py`
+
+**STOP-TANYA:** bila ingin menyimpan foto resolusi asli (tanpa kompres), tanya pemilik dulu: risiko kuota penyimpanan browser.
+
+### WP-30 — Paket Lapangan zip (GeoJSON, GPX, CSV, foto, KMZ), Bagikan, dan impor kembali round-trip
+
+Branch `feat/field-package-export-import` · Lane `TOOLS` · Gerbang `G4` · Exec `gpt-luna-6` · Review `claude-opus-5-5`
+
+**Tujuan:** Satu berkas yang bisa dikirim, dibuka di QGIS/Google Earth/Excel, **dan dibuka kembali di GeoAtlas** di perangkat lain. Menjawab "data disimpan dan dibuka lagi seperti apa" tanpa backend.
+
+**Lingkup file:** `app/src/waypoints.ts`, berkas baru `app/src/field_package.ts` dan `app/src/zip.ts`, `app/app/index.html` (blok `#wpPanel`/daftar waypoint), `app/src/i18n.ts`, `app/src/style.css`; baris `FLD-02`, `FLD-03` di `docs/PLAN-geoatlas.md`. Branch: `feat/field-package-export-import`. Pembaca zip: pakai ulang `unzipEntries` dari `app/src/shp_import.ts` (ekspor fungsinya, jangan salin).
+
+**Langkah:**
+1. `app/src/zip.ts`: penulis ZIP metode *store* + CRC32 (stdlib browser, tanpa dependensi), nama berkas UTF-8 (flag bit 11).
+2. `field_package.ts` → `buildFieldPackage(wps, photos, session)` menghasilkan `orebit-lapangan-YYYY-MM-DD.zip` berisi: `project.json` (`schema: "orebit-geoatlas-field-v1"`, `app_version`, `exported_at`, `waypoints`, `photos` meta, `transect`, `view_hash`), `waypoints.geojson` (atribut `photos` = path relatif), `waypoints.gpx` (`<link href="photos/WP-001_1.jpg">`), `waypoints.csv` (kolom `photos` dipisah `;`), `photos/<nama-wp>_<n>.jpg`, `README.txt` singkat (sumber data + atribusi PSG/Badan Geologi). Ekspor GPX/CSV tunggal yang lama tetap ada.
+3. `buildKmz(wps, photos)` → `waypoints.kmz` (`doc.kml` + `files/*.jpg`, balon berisi foto, catatan, strike/dip, unit).
+4. Tombol **Bagikan** bila `navigator.canShare?.({ files: [file] })`; selain itu unduh lewat `saveBlob` yang ada. Batal-bagikan (`AbortError`) bukan galat.
+5. Impor: tombol **Buka paket / impor** menerima `.zip` (Paket Lapangan), `.gpx`, `.csv`, `.geojson`. Paket: validasi `schema`, gabung per `id` (id sama → pertahankan yang `time` terbaru, tanpa duplikat), pulihkan foto ke IndexedDB dan lintasan ke sesi. GPX/CSV/GeoJSON pihak ketiga: buat waypoint baru (`kind: "other"`, nama dari `<name>`/kolom `name`). Tampilkan ringkasan "N ditambah, M diperbarui, K dilewati". Berkas rusak → pesan, data lama tidak berubah.
+6. Pengingat cadangan: simpan `lastBackupAt` di `geoatlas.ui.v1`; di daftar waypoint tampilkan "Cadangan terakhir: …" dan sorot tombol ekspor bila ada waypoint lebih baru dari cadangan terakhir.
+
+**Selesai bila (DoD):**
+- [ ] Round-trip Playwright: 3 waypoint (1 struktur 030/45, 2 foto) → ekspor zip → Hapus semua → impor zip → nama, strike/dip, foto (byte sama), lintasan identik; impor kedua kali tidak menggandakan (`FLD-03`).
+- [ ] `unzip -t` lulus untuk zip & kmz hasil ekspor; `waypoints.geojson` valid (parse + 3 fitur Point); GPX lolos parse XML dengan `<link>` foto (`FLD-02`).
+- [ ] Fixture GPX gaya Garmin dan CSV Avenza di `tests/fixtures/` terimpor dengan jumlah titik benar; zip rusak menampilkan pesan tanpa mengubah data (`FLD-03`).
+
+**Tes:** `cd app && npm run build`, `node tests/test_app_contracts.mjs`, `python3 tests/test_browser_uiux.py`
+
+**STOP-TANYA:** perubahan skema `orebit-geoatlas-field-v1` setelah rilis wajib persetujuan pemilik (berkas pengguna lama harus tetap bisa dibuka).
+
+### WP-31 — Geologi offline: cache Range PMTiles di service worker dan simpan area untuk offline
+
+Branch `feat/offline-geology-area` · Lane `MAP` · Gerbang `G4` · Exec `gpt-luna-6` · Review `claude-opus-5-5`
+
+**Tujuan:** Poligon geologi tampil saat sinyal hilang di lapangan. Kini `sw.js` melewatkan semua request ber-header `Range` sehingga hanya basemap yang ter-cache, bukan geologi PMTiles (audit §7).
+
+**Lingkup file:** `app/public/sw.js`, `app/src/layers.ts` (bila perlu akses daftar tile), `app/src/main.ts` (satu tombol + handler saja), berkas baru `app/src/offline.ts`, `app/app/index.html`, `app/src/i18n.ts`, `app/src/style.css`; baris `PWA-02` di `docs/PLAN-geoatlas.md`. Branch: `feat/offline-geology-area`.
+
+**Langkah:**
+1. `sw.js`: untuk request `Range` ke berkas `*.pmtiles` same-origin, kunci cache sintetis `url + "#bytes=" + range` di cache `geoatlas-pmtiles-v1`; strategi cache-first, simpan respons 206 sebagai `Response` baru dengan header `Content-Range`/`Content-Length` yang sama. Nama berkas PMTiles ber-versi (`all-v3.pmtiles`) → kunci stabil; versi baru = cache lama dibuang di `activate`. Batas 150 MB (buang entri terlama).
+2. `offline.ts`: **Simpan area ini untuk offline** — hitung tile z(sekarang)…min(z+3, 14) di bounds tampilan, tolak bila > 2.000 tile, unduh lewat `map` source (atau `PMTiles.getZxy`) dengan progres + batal; panggil `navigator.storage.persist()`.
+3. Indikator: ukuran cache (`navigator.storage.estimate()`) + tombol **Hapus data offline**.
+4. Naikkan `VERSION` SW dan pastikan `/assets/*` aplikasi ikut ter-cache saat install agar shell lengkap offline pada kunjungan berikutnya.
+
+**Selesai bila (DoD):**
+- [ ] Playwright (server lokal yang mendukung Range): buka area Babel, "Simpan area", `set_offline(True)`, reload → `queryRenderedFeatures` layer geologi > 0 di area itu (`PWA-02`).
+- [ ] Area di luar yang disimpan offline tidak membuat crash (peta kosong + pesan offline); hapus data offline mengosongkan cache `geoatlas-pmtiles-v1` (`PWA-02`).
+- [ ] Online: request Range PMTiles tetap 206 benar (tidak ada tile rusak), nol `pageerror` (`PWA-02`).
+
+**Tes:** `cd app && npm run build`, `node tests/test_app_contracts.mjs`, `python3 tests/test_browser_uiux.py`
+
+**STOP-TANYA:** bila server uji `http.server` tidak mendukung Range, tambahkan handler Range kecil di tes; jangan ubah konfigurasi nginx produksi tanpa pemilik.
+
+### WP-32 — Perintah coverage berulang dan tes unit modul murni hingga coverage 60 persen
+
+Branch `test/coverage-pure-modules` · Lane `TEST` · Gerbang `G4` · Exec `deepseek-flash` · Review `claude-sonnet-5-5`
+
+**Tujuan:** Coverage bisa diukur ulang dengan satu perintah dan naik dari baseline 29% (audit §2), terutama logika murni berisiko: parser SHP/DBF/PRJ/KML, ekspor waypoint, parser state URL, pencarian, transect.
+
+**Lingkup file:** `tests/test_app_contracts.mjs`, `tests/test_pipeline_contracts.py`, berkas baru `ops/scripts/ci/coverage.sh`, `tests/fixtures/**`, `ops/scripts/ci/local-ci.sh`, `.gitignore`; baris `TEST-04` di `docs/PLAN-geoatlas.md`. Branch: `test/coverage-pure-modules`. Tidak mengubah `app/src/**` kecuali menambah `export` pada fungsi murni yang sudah ada (tanpa ubah perilaku).
+
+**Langkah:**
+1. `test_app_contracts.mjs`: baca direktori kompilasi dari env `GEOATLAS_COMPILE_DIR` (default `mkdtemp`), dan **jangan hapus** direktori itu bila env diset. Tambah `session` ke `modulesToCompile` (stub `localStorage`/`history` di Node).
+2. `coverage.sh`: `GEOATLAS_COMPILE_DIR=.cov/build node --test --experimental-test-coverage --test-coverage-include='.cov/build/**' --test-coverage-lines=$MIN tests/test_app_contracts.mjs`; `.cov/` masuk `.gitignore`. Cetak tabel per modul.
+3. Tes baru: `shp_import` (fixture SHP+DBF+PRJ kecil titik/garis/poligon di `tests/fixtures/`, UTM 48S & 50S, `.prj` hilang, DBF berkarakter non-ASCII, zip *store* & *deflate*, KML), `waypoints` (`toGpx`/`toCsv` struktur vertikal, akurasi null, nama aneh, `drawWpIcon` dengan stub canvas), `gps` (fungsi murni ring/format), `search` (peringkat, aksen/huruf besar, query kosong), `state` (semua branch parse/serialize, nilai di luar batas), `transect`/`section_model` (lintasan 1 titik, antimeridian tidak relevan → nilai ekstrem), `session` (JSON rusak, hash tanpa `map=`).
+4. `local-ci.sh`: langkah baru `coverage` (fast & full) memanggil `coverage.sh` dengan ambang `MIN=60`.
+
+**Selesai bila (DoD):**
+- [ ] `bash ops/scripts/ci/coverage.sh` mencetak tabel dan total line coverage modul unit ≥ 60%; `shp_import` ≥ 50%, `waypoints` ≥ 60% (`TEST-04`).
+- [ ] `local-ci.sh --fast` gagal bila coverage < 60% (dibuktikan sekali dengan menurunkan ambang sementara) dan lulus di branch (`TEST-04`).
+
+**Tes:** `bash ops/scripts/ci/coverage.sh`, `bash ops/scripts/ci/local-ci.sh --fast`
+
+**STOP-TANYA:** bila sebuah tes menemukan bug di `app/src/**`, catat sebagai temuan di PR dan tandai tes `skip` dengan alasan; perbaikan kode masuk WP lain atau disetujui pemilik.
+
+### WP-33 — E2E pengguna baru untuk foto, Paket Lapangan, pemasangan, offline, dan smoke produksi
+
+Branch `test/new-user-e2e-prod-smoke` · Lane `TEST` · Gerbang `G4` · Exec `gpt-luna-6` · Review `claude-sonnet-5-5`
+
+**Tujuan:** Aplikasi sudah produksi; setiap rilis harus lolos skenario pengguna baru dari ujung ke ujung dan diperiksa langsung di `atlas.orebit.id` setelah deploy.
+
+**Lingkup file:** `tests/test_browser_uiux.py`, berkas baru `ops/scripts/ci/prod-smoke.py`, `tests/fixtures/**`, `ops/scripts/ci/local-ci.sh`, `docs/runbooks/deploy-atlas-vps.md` (satu langkah smoke); baris `TEST-05` di `docs/PLAN-geoatlas.md`. Branch: `test/new-user-e2e-prod-smoke`.
+
+**Langkah:**
+1. Skenario Playwright baru (desktop 1366×768 + Pixel 7, ID & EN), masing-masing gagal bila ada `pageerror`/`console.error` selain `ERR_INTERNET_DISCONNECTED` saat offline sengaja:
+   - pengguna baru: landing → "Buka peta" → cari "Klabat" → klik hasil → detail tampil;
+   - waypoint + 2 foto → Paket Lapangan → Hapus semua → impor → data identik;
+   - UA iPhone Safari, UA LinkedIn, mode standalone (cek WP-28);
+   - "Simpan area" → offline → geologi tampil (cek WP-31);
+   - `localStorage` rusak & IndexedDB diblokir → aplikasi tetap terbuka.
+2. `prod-smoke.py <base-url>` (stdlib `urllib` saja): `/`, `/app/` 200 `text/html`; `/manifest.json` JSON valid dengan `start_url`; `/sw.js` 200 JavaScript; `/data/indonesia-units-index.json` gzip + JSON parse + ≥ 2.000 unit; satu `/assets/*.js` dari HTML `immutable`; PMTiles yang dirujuk config → Range `bytes=0-16383` = 206 + header CORS; header `Permissions-Policy` memuat `geolocation=(self)`. Batas waktu per request 60 dtk; keluaran PASS/FAIL per cek.
+3. Runbook deploy: tambahkan langkah wajib `python3 ops/scripts/ci/prod-smoke.py https://atlas.orebit.id` setelah `current` dialihkan, dan rollback bila FAIL.
+
+**Selesai bila (DoD):**
+- [ ] `bash ops/scripts/ci/local-ci.sh --full` lulus dengan semua skenario baru (`TEST-05`).
+- [ ] `python3 ops/scripts/ci/prod-smoke.py https://atlas.orebit.id` lulus terhadap produksi saat ini (`TEST-05`).
+
+**Tes:** `bash ops/scripts/ci/local-ci.sh --full`, `python3 ops/scripts/ci/prod-smoke.py https://atlas.orebit.id`
+
+**STOP-TANYA:** tidak ada.
+
+### WP-34 — Panduan pengguna pemasangan desktop, Android, iOS, LinkedIn, serta penyimpanan dan cadangan data
+
+Branch `docs/user-install-data-guide` · Lane `DOCS` · Gerbang `G6` · Exec `deepseek-flash` · Review `claude-sonnet-5-5`
+
+**Tujuan:** Pengguna awam tahu bahwa GeoAtlas **tidak perlu di-install lewat kode**, cara memasangnya di tiap perangkat, dan bahwa datanya hanya ada di perangkat sampai diekspor.
+
+**Lingkup file:** `README.md`, `app/index.html` (section `#pasang` + blok baru "Data Anda"), `docs/DEVELOPMENT.md` (bagian self-host); baris `DOC-02` di `docs/PLAN-geoatlas.md`. Branch: `docs/user-install-data-guide`.
+
+**Langkah:**
+1. Section `#pasang` dan README: 4 jalur — Desktop Chrome/Edge (ikon Instal di address bar), Android Chrome, iPhone Safari (Bagikan → Tambahkan ke Layar Utama), dan "Dibuka dari LinkedIn/WhatsApp? Ketuk ⋯ → Buka di browser dulu". Tabel di audit §3 menjadi acuan. ID & EN (`data-en`).
+2. Blok "Data Anda": waypoint, foto, lintasan tersimpan di browser perangkat ini saja; tidak dikirim ke server; hapus data situs = data hilang; iPhone tanpa dipasang bisa menghapus data setelah 7 hari tidak dibuka; ekspor Paket Lapangan untuk cadangan & pindah HP.
+3. README: pisahkan jelas "Pakai" (tautan) vs "Kembangkan/self-host" (`git clone`, `make dev`, `make app`, lisensi GPL-3.0 & Lisensi Terbuka PSG).
+
+**Selesai bila (DoD):**
+- [ ] README dan landing memuat 4 jalur pemasangan + "Data Anda" dalam ID dan EN; tidak ada klaim fitur yang belum rilis (tandai "segera" bila WP-29/30 belum merge) (`DOC-02`).
+- [ ] `python3 ops/scripts/guards/check-docs.py` lulus (`DOC-02`).
+
+**Tes:** `python3 ops/scripts/guards/check-docs.py`, `cd app && npm run build`
+
+**STOP-TANYA:** tidak ada.
+
+### WP-35 — Rilis produksi v4 lapangan ke atlas.orebit.id dengan receipt exact-SHA dan smoke produksi
+
+Branch `release/field-v4` · Lane `REL` · Gerbang `G4` · Exec `gpt-luna-6` · Review `gpt-sol-6-1, pemilik`
+
+**Tujuan:** Merilis Gelombang H ke produksi dengan bukti lengkap dan rollback siap.
+
+**Lingkup file:** `docs/runbooks/deploy-atlas-vps.md`, `docs/handover/HANDOVER-geoatlas.md` (checkpoint), `docs/geoatlas-completed.md`; baris `REL-03` di `docs/PLAN-geoatlas.md`. Branch: `release/field-v4`.
+
+**Langkah:**
+1. Pastikan `VERSION` di `app/public/sw.js` sudah naik (WP-31) agar pengguna PWA lama menerima versi baru.
+2. `bash ops/scripts/ci/local-ci.sh --full --write-receipt` pada kandidat exact-SHA yang bersih.
+3. Setelah pemilik menyetujui: deploy `app/dist` ke rilis baru di VPS sesuai runbook, alihkan `current`, jalankan `prod-smoke.py`; FAIL → kembalikan `current` ke rilis sebelumnya.
+4. Uji manual singkat di HP nyata (Android Chrome + iPhone Safari): pasang, ambil foto waypoint, ekspor Paket Lapangan, buka di laptop. Catat hasil di checkpoint handover.
+
+**Selesai bila (DoD):**
+- [ ] Receipt `.tmp-tier-receipts/local-ci-<sha>.json` PASS dan `prod-smoke.py https://atlas.orebit.id` PASS setelah deploy (`REL-03`).
+- [ ] Checkpoint handover memuat release id, rollback target, dan hasil uji HP nyata (`REL-03`).
+
+**Tes:** `bash ops/scripts/ci/local-ci.sh --full --write-receipt`, `python3 ops/scripts/ci/prod-smoke.py https://atlas.orebit.id`
+
+**STOP-TANYA:** deploy produksi hanya setelah persetujuan eksplisit pemilik.
