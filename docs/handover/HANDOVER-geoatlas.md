@@ -2,6 +2,9 @@
 
 Dokumen ini mencatat `ACTIVE CHECKPOINT` tunggal untuk kelanjutan sesi manusia maupun multi-agent (Eksekutor T1 & Reviewer T2/T3). Hanya boleh ada **satu** heading `## ACTIVE CHECKPOINT` di seluruh `docs/handover/`.
 
+**2026-11-22 deploy:** commit `8428c38` live di `atlas.orebit.id` (release `20261122T034853Z-8428c38`, `current` dialihkan; rollback: arahkan `current` ke `releases/20261121T173220Z-0bb9349`). Receipt `local-ci-8428c38…json` 8/8 PASS. sha256 `index.html` `4d12c734…`, `indonesia-units-index.json` `a25d70c8…`; HTTP 200, PMTiles 206 + CORS. Checkout VPS `/opt/orebit-geoatlas` masih riwayat lama (`faed4d7`) setelah penulisan ulang riwayat: jangan `pull --ff-only`/`reset --hard`; deploy memakai dist hasil build lokal. Perbaikan: Clear Layer, popup seluler, penampang (kontak dari umur, sesar hanya terpeta, strike/dip bisa diisi).
+
+
 ## ACTIVE CHECKPOINT
 
 - **Tanggal:** 22 November 2026
