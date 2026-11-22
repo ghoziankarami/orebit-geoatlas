@@ -188,6 +188,51 @@ class TestBrowserUIUX(unittest.TestCase):
             self.assertNotIn("[AUTO]", about_text)
             browser.close()
 
+    def test_waypoints_and_session_persist(self) -> None:
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            context = browser.new_context(viewport={"width": 1366, "height": 768}, locale="id-ID")
+            page = context.new_page()
+            errors: list[str] = []
+            page.on("pageerror", lambda err: errors.append(str(err)))
+            page.goto(self.base_url + "#map=9/-0.95/119.9", wait_until="domcontentloaded")
+            page.wait_for_selector("#regionBar .region-chip")
+            # Tanpa GPS: tombol masuk mode tempatkan, ketukan peta membuat WP-001 dan membuka editor
+            page.locator("#wpBtn").click()
+            self.assertEqual(page.locator("#wpBtn").get_attribute("aria-pressed"), "true")
+            page.mouse.click(800, 400)
+            panel = page.locator("#wpPanel")
+            panel.wait_for(state="visible")
+            self.assertEqual(page.locator("#wpName").input_value(), "WP-001")
+            page.locator("#wpName").fill("Singkapan 1")
+            page.locator("#wpNote").fill("andesit, N30E/45")
+            page.locator("#wpSave").click()
+            self.assertTrue(panel.is_hidden())
+            self.assertEqual(page.locator("#wpCount").inner_text(), "1")
+            with page.expect_download() as dl:
+                page.locator("#wpExportGpx").click()
+            self.assertTrue(dl.value.suggested_filename.endswith(".gpx"))
+            # Lintasan tersimpan juga
+            page.locator("#transectBtn").click()
+            page.mouse.click(700, 250)
+            page.mouse.click(900, 320)
+            page.locator("#drawDone").click()
+            page.locator("#transectPanel").wait_for(state="visible")
+            with page.expect_download() as dl2:
+                page.locator("#transectExport").click()
+            self.assertTrue(dl2.value.suggested_filename.endswith(".png"))
+            page.evaluate("window.dispatchEvent(new Event('pagehide'))")
+            # Buka ulang tanpa hash: sesi (tampilan) dan waypoint pulih
+            page.goto(self.base_url, wait_until="domcontentloaded")
+            page.wait_for_selector("#regionBar .region-chip")
+            self.assertIn("map=", page.evaluate("location.hash"))
+            self.assertEqual(page.locator("#wpCount").inner_text(), "1")
+            self.assertIn("Singkapan 1", page.locator("#wpList").inner_text())
+            session = page.evaluate("JSON.parse(localStorage.getItem('geoatlas.session.v1'))")
+            self.assertEqual(len(session["transect"]), 2)
+            self.assertEqual(errors, [], f"Unexpected pageerrors: {errors}")
+            browser.close()
+
     def test_mobile_bottom_sheet_3_snap_and_no_overflow(self) -> None:
         with sync_playwright() as p:
             browser = p.chromium.launch()
@@ -252,9 +297,10 @@ class TestBrowserUIUX(unittest.TestCase):
             detail.wait_for(state="visible")
             m_detail = detail.bounding_box()
             m_foot = page.locator(".map-foot").bounding_box()
-            assert m_detail and m_foot
-            self.assertFalse(
-                boxes_overlap(m_detail, m_foot),
+            assert m_detail
+            # Footer (koordinat/GPS) disembunyikan selama detail terbuka; bila tampil, tidak boleh bertumpuk.
+            self.assertTrue(
+                m_foot is None or not boxes_overlap(m_detail, m_foot),
                 f"Mobile detail overlaps map-foot: {m_detail} vs {m_foot}",
             )
 

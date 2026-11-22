@@ -354,8 +354,8 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
 /* ---------- Kontrol peta ---------- */
 .map-ctrls {
   position: absolute; top: 14px; right: 14px; z-index: 2;
-  display: grid; grid-template-columns: 74px 40px 40px 40px 40px 104px 48px;
-  grid-template-areas: "zoom back north locate transect view tools" ". . . . . orient tools";
+  display: grid; grid-template-columns: 74px 40px 40px 40px 40px 40px 104px 48px;
+  grid-template-areas: "zoom back north locate wp transect view tools" ". . . . . . orient tools";
   gap: 6px; align-items: start;
 }
 .ctrl-group { display: flex; flex-direction: row; background: rgba(255,255,255,.94); border: 1px solid rgba(214,221,225,.9); border-radius: 10px; overflow: hidden; box-shadow: 0 5px 18px rgba(21,39,48,.15); backdrop-filter: blur(10px); }
@@ -373,6 +373,8 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
 .compass-arrow { color: #D9381E; font-size: 10px; line-height: 1; display: inline-block; transition: transform .15s ease; }
 .compass-n { color: var(--ink); font-size: 9.5px; line-height: 1; }
 .ctrl.solo.transect-toggle { grid-area: transect; }
+.ctrl.solo.wp-toggle { grid-area: wp; color: #C2410C; }
+.ctrl.solo.wp-toggle[aria-pressed="true"], .ctrl.solo.wp-toggle[aria-pressed="true"]:hover:not(:disabled) { background: #E8590C; color: #fff; border-color: #E8590C; }
 .ctrl.solo.transect-toggle[aria-pressed="true"], .ctrl.solo.transect-toggle[aria-pressed="true"]:hover:not(:disabled) { background: var(--tin); color: #fff; border-color: var(--tin); }
 .view-group { display: flex; gap: 3px; padding: 3px; background: rgba(255,255,255,.94); border: 1px solid rgba(214,221,225,.9); border-radius: 13px; overflow: hidden; box-shadow: 0 5px 18px rgba(21,39,48,.15); backdrop-filter: blur(10px); }
 .view-group button { flex: 1; height: 34px; min-width: 40px; border: 0; border-radius: 9px; background: transparent; cursor: pointer; font-size: 12px; font-weight: 700; color: var(--ink-soft); transition: background-color .2s ease, color .2s ease; }
@@ -408,7 +410,7 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
 .map-ctrls.is-3d .rotation-group button { width: 100%; height: 30px; }
 .hover-tip { position: absolute; z-index: 4; max-width: 260px; padding: 8px 11px; border: 1px solid rgba(214,221,225,.85); border-radius: 9px; background: rgba(255,255,255,.96); color: var(--ink); box-shadow: 0 8px 22px rgba(21,39,48,.18); backdrop-filter: blur(8px); font-size: 12px; font-weight: 600; line-height: 1.4; white-space: pre-line; pointer-events: none; }
 .hover-tip[hidden] { display: none; }
-.me-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--tin); border: 3px solid #fff; box-shadow: 0 0 0 1px var(--tin); }
+.me-dot { width: 20px; height: 20px; border-radius: 50%; background: #1D7FE0; border: 3px solid #fff; box-shadow: 0 1px 6px rgba(0,0,0,.35); animation: gps-pulse 1.8s ease-out infinite; pointer-events: none; }
 
 .map-foot { position: absolute; right: 12px; bottom: 12px; z-index: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: none; }
 .map-foot > * { pointer-events: auto; }
@@ -514,6 +516,7 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
   .ctrl.solo.fab { position: fixed; right: 12px; z-index: 2; width: 52px; height: 52px; border-radius: 16px; box-shadow: 0 6px 18px rgba(21,39,48,.24); }
   #locateBtn.fab { bottom: calc(var(--sheet-h, 112px) + 12px); }
   #transectBtn.fab { bottom: calc(var(--sheet-h, 112px) + 74px); }
+  #wpBtn.fab { bottom: calc(var(--sheet-h, 112px) + 136px); }
   .ctrl.solo.fab svg { width: 22px; height: 22px; }
   .draw-bar:not([hidden]) ~ .map-ctrls .fab,
   .detail:not([hidden]) ~ .map-ctrls .fab,
@@ -562,13 +565,14 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
   .draw-actions .btn { flex: 1; min-height: 44px; }
   .draw-cancel { width: 44px; height: 44px; border: 1px solid var(--line); }
   .gps-card { max-width: 100%; }
+  .detail:not([hidden]) ~ .map-foot { display: none; }
   /* Detail mulai di bawah tumpukan kontrol kanan (±170px) agar lapisan/2D-3D tetap bisa diketuk. */
   .detail { max-height: calc(100vh - var(--sheet-h, 112px) - 250px); max-height: calc(100dvh - var(--sheet-h, 112px) - 250px); }
   .foot-top { max-width: 100%; flex-wrap: nowrap; }
   .coord-bar { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .gps-main { font-size: 13px; padding: 6px 0; }
 }
-@media (prefers-reduced-motion: reduce) { .panel { transition: none; } .gps-pulse { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .panel { transition: none; } .gps-pulse, .me-dot { animation: none; } }
 
 .shp-dragging { outline: 3px dashed #E11D48; outline-offset: -8px; }
 .shp-attr { border-collapse: collapse; font-size: 12px; }
@@ -576,3 +580,24 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
 .shp-attr td { padding: 2px 0; word-break: break-word; }
 .install-btn { background: var(--tin); border-color: var(--tin); color: #fff; white-space: nowrap; }
 .install-btn:hover { background: var(--tin-dark); }
+
+/* ---------- Waypoint ---------- */
+.wp-block h2 { display: flex; align-items: center; gap: 6px; }
+.wp-count { min-width: 20px; padding: 0 6px; border-radius: 999px; background: #FDEBD8; color: #9A3412; font-size: 11px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; }
+.wp-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; max-height: 210px; overflow-y: auto; }
+.wp-item { width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); text-align: left; cursor: pointer; min-height: 44px; justify-content: center; }
+.wp-item:hover { background: var(--field); border-color: #E8590C; }
+.wp-item strong { font-size: 13px; }
+.wp-item span { font-size: 11px; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.wp-list .muted { font-size: 12px; }
+.wp-block .btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.wp-clear { color: #B42318; }
+.wp-panel .wp-field { display: grid; gap: 4px; margin-top: 10px; font-size: 12px; font-weight: 600; color: var(--ink-soft); }
+.wp-panel input, .wp-panel textarea { font: inherit; font-size: 14px; color: var(--ink); width: 100%; padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--field); resize: vertical; }
+.wp-panel input:focus, .wp-panel textarea:focus { outline: none; border-color: #E8590C; background: var(--paper); }
+.wp-meta dl { margin: 12px 0 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
+.wp-meta dd { font-size: 13px; font-variant-numeric: tabular-nums; }
+.wp-panel .detail-actions { grid-template-columns: 1fr 1fr 1fr; }
+@media (max-width: 760px) {
+  .wp-panel input, .wp-panel textarea { font-size: 16px; }
+}

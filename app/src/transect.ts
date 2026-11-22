@@ -523,6 +523,7 @@ export function createTransectController(
   map: maplibregl.Map,
   onActiveChange: (active: boolean) => void,
   getNationalUnits?: () => NationalUnit[],
+  onPointsChange?: (points: TransectPoint[]) => void,
 ) {
   let active = false;
   let points: TransectPoint[] = [];
@@ -988,11 +989,14 @@ export function createTransectController(
     lastStructures = [];
     overrides = {};
     lastElevRange = null;
+    onPointsChange?.([]);
     syncGeojson();
     syncDrawBar();
   };
 
   btn.addEventListener("click", () => {
+    // Lintasan tersimpan/tersembunyi (mis. setelah membuka detail unit): buka lagi penampangnya, jangan dihapus.
+    if (!active && panel.hidden && points.length >= 2) return finish();
     if (active) {
       if (points.length >= 2) finish();
       else {
@@ -1009,6 +1013,7 @@ export function createTransectController(
   });
   drawUndo.addEventListener("click", () => {
     points.pop();
+    onPointsChange?.(points.slice());
     syncGeojson();
     syncDrawBar();
   });
@@ -1029,33 +1034,94 @@ export function createTransectController(
 
   veSelect?.addEventListener("change", () => redrawSection?.());
 
-  svgExportBtn?.addEventListener("click", () => {
-    const svgEl = body.querySelector(".transect-section svg");
-    if (!svgEl) return;
-    let xml = new XMLSerializer().serializeToString(svgEl);
-    if (!xml.includes("xmlns=")) xml = xml.replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg"');
-    const blob = new Blob([`<?xml version="1.0" encoding="UTF-8"?>\n${xml}`], { type: "image/svg+xml;charset=utf-8" });
+  const download = (blob: Blob, ext: string) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `orebit-geological-section-${new Date().toISOString().slice(0, 10)}.svg`;
+    a.download = `orebit-geological-section-${new Date().toISOString().slice(0, 10)}.${ext}`;
     a.click();
     window.setTimeout(() => URL.revokeObjectURL(url), 1500);
+  };
+  const sectionXml = (): string | null => {
+    const svgEl = body.querySelector(".transect-section svg");
+    if (!svgEl) return null;
+    const xml = new XMLSerializer().serializeToString(svgEl);
+    return xml.includes("xmlns=") ? xml : xml.replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg"');
+  };
+
+  svgExportBtn?.addEventListener("click", () => {
+    const xml = sectionXml();
+    if (xml) download(new Blob([`<?xml version="1.0" encoding="UTF-8"?>\n${xml}`], { type: "image/svg+xml;charset=utf-8" }), "svg");
   });
 
-  exportBtn.addEventListener("click", () => {
-    if (!lastSegments.length) return;
-    const header = "unit,symbol,lithology_class,lithology_detail,age,distance_km,percent\n";
-    const rows = lastSegments
-      .map((s) => `"${s.label.replace(/"/g, '""')}","${s.symbol}","${s.lithLabel.replace(/"/g, '""')}","${s.lithDetail.replace(/"/g, '""')}","${s.age}",${s.km},${s.pct}`)
-      .join("\n");
-    const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `orebit-geological-section-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1500);
+  // PNG siap laporan: judul, jarak/azimuth, koordinat A & A', penampang 2×, dan atribusi.
+  exportBtn.addEventListener("click", async () => {
+    const xml = sectionXml();
+    const svgEl = body.querySelector<SVGSVGElement>(".transect-section svg");
+    if (!xml || !svgEl || points.length < 2) return;
+    exportBtn.disabled = true;
+    try {
+      const img = new Image();
+      // Gambar data-URL tidak memuat webfont; paksa sans sistem agar tidak jatuh ke serif.
+      const sansXml = xml.replace("<svg", '<svg font-family="Helvetica, Arial, sans-serif"');
+      img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(sansXml)}`;
+      await img.decode();
+      const vb = svgEl.viewBox.baseVal;
+      const k = 2;
+      const pad = 24;
+      const headH = 64;
+      const footH = 64;
+      const w = vb.width * k + pad * 2;
+      const h = vb.height * k + headH + footH + pad;
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d")!;
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(0, 0, w, h);
+      const { totalKm, azimuthDeg } = computeTransectStats(points);
+      const a = points[0];
+      const b = points[points.length - 1];
+      const fmt = (p: TransectPoint) => `${p.lat.toFixed(5)}°, ${p.lng.toFixed(5)}°`;
+      ctx.fillStyle = "#1F2B33";
+      ctx.font = "700 26px Instrument Sans, system-ui, sans-serif";
+      ctx.fillText(t("transectTitle"), pad, pad + 14);
+      ctx.fillStyle = "#56656E";
+      ctx.font = "500 17px Instrument Sans, system-ui, sans-serif";
+      ctx.fillText(`A ${fmt(a)}  →  A' ${fmt(b)}  ·  ${totalKm.toFixed(2)} km  ·  ${azimuthDeg.toFixed(0)}°  ·  ${new Date().toISOString().slice(0, 10)}`, pad, pad + 44);
+      ctx.drawImage(img, pad, headH + 8, vb.width * k, vb.height * k);
+      // Legenda kontak, sama dengan legenda di panel.
+      const X = SECTION_TXT[getLang()];
+      const kinds: [ContactKind, string, number, number[]][] = [
+        ["fault", "#DC2626", 4.6, [14, 5]],
+        ["intrusive", "#7F1D1D", 3.8, []],
+        ["unconformity", "#1F2B33", 3, [18, 6, 4, 6]],
+        ["conformable", "#334155", 2.4, []],
+      ];
+      let lx = pad;
+      const ly = h - footH + 8;
+      ctx.font = "500 15px Instrument Sans, system-ui, sans-serif";
+      kinds.forEach(([kind, color, lw, dash]) => {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = lw;
+        ctx.setLineDash(dash);
+        ctx.beginPath();
+        ctx.moveTo(lx, ly);
+        ctx.lineTo(lx + 44, ly);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = "#41535C";
+        ctx.fillText(X.kinds[kind], lx + 52, ly + 5);
+        lx += 52 + ctx.measureText(X.kinds[kind]).width + 28;
+      });
+      ctx.fillStyle = "#64747C";
+      ctx.font = "400 14px Instrument Sans, system-ui, sans-serif";
+      ctx.fillText("Orebit GeoAtlas · Geologi: Pusat Survei Geologi (ESDM), Macrostrat (CC BY 4.0) · Penampang interpretatif, bukan peta resmi", pad, h - 12);
+      const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, "image/png"));
+      if (blob) download(blob, "png");
+    } finally {
+      exportBtn.disabled = false;
+    }
   });
 
   return {
@@ -1071,9 +1137,14 @@ export function createTransectController(
     addPoint: (lng: number, lat: number) => {
       if (!active) return false;
       points.push({ lng, lat });
+      onPointsChange?.(points.slice());
       syncGeojson();
       syncDrawBar();
       return true;
+    },
+    setPoints: (pts: readonly TransectPoint[]) => {
+      points = pts.filter((p) => Number.isFinite(p.lng) && Number.isFinite(p.lat)).map((p) => ({ lng: p.lng, lat: p.lat }));
+      syncGeojson();
     },
     refresh: () => {
       syncGeojson();

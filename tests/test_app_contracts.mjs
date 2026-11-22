@@ -19,7 +19,7 @@ globalThis.document = { documentElement: { lang: "id" } };
 globalThis.importMetaEnv = {};
 
 const tempDir = mkdtempSync(join(tmpdir(), "geoatlas-contracts-"));
-const modulesToCompile = ["config", "i18n", "timescale", "lithology", "layers", "state", "coords", "search", "detail", "transect", "section_model", "shp_import", "gps"];
+const modulesToCompile = ["config", "i18n", "timescale", "lithology", "layers", "state", "coords", "search", "detail", "transect", "section_model", "shp_import", "gps", "waypoints"];
 
 for (const name of modulesToCompile) {
   let src = readFileSync(resolve(ROOT, `app/src/${name}.ts`), "utf-8");
@@ -134,6 +134,24 @@ try {
   assert.deepEqual(ring[0], ring[32]);
   const dLatM = (ring[8][1] - -0.9) * 111320;
   assert.ok(Math.abs(dLatM - 100) < 0.5, `accuracy ring radius off: ${dLatM}`);
+
+  // 7. Waypoint: penomoran berlanjut, GPX 1.1 valid & ter-escape, CSV ber-header
+  const { nextName, toGpx, toCsv } = await import(join(tempDir, "waypoints.mjs"));
+  const wps = [
+    { id: "a", name: "WP-002", note: 'Singkapan <andesit> & "kekar"', lat: -0.9, lng: 119.87, elevM: 42.4, accM: 8.6, unit: "Formasi Pakuli", symbol: "Qp", time: "2026-11-22T06:00:00.000Z" },
+    { id: "b", name: "Sampel A", note: "", lat: -0.91, lng: 119.88, elevM: null, accM: null, unit: "", symbol: "", time: "2026-11-22T06:05:00.000Z" },
+  ];
+  assert.equal(nextName(wps), "WP-003");
+  assert.equal(nextName([]), "WP-001");
+  const gpx = toGpx(wps);
+  assert.ok(gpx.includes('<gpx version="1.1"') && gpx.includes('xmlns="http://www.topografix.com/GPX/1/1"'));
+  assert.ok(gpx.includes('<wpt lat="-0.9000000" lon="119.8700000"><ele>42.4</ele>'));
+  assert.ok(gpx.includes("&lt;andesit&gt; &amp; &quot;kekar&quot;"), "GPX must escape XML");
+  assert.equal((gpx.match(/<wpt /g) || []).length, 2);
+  const csv = toCsv(wps).trim().split("\n");
+  assert.equal(csv[0], "name,lat,lon,elev_m,accuracy_m,unit,symbol,note,time");
+  assert.equal(csv.length, 3);
+  assert.ok(csv[1].includes('"Singkapan <andesit> & ""kekar"""'), "CSV must double quotes");
 
   // 8. Impor SHP: reproyeksi UTM 48S ke WGS84 (known answer) dan deteksi .prj
   const shp = await import(join(tempDir, "shp_import.mjs"));

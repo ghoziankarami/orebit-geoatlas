@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (c) 2026 Orebit (Ghozian Islam Karami)
 // Pelacakan GPS lapangan: titik + lingkar akurasi, mode ikuti, dan unit geologi di bawah posisi.
-import type maplibregl from "maplibre-gl";
+import maplibregl from "maplibre-gl";
 import { t } from "./i18n";
 import { styleReady } from "./layers";
 
@@ -11,6 +11,7 @@ export interface Fix {
   lat: number;
   lng: number;
   acc: number;
+  alt: number | null;
 }
 
 /** Poligon lingkaran akurasi (meter) di sekitar titik; cukup akurat untuk radius < beberapa km. */
@@ -43,6 +44,11 @@ export function createGps(
   let fix: Fix | null = null;
   let firstFix = true;
   let unitFeature: maplibregl.MapGeoJSONFeature | undefined;
+  // Titik lokasi = DOM marker: selalu di atas kanvas, tidak bergantung urutan layer, ganti style, atau GPU.
+  const dotEl = document.createElement("div");
+  dotEl.className = "me-dot";
+  dotEl.setAttribute("aria-hidden", "true");
+  const marker = new maplibregl.Marker({ element: dotEl });
 
   const syncBtn = () => {
     const on = watchId !== null;
@@ -60,21 +66,19 @@ export function createGps(
     if (!map.getLayer("gps-acc")) {
       map.addLayer({ id: "gps-acc", type: "fill", source: SRC, filter: ["==", ["geometry-type"], "Polygon"], paint: { "fill-color": "#1D7FE0", "fill-opacity": 0.14 } });
       map.addLayer({ id: "gps-acc-line", type: "line", source: SRC, filter: ["==", ["geometry-type"], "Polygon"], paint: { "line-color": "#1D7FE0", "line-width": 1.2, "line-opacity": 0.6 } });
-      map.addLayer({ id: "gps-dot", type: "circle", source: SRC, filter: ["==", ["geometry-type"], "Point"], paint: { "circle-radius": 7.5, "circle-color": "#1D7FE0", "circle-stroke-color": "#FFFFFF", "circle-stroke-width": 3 } });
     } else {
-      ["gps-acc", "gps-acc-line", "gps-dot"].forEach((id) => map.moveLayer(id));
+      ["gps-acc", "gps-acc-line"].forEach((id) => map.moveLayer(id));
     }
     return true;
   };
 
   const draw = () => {
+    if (fix) marker.setLngLat([fix.lng, fix.lat]).addTo(map);
+    else marker.remove();
     try {
       if (!ensureLayers()) return;
       const features = fix
-        ? [
-            { type: "Feature" as const, properties: {}, geometry: { type: "Polygon" as const, coordinates: [accuracyRing(fix.lng, fix.lat, fix.acc)] } },
-            { type: "Feature" as const, properties: {}, geometry: { type: "Point" as const, coordinates: [fix.lng, fix.lat] } },
-          ]
+        ? [{ type: "Feature" as const, properties: {}, geometry: { type: "Polygon" as const, coordinates: [accuracyRing(fix.lng, fix.lat, fix.acc)] } }]
         : [];
       (map.getSource(SRC) as maplibregl.GeoJSONSource).setData({ type: "FeatureCollection", features });
     } catch {
@@ -125,7 +129,7 @@ export function createGps(
     firstFix = true;
     watchId = navigator.geolocation.watchPosition(
       ({ coords }) => {
-        fix = { lat: coords.latitude, lng: coords.longitude, acc: coords.accuracy };
+        fix = { lat: coords.latitude, lng: coords.longitude, acc: coords.accuracy, alt: coords.altitude ?? null };
         draw();
         opts.onFix(fix);
         if (follow) {

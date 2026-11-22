@@ -25,8 +25,11 @@ import { readState, writeState, type ConfidenceFilter } from "./state";
 import { ERA_PRESETS } from "./timescale";
 import { createTransectController } from "./transect";
 import { createGps } from "./gps";
+import { createWaypoints, WP_LAYER } from "./waypoints";
+import { loadSession, restoreHashIfEmpty, saveSession } from "./session";
 import { createShpImportController } from "./shp_import";
 
+const sessionRestored = restoreHashIfEmpty();
 const state = readState();
 setLang(state.lang ?? getLang());
 
@@ -332,6 +335,7 @@ function setupGeologyOnMap() {
   // Label tempat satelit tetap di atas geologi agar terbaca di lapangan.
   if (map.getLayer("sat-labels")) map.moveLayer("sat-labels");
   gps.refresh();
+  wp.refresh();
 }
 
 document.querySelectorAll<HTMLButtonElement>("#basemapGroup button").forEach((b) => {
@@ -763,10 +767,20 @@ const TEXT_IDS: Record<string, Key> = {
   resetFiltersBtn: "resetFilters",
   transectTitle: "transectTitle",
   transectClear: "transectClear",
-  transectExport: "transectExportCsv",
+  transectExport: "transectExportPng",
   transectExportSvg: "transectExportSvg",
   transectVeLabel: "transectVe",
   transectEdit: "transectEdit",
+  "t-wpTitle": "wpTitle",
+  "t-wpHint": "wpHint",
+  "t-wpName": "wpName",
+  "t-wpNote": "wpNote",
+  wpSave: "wpSave",
+  wpDelete: "wpDelete",
+  wpFly: "wpFly",
+  wpExportGpx: "wpExportGpx",
+  wpExportCsv: "wpExportCsv",
+  wpClearAll: "wpClearAll",
   drawUndo: "transectUndo",
   drawDone: "transectDone",
   snapPeek: "sheetSnapPeek",
@@ -798,6 +812,8 @@ const LABEL_IDS: Record<string, Key> = {
   tiltDown: "tiltDown",
   searchClear: "clearSearch",
   drawCancel: "transectCancel",
+  wpBtn: "wpBtn",
+  wpClose: "closeDetail",
 };
 
 function syncLegend() {
@@ -855,6 +871,7 @@ function applyText() {
   transect.refresh();
   shpImport.refresh();
   gps.refresh();
+  wp.refresh();
 }
 
 function updateSheetHint() {
@@ -1039,6 +1056,7 @@ let activeIndexUnit: NationalUnit | null = null;
 
 function selectFeature(f: maplibregl.MapGeoJSONFeature, nearbyLines?: maplibregl.MapGeoJSONFeature[]) {
   transect.hide();
+  wp.close();
   activeFeature = f;
   activeIndexUnit = null;
   activeNearbyLines = nearbyLines;
@@ -1056,6 +1074,7 @@ function selectFeature(f: maplibregl.MapGeoJSONFeature, nearbyLines?: maplibregl
 
 function selectIndexUnit(u: NationalUnit) {
   transect.hide();
+  wp.close();
   activeFeature = null;
   activeNearbyLines = undefined;
   activeIndexUnit = u;
@@ -1140,12 +1159,14 @@ const transect = createTransectController(
   map,
   (isActive) => {
     if (isActive) {
+      wp.close();
       hideDetail();
       hoverTip.hidden = true;
       if (isMobile()) setSnap("peek");
     }
   },
   getLoadedNationalUnits,
+  (pts) => saveSession({ transect: pts }),
 );
 
 // ---------- GPS lapangan ----------
@@ -1154,6 +1175,28 @@ const gps = createGps(map, {
   queryLayers: () => queryLayers(),
   onPickFeature: (f) => selectFeature(f),
   onFix: (fix) => updateCoordBar(fix.lat, fix.lng),
+});
+
+// ---------- Waypoint lapangan ----------
+const wp = createWaypoints(map, {
+  toast,
+  saveBlob,
+  getFix: () => gps.lastFix(),
+  unitAt: (lng, lat) => {
+    const ql = queryLayers();
+    const pt = map.project([lng, lat]);
+    const f = ql.length ? map.queryRenderedFeatures(pt, { layers: ql })[0] : undefined;
+    if (!f) return null;
+    const p = (f.properties ?? {}) as Record<string, unknown>;
+    return { name: String(p.formation || p.strat_name || p.name || ""), symbol: String(p.symbol || "") };
+  },
+  beforeOpen: () => {
+    hideDetail();
+    highlight(map, null);
+    transect.hide();
+    hoverTip.hidden = true;
+    if (isMobile()) setSnap("peek");
+  },
 });
 
 // ---------- Impor SHP / GeoJSON (Cek Lokasi) ----------
@@ -1172,6 +1215,8 @@ document.addEventListener("keydown", (event) => {
   if (toolsMenu.open) {
     toolsMenu.open = false;
     $("toolsSummary").focus();
+  } else if (!$<HTMLElement>("wpPanel").hidden) {
+    wp.close();
   } else if (transect.isActive() || !$<HTMLElement>("transectPanel").hidden) {
     transect.hide();
     $("transectBtn").focus();
@@ -1187,7 +1232,18 @@ document.addEventListener("keydown", (event) => {
 map.on("load", () => {
   syncBasemapButtons();
   setupGeologyOnMap();
+  const saved = loadSession().transect;
+  if (saved?.length) transect.setPoints(saved);
+  if (sessionRestored) toast(t("sessionRestored"));
 });
+
+// Simpan sesi saat peta berhenti bergerak dan saat app ditinggalkan (andal di HP).
+const persistView = () => saveSession({ hash: location.hash });
+map.on("moveend", persistView);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") persistView();
+});
+window.addEventListener("pagehide", persistView);
 
 let lastFine = isFineZoom(map.getZoom());
 map.on("zoom", () => {
@@ -1206,8 +1262,20 @@ const queryLayers = () => {
   }
 };
 map.on("click", (e) => {
+  if (wp.isPlacing()) {
+    wp.place(e.lngLat.lng, e.lngLat.lat);
+    return;
+  }
   if (transect.isActive()) {
     transect.addPoint(e.lngLat.lng, e.lngLat.lat);
+    return;
+  }
+  const r = 12;
+  const wpHit = map.getLayer(WP_LAYER)
+    ? map.queryRenderedFeatures([[e.point.x - r, e.point.y - r], [e.point.x + r, e.point.y + r]], { layers: [WP_LAYER] })[0]
+    : undefined;
+  if (wpHit) {
+    wp.open(String(wpHit.properties?.id));
     return;
   }
   const ql = queryLayers();
