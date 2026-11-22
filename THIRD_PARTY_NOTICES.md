@@ -1,6 +1,6 @@
 # Third-party notices
 
-GeoAtlas is MIT-licensed code (see LICENSE). The components and data below keep their own licences.
+GeoAtlas is GPL-3.0-only code (see LICENSE). The components and data below keep their own licences.
 
 ## Code dependencies (bundled in the web app)
 
@@ -19,7 +19,7 @@ Run `npm ls --all` in `app/` for the full transitive list; the licence of each p
 | Macrostrat geologic units | Macrostrat | CC BY 4.0. May contain original sources with their own attribution terms. |
 | Basemap | OpenStreetMap contributors, OpenFreeMap, OpenMapTiles | ODbL 1.0 (data) and the OpenMapTiles/OpenFreeMap terms. Keep the attribution shown on the map. |
 | Terrain elevation tiles | Mapterhorn (Terrarium encoding) | See https://mapterhorn.com/attribution |
-| Orebit-derived PMTiles and `reference/` tables | Orebit | Derived from the sources above; they inherit those terms. The MIT licence does not apply to them. |
+| Orebit-derived PMTiles and `reference/` tables | Orebit | Derived from the sources above; they inherit those terms. The GPL does not apply to them. |
 
 Per-sheet source, publisher and licence are listed in `reference/sources.csv` and in the app under **About & sources**.
 

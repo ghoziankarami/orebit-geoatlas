@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: GPL-3.0-only
 # Copyright (c) 2026 Orebit (Ghozian Islam Karami)
 """Validasi CSV referensi. Dipakai CI: gagal bila ada unit tanpa umur/litologi atau crosswalk menunjuk unit yang tidak ada."""
 from __future__ import annotations

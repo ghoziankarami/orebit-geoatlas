@@ -6,7 +6,7 @@ authors:
   - given-names: "Ghozian Islam"
     family-names: "Karami"
     affiliation: "Orebit"
-license: MIT
+license: GPL-3.0-only
 repository-code: "https://github.com/ghoziankarami/orebit-geoatlas"
 url: "https://atlas.orebit.id"
 keywords:

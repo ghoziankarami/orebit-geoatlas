@@ -16,7 +16,7 @@ Report vulnerabilities through [SECURITY.md](SECURITY.md).
    source provenance, units, and licence information.
 5. Keep generated output, caches, dependencies, and credentials out of Git.
 
-Contributions use the repository's existing MIT licence.
+Contributions are accepted under the repository's GPL-3.0-only licence. Sign off every commit (`git commit -s`) to certify the [Developer Certificate of Origin](https://developercertificate.org/); the maintainer may also offer the code under other licences.
 Preserve third-party copyright, data licences, and attribution.
 
 ## Commit authorship

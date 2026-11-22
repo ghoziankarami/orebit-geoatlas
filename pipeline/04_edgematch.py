@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: GPL-3.0-only
 # Copyright (c) 2026 Orebit (Ghozian Islam Karami)
 """Gabungkan poligon bertetangga dengan unit baku sama (menghapus batas lembar),
 hitung area_km2 Equal-Area (EPSG:6933), dan tandai sambungan bermasalah.

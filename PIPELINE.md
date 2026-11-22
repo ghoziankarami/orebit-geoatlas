@@ -17,7 +17,7 @@ Jangan mengedit berkas hasil build di `app/dist/` atau direktori webroot `/var/w
 
 ## 2. Batas Lisensi & Data Publik
 
-- **Kode Sumber (`app/`, `pipeline/`, `ops/`, `tests/`):** Berlisensi **MIT** (`LICENSE`).
+- **Kode Sumber (`app/`, `pipeline/`, `ops/`, `tests/`):** Berlisensi **GPL-3.0-only** (`LICENSE`).
 - **Data Geologi Layanan ESDM / GeoMap PSG:** Berlisensi Terbuka Pusat Survei Geologi, Badan Geologi, Kementerian ESDM — **wajib atribusi PSG dan dilarang diperjualbelikan**. Oleh karena itu, Orebit GeoAtlas adalah produk publik gratis dan tidak pernah dijual atau dimasukkan ke dalam paket komersial.
 - **Data mentah (`data/raw/`):** Tidak di-commit ke repositori Git; yang disimpan di Git adalah tabel harmonisasi `reference/*.csv`, kode pipeline, dan katalog indeks ringkas `app/public/data/indonesia-units-index.json`.
 - **Macrostrat (`carto`):** CC-BY 4.0. **OpenStreetMap / OpenFreeMap:** ODbL. **Terrain Mapterhorn:** mengikuti atribusi sumber DEM Mapterhorn.

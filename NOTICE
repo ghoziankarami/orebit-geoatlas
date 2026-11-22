@@ -2,14 +2,19 @@ Orebit GeoAtlas
 Copyright (c) 2026 Orebit (Ghozian Islam Karami)
 https://github.com/ghoziankarami/orebit-geoatlas
 
-The GeoAtlas source code is licensed under the MIT License (see LICENSE). If you
-redistribute it or a work derived from it, in source or binary form, you must keep
-the copyright notice above, the LICENSE text, and this NOTICE with the copy.
+The GeoAtlas source code is licensed under the GNU General Public License v3.0
+only (GPL-3.0-only; see LICENSE), the same licence as Orebit GeoSuite. If you
+distribute it or a modified version, including by serving it to users' browsers,
+you must offer the complete corresponding source under the same licence and keep
+the copyright notice above, the LICENSE text and this NOTICE.
 
-The MIT License covers the code only. Geological data, map tiles and basemaps come
+Earlier releases were published under the MIT License and remain available under
+it. Source published after the relicensing commit (2026-11-22) is GPL-3.0-only.
+
+The licence covers the code only. Geological data, map tiles and basemaps come
 from third parties and keep their own licences and attribution requirements; see
 THIRD_PARTY_NOTICES.md. In particular, the PSG open licence on Indonesian
 geological map data requires attribution and forbids sale.
 
-The names "Orebit" and "GeoAtlas" and the logo are not licensed for use as the name
-of a modified or competing product. See TRADEMARKS.md.
+The names "Orebit" and "GeoAtlas" and the logo are not licensed for use as the
+name of a modified or competing product. See TRADEMARKS.md.

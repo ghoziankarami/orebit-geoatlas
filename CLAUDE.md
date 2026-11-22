@@ -31,5 +31,5 @@ Never enumerate plans or count them by hand here — that prose is what drifted.
 - **Stack:** Vite + TypeScript + MapLibre GL JS + PMTiles (`app/`), Python/GeoPandas + tippecanoe (`pipeline/`). Tanpa backend server.
 - **8 Wilayah Kepulauan Nasional:** `sumatra`, `babel`, `jawa`, `balinusra`, `kalimantan`, `sulawesi`, `maluku`, `papua` + bundel gabungan nasional (`all` / `indonesia`).
 - **Harmonisasi & Kepercayaan Data:** `reference/sources.csv` → `reference/crosswalk.csv` → `reference/units.csv` (dengan umur Ma dari `ics_intervals.csv`, kelas litologi dari `lithology.csv`, dan kolom `confidence`: `curated` | `auto` | `flagged`) → `app/public/data/indonesia-units-index.json`.
-- **Lisensi:** Kode MIT; data geologi ESDM/PSG mengikuti Lisensi Terbuka PSG (wajib atribusi, dilarang dijual).
+- **Lisensi:** Kode GPL-3.0-only; data geologi ESDM/PSG mengikuti Lisensi Terbuka PSG (wajib atribusi, dilarang dijual).
 - **Prompt Eksekusi Satu Kali:** Lihat [docs/handover/PROMPT-close-all-tasks.md](docs/handover/PROMPT-close-all-tasks.md).

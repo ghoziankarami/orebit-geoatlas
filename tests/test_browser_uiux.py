@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: GPL-3.0-only
 # Copyright (c) 2026 Orebit (Ghozian Islam Karami)
 """Playwright E2E UI/UX verification for Orebit GeoAtlas (Desktop 1366x768 & Mobile 375x812, ID & EN)."""
 

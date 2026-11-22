@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-3.0-only
 // Copyright (c) 2026 Orebit (Ghozian Islam Karami)
 /**
  * Utilitas konversi koordinat WGS84 (lat, lon) ke UTM (Universal Transverse Mercator)

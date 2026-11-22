@@ -1,11 +1,11 @@
 # Name and attribution policy
 
-The MIT License covers GeoAtlas's code. It does not cover the names and marks below.
+The GPL-3.0 licence covers GeoAtlas's code. It does not cover the names and marks below.
 
 **Names and logo.** "Orebit", "GeoAtlas" and the GeoAtlas logo identify this project and its maintainer. Do not use them as the name of a fork, a hosted service or a commercial product, and do not suggest that a modified version is endorsed by or comes from this project.
 
 **Forks and derivative works are welcome.** You may:
-- fork and modify GeoAtlas under the MIT License;
+- fork and modify GeoAtlas under the GPL-3.0 licence;
 - say "based on Orebit GeoAtlas" with a link to https://github.com/ghoziankarami/orebit-geoatlas;
 - use the name GeoAtlas to describe compatibility truthfully.
 
