@@ -259,7 +259,7 @@ class TestBrowserUIUX(unittest.TestCase):
                 page.goto(self.base_url, wait_until="domcontentloaded")
                 self.assertIn("Peta geologi Indonesia", page.locator("h1").inner_text())
                 self.assertEqual(page.locator('a.btn.primary[href="/app/"]').count() >= 2, True)
-                self.assertEqual(page.locator('video source[src="/media/geoatlas-field.mp4"]').count(), 1)
+                self.assertEqual(page.locator('video source[src="/media/geoatlas-howto.mp4"]').count(), 1)
                 self.assertGreaterEqual(page.locator('a[href^="https://github.com/ghoziankarami/orebit-geoatlas"]').count(), 1)
                 scroll_w = page.evaluate("document.documentElement.scrollWidth")
                 self.assertLessEqual(scroll_w, vp["width"], f"landing overflows at {vp}: {scroll_w}")

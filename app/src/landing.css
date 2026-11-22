@@ -124,3 +124,12 @@ pre { margin: 0 0 14px; padding: 16px 18px; border-radius: 10px; background: #14
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 /* Grid children may not grow past the column (long code lines scroll inside <pre>). */
 .hero-grid > *, .two > *, .feat > *, .install > *, .steps > * { min-width: 0; }
+
+/* all features */
+.fgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.fgroup { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 24px 26px; min-width: 0; }
+.fgroup h3 { font-size: 20px; margin-bottom: 14px; }
+.fgroup ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.fgroup li { position: relative; padding-left: 26px; color: var(--ink-soft); font-size: 16px; line-height: 1.4; }
+.fgroup li::before { content: ""; position: absolute; left: 0; top: 6px; width: 14px; height: 8px; border-left: 2.5px solid var(--tin); border-bottom: 2.5px solid var(--tin); transform: rotate(-45deg); }
+@media (max-width: 860px) { .fgrid { grid-template-columns: 1fr; } }
