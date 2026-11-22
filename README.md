@@ -39,16 +39,16 @@ Peta dirender di browser menggunakan MapLibre GL JS dan PMTiles. Legenda/harmoni
 
 ## Cakupan dan sumber data
 
+Data geologi rinci kini mencakup **seluruh Indonesia**, 8 wilayah kepulauan: Sumatra, Bangka–Belitung, Jawa, Bali–Nusra, Kalimantan, Sulawesi, Maluku, dan Papua.
+
 | Zoom | Sumber | Lisensi |
 | --- | --- | --- |
-| 0–14 (dasar) | Tile Macrostrat `carto` (untuk Indonesia: peta global GSC/Chorlton 2007) | CC-BY 4.0 |
-| 8+ (di atasnya) | PMTiles Orebit dari layanan Geologi Litologi ESDM (status Mei 2018); saat ini cakupan Bangka-Belitung dan Sumatra | Lisensi Terbuka PSG: atribusi, dilarang dijual |
-| Hillshade dan medan 3D | Tile elevasi Mapterhorn, Terrarium | Lihat [atribusi sumber terrain](https://mapterhorn.com/attribution) |
+| 6 ke atas | PMTiles Orebit dari Peta Geologi Bersistem Indonesia (P3G/PSG, Badan Geologi): kompilasi lembar skala 1:250.000 dan 1:1.000.000, berisi formasi, litologi, sesar, lipatan, dan kontak untuk 8 wilayah | Lisensi Terbuka PSG: atribusi, dilarang dijual |
+| 0–6 (tinjauan) | Tile Macrostrat `carto` | CC-BY 4.0 |
+| Hillshade, medan 3D, profil penampang | Elevasi Mapterhorn (Terrarium) | Lihat [atribusi sumber terrain](https://mapterhorn.com/attribution) |
+| Peta dasar | OpenFreeMap / OpenMapTiles / OpenStreetMap; citra satelit Esri World Imagery | ODbL; atribusi Esri, Maxar, Earthstar Geographics |
 
-Layanan ESDM yang dipakai tidak menyatakan skala pada metadata pipeline ini; jangan anggap lapisan Orebit saat ini sebagai peta 1:100.000. Area lain, termasuk Jawa, Kalimantan, Sulawesi, dan Papua, tampil dari Macrostrat sampai data rinci tersedia.
-Topografi hillshade dan tampilan medan 3D menggunakan elevasi Mapterhorn. Kontrol 2D/3D, opasitas geologi, pencarian satuan/lokasi, detail unit, dan ekspor PNG/PDF tersedia di aplikasi.
-
-Crosswalk Bangka-Belitung berisi 22 simbol tanpa unit otomatis. Di Sumatra, 470 dari 479 baris unit memakai pemetaan otomatis berbasis istilah umur sumber dan kata kunci nama/deskripsi litologi; hasilnya belum ditelaah geolog secara independen. Geometri yang lolos pipeline bukan bukti bahwa interpretasi umur dan litologinya sudah benar.
+Katalog unit nasional (`app/public/data/indonesia-units-index.json`) berisi 2.130 unit: Sumatra 640, Jawa 581, Kalimantan 214, Papua 210, Sulawesi 181, Bali–Nusra 153, Maluku 130, Bangka–Belitung 21. Setiap unit diselaraskan ke umur ICS (Ma) dan 8 kelas litologi. Tingkat kepercayaan dicatat per unit: 106 dikurasi manual (`curated`), 2.022 dipetakan otomatis dari istilah umur dan kata kunci litologi sumber (`auto`), 2 ditandai untuk ditinjau (`flagged`). Unit otomatis belum ditelaah geolog secara independen; geometri yang lolos pipeline bukan bukti bahwa interpretasi umur dan litologinya sudah benar.
 
 ## Pengembangan lokal
 
@@ -99,7 +99,7 @@ tandai sambungan bermasalah) → `05_export` (GeoJSONSeq) → `06_tile.sh` (PMTi
 
 ## Atribusi & disclaimer
 
-Peta ini bukan peta resmi dan tidak dimaksudkan untuk keputusan teknis tanpa pemeriksaan lembar asli. Data layanan Geologi Litologi ESDM berstatus Mei 2018; cakupan rinci saat ini Bangka-Belitung dan Sumatra. Skala layanan tidak dinyatakan dalam metadata pipeline. Atribusi lengkap dan catatan pemrosesan tersedia di **Tentang & sumber** pada aplikasi. Data mentah GeoMap tidak disimpan di repo ini.
+Peta ini bukan peta resmi dan tidak dimaksudkan untuk keputusan teknis tanpa pemeriksaan lembar asli. Data rinci berasal dari kompilasi Peta Geologi Bersistem Indonesia (P3G/PSG, Badan Geologi) skala 1:250.000 dan 1:1.000.000 untuk 8 wilayah; skala dan tingkat verifikasi mengikuti tiap lembar sumber. Penampang geologi bersifat interpretatif: kontak diproyeksikan ke kedalaman dan dip asumsi ditandai `*`. Atribusi lengkap dan catatan pemrosesan tersedia di **Tentang & sumber** pada aplikasi. Data mentah GeoMap tidak disimpan di repo ini.
 
 Tile Macrostrat berlisensi CC-BY 4.0 dan dapat mengandung sumber asli dengan ketentuan atribusinya sendiri. Basemap menggunakan OpenStreetMap/OpenFreeMap/OpenMapTiles; terrain mengikuti atribusi Mapterhorn. Kode repo ini berlisensi GNU GPL v3.0 (GPL-3.0-only): boleh dipakai, dipelajari, diubah, dan dibagikan; bila Anda mendistribusikan versi yang diubah, termasuk menyajikannya ke browser pengguna, kode sumber lengkapnya wajib ditawarkan dengan lisensi yang sama. Lisensi ini hanya berlaku untuk kode, bukan data pihak ketiga. Salinan dan turunan wajib menyertakan `LICENSE` dan [NOTICE](NOTICE). Rilis lama berlisensi MIT tetap tersedia dengan lisensi itu. Nama "Orebit" dan "GeoAtlas" serta logonya tidak dilisensikan untuk fork atau produk pesaing ([TRADEMARKS.md](TRADEMARKS.md)). Rincian lisensi komponen dan data: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Untuk sitasi, gunakan [CITATION.cff](CITATION.cff).
 
