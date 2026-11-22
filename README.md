@@ -39,7 +39,7 @@ Waypoint dan penampang hanya tersimpan di browser perangkat ini. Data tidak diki
 
 **Di lapangan (HP)**
 - GPS langsung dengan lingkar akurasi dan mode ikuti; kartu menyebut unit geologi di bawah posisi (ketuk untuk detail).
-- Waypoint singkapan, sampel, struktur, foto, lainnya. Struktur diisi strike/dip (kaidah tangan kanan) dan digambar sebagai simbol strike/dip.
+- Waypoint singkapan, sampel, struktur, foto, lainnya. Struktur diisi strike/dip (kaidah tangan kanan) dan digambar sebagai simbol strike/dip. "Foto" hanya label jenis waypoint; lampiran foto **segera hadir**. / Waypoint types: outcrop, sample, structure, photo (a label only; attaching photos is **coming soon**), other.
 - Penampang geologi dari posisi Anda: topografi DEM, kontak dari peta, waypoint di dekat lintasan diproyeksikan, dip hasil ukur menggantikan dip asumsi.
 - Pasang ke layar utama (PWA) tanpa app store; tile yang pernah dibuka tetap tampil saat sinyal lemah; sesi (tampilan, filter, lintasan) tersimpan otomatis.
 
