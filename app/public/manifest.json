@@ -4,7 +4,7 @@
   "short_name": "GeoAtlas",
   "description": "Atlas geologi interaktif Indonesia untuk lapangan: formasi, umur, litologi, GPS, dan penampang geologi.",
   "lang": "id",
-  "start_url": "/?source=pwa",
+  "start_url": "/app/?source=pwa",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],

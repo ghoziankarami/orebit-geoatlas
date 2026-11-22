@@ -680,7 +680,8 @@ for (const format of ["png", "pdf"] as const) {
     button.disabled = true;
     toast(t("exportWorking"));
     try {
-      if (!map.loaded()) await new Promise<void>((resolve) => map.once("idle", () => resolve()));
+      // Tunggu tile sebentar, tapi jangan macet di sinyal lemah: ekspor apa yang sudah tampil.
+      if (!map.loaded()) await Promise.race([new Promise<void>((resolve) => map.once("idle", () => resolve())), new Promise((r) => setTimeout(r, 4000))]);
       const image = composeExport();
       const filename = `orebit-geoatlas-${new Date().toISOString().slice(0, 10)}.${format}`;
       if (format === "png") {
@@ -1299,7 +1300,9 @@ document.addEventListener("keydown", (event) => {
 });
 
 // ---------- Peta ----------
-map.on("load", () => {
+// "style.load", not "load": "load" waits for every initial tile, which on a weak field
+// connection delays geology, waypoints and the restored line by a long time (or forever).
+map.once("style.load", () => {
   syncBasemapButtons();
   setupGeologyOnMap();
   const saved = loadSession().transect;

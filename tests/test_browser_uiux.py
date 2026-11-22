@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import functools
 import http.server
+import re
 import socketserver
 import threading
 import unittest
@@ -42,6 +43,7 @@ class TestBrowserUIUX(unittest.TestCase):
         cls.thread = threading.Thread(target=cls.httpd.serve_forever, daemon=True)
         cls.thread.start()
         cls.base_url = f"http://127.0.0.1:{cls.port}/"
+        cls.app_url = cls.base_url + "app/"
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -56,7 +58,7 @@ class TestBrowserUIUX(unittest.TestCase):
             errors: list[str] = []
             page.on("pageerror", lambda err: errors.append(str(err)))
 
-            page.goto(self.base_url, wait_until="domcontentloaded")
+            page.goto(self.app_url, wait_until="domcontentloaded")
             page.wait_for_selector("#regionBar .region-chip")
 
             # 1. Verify 9 region chips (Nasional + 8 regions)
@@ -173,7 +175,7 @@ class TestBrowserUIUX(unittest.TestCase):
             browser = p.chromium.launch()
             context = browser.new_context(viewport={"width": 1366, "height": 768}, locale="en-US")
             page = context.new_page()
-            page.goto(self.base_url, wait_until="domcontentloaded")
+            page.goto(self.app_url, wait_until="domcontentloaded")
             page.wait_for_selector("#regionBar .region-chip")
             # Tombol navigasi kamera & kompas, impor SHP
             for sel in ("#navBack", "#compassNorthBtn", "#shpImportBtn"):
@@ -195,7 +197,7 @@ class TestBrowserUIUX(unittest.TestCase):
             page = context.new_page()
             errors: list[str] = []
             page.on("pageerror", lambda err: errors.append(str(err)))
-            page.goto(self.base_url + "#map=9/-0.95/119.9", wait_until="domcontentloaded")
+            page.goto(self.app_url + "#map=9/-0.95/119.9", wait_until="domcontentloaded")
             page.wait_for_selector("#regionBar .region-chip")
             # Tanpa GPS: tombol masuk mode tempatkan, ketukan peta membuat WP-001 dan membuka editor
             page.locator("#wpBtn").click()
@@ -237,7 +239,7 @@ class TestBrowserUIUX(unittest.TestCase):
             self.assertTrue(dl2.value.suggested_filename.endswith(".png"))
             page.evaluate("window.dispatchEvent(new Event('pagehide'))")
             # Buka ulang tanpa hash: sesi (tampilan) dan waypoint pulih
-            page.goto(self.base_url, wait_until="domcontentloaded")
+            page.goto(self.app_url, wait_until="domcontentloaded")
             page.wait_for_selector("#regionBar .region-chip")
             self.assertIn("map=", page.evaluate("location.hash"))
             self.assertEqual(page.locator("#wpCount").inner_text(), "1")
@@ -245,6 +247,33 @@ class TestBrowserUIUX(unittest.TestCase):
             session = page.evaluate("JSON.parse(localStorage.getItem('geoatlas.session.v1'))")
             self.assertEqual(len(session["transect"]), 2)
             self.assertEqual(errors, [], f"Unexpected pageerrors: {errors}")
+            browser.close()
+
+    def test_landing_page_and_legacy_redirects(self) -> None:
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            for vp in ({"width": 375, "height": 812}, {"width": 1366, "height": 768}):
+                page = browser.new_context(viewport=vp, locale="id-ID").new_page()
+                errors: list[str] = []
+                page.on("pageerror", lambda err: errors.append(str(err)))
+                page.goto(self.base_url, wait_until="domcontentloaded")
+                self.assertIn("Peta geologi Indonesia", page.locator("h1").inner_text())
+                self.assertEqual(page.locator('a.btn.primary[href="/app/"]').count() >= 2, True)
+                self.assertEqual(page.locator('video source[src="/media/geoatlas-field.mp4"]').count(), 1)
+                self.assertGreaterEqual(page.locator('a[href^="https://github.com/ghoziankarami/orebit-geoatlas"]').count(), 1)
+                scroll_w = page.evaluate("document.documentElement.scrollWidth")
+                self.assertLessEqual(scroll_w, vp["width"], f"landing overflows at {vp}: {scroll_w}")
+                page.locator("#langBtn").click()
+                self.assertIn("in your pocket", page.locator("h1").inner_text())
+                self.assertEqual(errors, [], f"landing pageerrors: {errors}")
+                page.context.close()
+            # Old shared links and the installed app icon land on the map, keeping the view
+            page = browser.new_page()
+            page.goto(self.base_url + "#map=9/-0.95/119.9", wait_until="domcontentloaded")
+            page.wait_for_url(re.compile(r"/app/#map=9/-0\.95/119\.9$"), wait_until="commit")
+            page.goto(self.base_url + "?source=pwa", wait_until="domcontentloaded")
+            page.wait_for_url(re.compile(r"/app/\?source=pwa"), wait_until="commit")
+            page.wait_for_selector("#searchInput")
             browser.close()
 
     def test_mobile_bottom_sheet_3_snap_and_no_overflow(self) -> None:
@@ -255,7 +284,7 @@ class TestBrowserUIUX(unittest.TestCase):
             errors: list[str] = []
             page.on("pageerror", lambda err: errors.append(str(err)))
 
-            page.goto(self.base_url, wait_until="domcontentloaded")
+            page.goto(self.app_url, wait_until="domcontentloaded")
             page.wait_for_selector("#searchInput")
 
             # Peek state must keep search unclipped inside #panel

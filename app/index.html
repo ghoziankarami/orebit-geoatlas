@@ -3,321 +3,215 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Orebit GeoAtlas — Peta Geologi Indonesia</title>
-  <meta name="description" content="Atlas geologi interaktif Full Satu Indonesia (8 wilayah kepulauan). Skala dan cakupan mengikuti sumber data yang tersedia." />
+  <title>Orebit GeoAtlas — Peta geologi Indonesia untuk lapangan</title>
+  <meta name="description" content="Peta geologi Indonesia di browser HP dan desktop: unit geologi di bawah posisi GPS, waypoint dengan strike/dip, penampang geologi, ekspor PNG/GPX. Gratis dan open source." />
   <link rel="canonical" href="https://atlas.orebit.id/" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="GeoAtlas" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#FFFFFF" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://atlas.orebit.id/" />
   <meta property="og:site_name" content="Orebit GeoAtlas" />
-  <meta property="og:title" content="Orebit GeoAtlas — Peta Geologi Indonesia" />
-  <meta property="og:description" content="Jelajahi formasi, umur, litologi, dan lintasan geologi seluruh Indonesia langsung di browser." />
+  <meta property="og:title" content="Orebit GeoAtlas — Peta geologi Indonesia untuk lapangan" />
+  <meta property="og:description" content="Unit geologi di bawah posisi GPS, waypoint strike/dip, penampang geologi, ekspor PNG/GPX. Gratis dan open source, jalan di browser HP." />
   <meta property="og:image" content="https://atlas.orebit.id/og-geoatlas.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="Orebit GeoAtlas, peta geologi interaktif Indonesia dengan pilihan umur, litologi, dan medan 3D." />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Orebit GeoAtlas — Peta Geologi Indonesia" />
-  <meta name="twitter:description" content="Jelajahi formasi, umur, litologi, dan lintasan geologi seluruh Indonesia langsung di browser." />
   <meta name="twitter:image" content="https://atlas.orebit.id/og-geoatlas.png" />
-  <meta name="theme-color" content="#FFFFFF" />
+  <script>
+    // Tautan lama (/#map=…) dan ikon aplikasi yang sudah terpasang langsung ke peta.
+    (function () {
+      var l = location;
+      var standalone = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
+      if (l.hash.indexOf("map=") !== -1 || /[?&]source=pwa/.test(l.search) || standalone) {
+        l.replace("/app/" + l.search + l.hash);
+      }
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/landing.css" />
 </head>
 <body>
-  <div id="map" aria-label="Peta geologi"></div>
-  <div id="hoverTip" class="hover-tip" role="tooltip" hidden></div>
-
-  <aside class="panel" id="panel" data-snap="peek" aria-label="Kontrol peta">
-    <div class="sheet-top-bar">
-      <button class="sheet-handle" id="sheetHandle" type="button" aria-expanded="false"><span></span></button>
-      <div class="sheet-snap-btns" id="sheetSnapBtns" role="group" aria-label="Ukuran panel">
-        <button type="button" data-snap="peek" id="snapPeek" aria-pressed="true"></button>
-        <button type="button" data-snap="half" id="snapHalf" aria-pressed="false"></button>
-        <button type="button" data-snap="full" id="snapFull" aria-pressed="false"></button>
-      </div>
+  <header class="top">
+    <div class="wrap top-row">
+      <a class="logo" href="/" aria-label="Orebit GeoAtlas">
+        <img src="/favicon.svg" alt="" width="32" height="32" />
+        <span>GeoAtlas</span>
+      </a>
+      <nav class="top-nav" aria-label="Navigasi">
+        <a href="#cara-pakai" data-en="How to use">Cara pakai</a>
+        <a href="#pasang" data-en="Install">Pasang</a>
+        <a href="https://github.com/ghoziankarami/orebit-geoatlas" target="_blank" rel="noopener">GitHub</a>
+        <button type="button" class="lang" id="langBtn">EN</button>
+      </nav>
+      <a class="btn primary small" href="/app/" data-en="Open map">Buka peta</a>
     </div>
+  </header>
 
-    <header class="brand">
-      <div>
-        <h1>GeoAtlas</h1>
-        <p class="tagline" id="t-tagline"></p>
-        <p class="sheet-hint" id="sheetHint"></p>
-        <a class="brand-credit" href="https://orebit.id" target="_blank" rel="noopener">orebit.id <span aria-hidden="true">↗</span></a>
-      </div>
-      <div class="brand-actions">
-        <button id="panelToggle" class="panel-toggle" type="button" aria-expanded="true" aria-controls="panelControls" title="Minimize control panel">
-          <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M11 3 L5 9 L11 15 M5 9 H16" /></svg>
-        </button>
-        <button class="lang install-btn" id="installBtn" type="button" hidden></button>
-        <button class="lang" id="langBtn" type="button"></button>
-      </div>
-    </header>
-
-    <form class="search" id="searchForm" role="search">
-      <label class="sr-only" for="searchInput" id="t-searchLabel"></label>
-      <div class="search-field">
-        <input id="searchInput" type="search" autocomplete="off" enterkeyhint="search" />
-        <button id="searchClear" class="search-clear" type="button" hidden>×</button>
-      </div>
-      <div id="searchResults" class="search-results" hidden></div>
-    </form>
-
-    <nav class="region-bar" id="regionBar" aria-label="Navigasi kepulauan Indonesia"></nav>
-
-    <div class="active-filter-bar" id="activeFilterBar" hidden>
-      <span id="activeFilterText"></span>
-      <button type="button" id="resetFiltersBtn" class="reset-filter-btn"></button>
-    </div>
-
-    <div class="panel-controls" id="panelControls">
-      <section class="block">
-        <h2 id="t-colorBy"></h2>
-        <div class="segmented" role="radiogroup" id="modeGroup">
-          <button type="button" role="radio" data-mode="age" id="t-modeAge"></button>
-          <button type="button" role="radio" data-mode="lith" id="t-modeLith"></button>
+  <main>
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow" data-en="Free · open source · runs in the browser">Gratis · open source · jalan di browser</p>
+          <h1 data-en="The geology map of Indonesia, in your pocket.">Peta geologi Indonesia, di saku Anda.</h1>
+          <p class="lead" data-en="See which mapped unit you are standing on, record outcrops with strike and dip, and draw a geological cross-section on site. Works on a phone in the field and on a desktop back at the office.">
+            Lihat unit geologi tempat Anda berdiri, catat singkapan lengkap dengan strike/dip, dan buat penampang geologi langsung di lokasi. Dipakai di HP saat di lapangan, dan di desktop saat kembali ke kantor.
+          </p>
+          <div class="cta-row">
+            <a class="btn primary" href="/app/" data-en="Open GeoAtlas">Buka GeoAtlas</a>
+            <a class="btn" href="#video" data-en="Watch the 38 s video">Tonton video 38 dtk</a>
+          </div>
+          <p class="fine" data-en="No account, no app store. Not an official geological map.">Tanpa akun, tanpa app store. Bukan peta geologi resmi.</p>
         </div>
-      </section>
-
-      <section class="block">
-        <h2 id="t-ageFilter"></h2>
-        <div class="era-bar" id="eraBar" role="group" aria-label="Preset era geologi"></div>
-        <div class="age-range">
-          <div class="age-track"></div>
-          <div class="age-fill" id="ageFill"></div>
-          <input type="range" id="ageMin" min="0" max="600" step="1" aria-labelledby="t-ageFilter" />
-          <input type="range" id="ageMax" min="0" max="600" step="1" aria-labelledby="t-ageFilter" />
-        </div>
-        <p class="age-readout" id="ageReadout"></p>
-      </section>
-
-      <section class="block" hidden>
-        <h2 id="t-confTitle"></h2>
-        <div class="segmented segmented-3" role="radiogroup" id="confGroup">
-          <button type="button" role="radio" data-conf="all" id="t-confAll" aria-checked="true"></button>
-          <button type="button" role="radio" data-conf="curated" id="t-confCurated" aria-checked="false"></button>
-          <button type="button" role="radio" data-conf="review" id="t-confReview" aria-checked="false"></button>
-        </div>
-      </section>
-
-      <section class="block">
-        <label class="toggle"><input type="checkbox" id="linesToggle" checked /> <span id="t-lines"></span></label>
-      </section>
-
-      <section class="block opacity-block">
-        <div class="control-heading"><h2 id="opacityLabel"></h2><output id="opacityValue" for="geologyOpacity">75%</output></div>
-        <input type="range" id="geologyOpacity" min="0" max="100" step="5" value="75" aria-labelledby="opacityLabel" />
-        <p class="opacity-hint" id="opacityHint"></p>
-      </section>
-
-      <section class="block shp-block" id="shpBlock">
-        <h2 id="t-shpTitle"></h2>
-        <p class="opacity-hint" id="t-shpHint"></p>
-        <input type="file" id="shpFileInput" accept=".zip,.shp,.dbf,.geojson,.json,.kml" multiple hidden />
-        <div class="shp-actions">
-          <button type="button" class="btn primary shp-import-btn" id="shpImportBtn"></button>
-          <button type="button" class="btn" id="shpFocusBtn" hidden></button>
-          <button type="button" class="btn" id="shpClearBtn" hidden></button>
-        </div>
-        <div id="shpImportSummary" class="shp-summary" hidden></div>
-      </section>
-
-      <section class="block wp-block" id="wpBlock">
-        <h2><span id="t-wpTitle"></span> <span class="wp-count" id="wpCount">0</span></h2>
-        <p class="opacity-hint" id="t-wpHint"></p>
-        <ul class="wp-list" id="wpList"></ul>
-        <div class="shp-actions">
-          <button type="button" class="btn" id="wpExportGpx"></button>
-          <button type="button" class="btn" id="wpExportCsv"></button>
-          <button type="button" class="btn wp-clear" id="wpClearAll"></button>
-        </div>
-      </section>
-
-      <section class="block legend" id="legend" aria-live="polite"></section>
-
-      <footer class="panel-foot">
-        <p id="t-disclaimer"></p>
-        <div class="foot-links">
-          <button class="link-btn" id="aboutBtn" type="button"></button>
-          <a class="link-btn" id="githubLink" href="https://github.com/ghoziankarami/orebit-geoatlas" target="_blank" rel="noopener"></a>
-        </div>
-      </footer>
-    </div>
-  </aside>
-
-  <aside class="detail" id="detail" hidden aria-live="polite">
-    <button class="close" id="detailClose" type="button">
-      <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3 L13 13 M13 3 L3 13" /></svg>
-    </button>
-    <div id="detailBody"></div>
-    <div class="detail-actions" id="detailActions">
-      <a class="btn primary" id="detailSource" target="_blank" rel="noopener" hidden></a>
-      <button class="btn" id="detailFocus" type="button"></button>
-      <button class="btn" id="detailGeoJSON" type="button"></button>
-      <button class="btn" id="detailCopy" type="button"></button>
-      <a class="btn" id="detailReport" target="_blank" rel="noopener"></a>
-    </div>
-  </aside>
-
-  <aside class="detail wp-panel" id="wpPanel" hidden aria-labelledby="wpPanelTitle">
-    <button class="close" id="wpClose" type="button">
-      <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3 L13 13 M13 3 L3 13" /></svg>
-    </button>
-    <p class="detail-kicker" id="wpPanelTitle">Waypoint</p>
-    <div class="wp-field"><span id="t-wpKindTitle"></span><div class="wp-kind" id="wpKind" role="group"></div></div>
-    <div class="wp-struct" id="wpStruct" hidden>
-      <label class="wp-field"><span id="t-wpStructType"></span><select id="wpStructType"></select></label>
-      <label class="wp-field"><span id="t-wpStrike"></span><input id="wpStrike" type="number" inputmode="numeric" min="0" max="360" step="1" placeholder="030" /></label>
-      <label class="wp-field"><span id="t-wpDip"></span><input id="wpDip" type="number" inputmode="numeric" min="0" max="90" step="1" placeholder="45" /></label>
-      <p class="opacity-hint wp-rhr" id="t-wpRhr"></p>
-    </div>
-    <label class="wp-field"><span id="t-wpName"></span><input id="wpName" type="text" maxlength="60" autocomplete="off" enterkeyhint="done" /></label>
-    <label class="wp-field"><span id="t-wpNote"></span><textarea id="wpNote" rows="3" maxlength="1000"></textarea></label>
-    <div id="wpMeta" class="wp-meta"></div>
-    <div class="detail-actions">
-      <button type="button" class="btn primary" id="wpSave"></button>
-      <button type="button" class="btn" id="wpFly"></button>
-      <button type="button" class="btn wp-clear" id="wpDelete"></button>
-    </div>
-  </aside>
-
-  <aside class="transect-panel" id="transectPanel" hidden aria-live="polite">
-    <header class="transect-head">
-      <h2 id="transectTitle"></h2>
-      <button class="close" id="transectClose" type="button" aria-label="Tutup">
-        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3 L13 13 M13 3 L3 13" /></svg>
-      </button>
-    </header>
-    <div id="transectBody"></div>
-    <div class="transect-actions">
-      <label class="transect-ve"><span id="transectVeLabel"></span>
-        <select id="transectVe">
-          <option value="1">1×</option>
-          <option value="2">2×</option>
-          <option value="5">5×</option>
-          <option value="10">10×</option>
-        </select>
-      </label>
-      <label class="transect-ve"><span id="transectWpBufLabel"></span>
-        <select id="transectWpBuf">
-          <option value="250">250 m</option>
-          <option value="500" selected>500 m</option>
-          <option value="1000">1 km</option>
-          <option value="2000">2 km</option>
-        </select>
-      </label>
-      <button type="button" class="btn" id="transectEdit"></button>
-      <button type="button" class="btn" id="transectClear"></button>
-      <button type="button" class="btn primary" id="transectExport"></button>
-      <button type="button" class="btn" id="transectExportSvg"></button>
-    </div>
-  </aside>
-
-  <div class="draw-bar" id="drawBar" hidden role="status" aria-live="polite">
-    <div class="draw-info"><strong id="drawTitle"></strong><span id="drawMeta"></span></div>
-    <div class="draw-actions">
-      <button type="button" class="btn draw-gps" id="drawGps">
-        <span class="gps-pulse" aria-hidden="true"></span><span id="drawGpsLabel"></span>
-      </button>
-      <button type="button" class="btn" id="drawUndo"></button>
-      <button type="button" class="btn primary" id="drawDone"></button>
-      <button type="button" class="draw-cancel" id="drawCancel">
-        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3 L13 13 M13 3 L3 13" /></svg>
-      </button>
-    </div>
-  </div>
-
-  <div class="map-ctrls" id="mapControls" aria-label="Navigasi peta">
-    <div class="ctrl-group">
-      <button type="button" id="zoomIn" class="ctrl">
-        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2 V14 M2 8 H14" /></svg>
-      </button>
-      <button type="button" id="zoomOut" class="ctrl">
-        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8 H14" /></svg>
-      </button>
-    </div>
-    <button type="button" id="navBack" class="ctrl solo nav-back" disabled>
-      <svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"><path d="M11 4 L5 9 L11 14 M5 9 H15" /></svg>
-    </button>
-    <button type="button" id="compassNorthBtn" class="ctrl solo compass-north" title="Northing Up">
-      <span class="compass-arrow" id="compassArrow" aria-hidden="true">▲</span><span class="compass-n">N</span>
-    </button>
-    <button type="button" id="locateBtn" class="ctrl solo fab">
-      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="5" /><path d="M9 1 V4 M9 14 V17 M1 9 H4 M14 9 H17" /></svg>
-    </button>
-    <button type="button" id="wpBtn" class="ctrl solo fab wp-toggle" aria-pressed="false">
-      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M9 16.5 C9 16.5 3.5 11 3.5 7.2 A5.5 5.5 0 0 1 14.5 7.2 C14.5 11 9 16.5 9 16.5 Z" /><path d="M9 4.6 V9.6 M6.5 7.1 H11.5" /></svg>
-    </button>
-    <button type="button" id="transectBtn" class="ctrl solo fab transect-toggle" aria-pressed="false">
-      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 14 L7 6 L12 11 L16 4" /><circle cx="2" cy="14" r="1.5" /><circle cx="16" cy="4" r="1.5" /></svg>
-    </button>
-    <div class="view-group" role="group" aria-label="Tampilan peta">
-      <button type="button" id="planView" aria-pressed="true">2D</button>
-      <button type="button" id="terrainView" aria-pressed="false">3D</button>
-    </div>
-    <div class="rotation-group" role="group" aria-label="Orientasi medan">
-      <button type="button" id="tiltUp" aria-label="Tambah kemiringan kamera" title="Tilt up">∧</button>
-      <button type="button" id="rotateLeft" aria-label="Putar peta ke kiri" title="Rotate left">↺</button>
-      <button type="button" id="resetNorth" aria-label="Kembalikan arah utara" title="Reset north">N</button>
-      <button type="button" id="rotateRight" aria-label="Putar peta ke kanan" title="Rotate right">↻</button>
-      <button type="button" id="tiltDown" aria-label="Kurangi kemiringan kamera" title="Tilt down">∨</button>
-    </div>
-    <details class="tools-menu" id="toolsMenu">
-      <summary id="toolsSummary" aria-label="Map layers and export">
-        <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5 L18 6.8 L10 11.1 L2 6.8 Z" /><path d="M2 10.4 L10 14.7 L18 10.4" /><path d="M2 13.9 L10 18.2 L18 13.9" /></svg>
-      </summary>
-      <div class="tools-popover">
-        <p class="popover-label" id="t-basemapTitle"></p>
-        <div class="basemap-group" id="basemapGroup" role="group">
-          <button type="button" data-base="light" id="t-baseLight" aria-pressed="true"></button>
-          <button type="button" data-base="dark" id="t-baseDark" aria-pressed="false"></button>
-          <button type="button" data-base="topo" id="t-baseTopo" aria-pressed="false"></button>
-          <button type="button" data-base="satellite" id="t-baseSat" aria-pressed="false"></button>
-        </div>
-        <button type="button" id="topographyToggle" class="ctrl topo-toggle" aria-pressed="false"></button>
-        <div class="export-group" role="group" aria-label="Export peta">
-          <button type="button" id="exportPNG" class="export-btn">PNG</button>
-          <button type="button" id="exportPDF" class="export-btn">PDF</button>
+        <div class="hero-art" aria-hidden="true">
+          <img class="art-desk" src="/landing/d-section.webp" alt="" width="1600" height="1000" />
+          <div class="phone art-phone"><img src="/landing/m-gps.webp" alt="" width="780" height="1688" /></div>
         </div>
       </div>
-    </details>
-  </div>
+    </section>
 
-  <div class="map-foot">
-    <div class="gps-card" id="gpsCard" hidden role="status" aria-live="polite">
-      <span class="gps-pulse" aria-hidden="true"></span>
-      <button type="button" class="gps-main" id="gpsUnit"></button>
-      <span class="gps-acc" id="gpsAcc"></span>
+    <section class="band" id="video">
+      <div class="wrap narrow">
+        <h2 data-en="GeoAtlas in 38 seconds">GeoAtlas dalam 38 detik</h2>
+        <video controls preload="none" playsinline poster="/landing/video-poster.webp" width="1920" height="1080">
+          <source src="/media/geoatlas-field.mp4" type="video/mp4" />
+        </video>
+        <p class="fine" data-en="Narration in English. Screens are unaltered captures of atlas.orebit.id.">Narasi bahasa Inggris. Layar adalah tangkapan asli atlas.orebit.id.</p>
+      </div>
+    </section>
+
+    <section class="wrap features">
+      <h2 data-en="What it does">Yang bisa dilakukan</h2>
+      <div class="feat">
+        <div class="phone"><img src="/landing/m-gps.webp" alt="GPS aktif: titik biru dan kartu unit geologi di bawah posisi" loading="lazy" width="780" height="1688" /></div>
+        <div>
+          <h3 data-en="Locate">Posisi</h3>
+          <p data-en="Tap the location button. GeoAtlas follows your GPS position, shows the accuracy circle, and names the mapped unit under you. Tap the name to open the unit details.">Ketuk tombol lokasi. GeoAtlas mengikuti posisi GPS, menampilkan lingkar akurasi, dan menyebut unit geologi di bawah Anda. Ketuk namanya untuk membuka detail unit.</p>
+        </div>
+      </div>
+      <div class="feat flip">
+        <div class="phone"><img src="/landing/m-waypoint-editor.webp" alt="Editor waypoint: jenis Struktur, perlapisan 020/35" loading="lazy" width="780" height="1688" /></div>
+        <div>
+          <h3 data-en="Mark">Waypoint</h3>
+          <p data-en="Drop a waypoint at your GPS position or by tapping the map. Choose outcrop, sample, structure, photo or other. Structures take strike and dip (right-hand rule) and are drawn as strike/dip symbols on the map.">Tandai titik dari posisi GPS atau dengan mengetuk peta. Pilih jenis: singkapan, sampel, struktur, foto, atau lainnya. Struktur diisi strike dan dip (kaidah tangan kanan) dan digambar sebagai simbol strike/dip di peta.</p>
+        </div>
+      </div>
+      <div class="feat">
+        <div class="phone"><img src="/landing/m-section.webp" alt="Penampang geologi dengan waypoint terproyeksi" loading="lazy" width="780" height="1688" /></div>
+        <div>
+          <h3 data-en="Section">Penampang</h3>
+          <p data-en="Draw a line, starting from your own position if you like, and open the section. Topography comes from a DEM, contacts from the map, and waypoints near the line are projected onto it. Measured dips replace assumed ones.">Gambar lintasan, bisa dimulai dari posisi Anda sendiri, lalu buka penampang. Topografi dari DEM, kontak dari peta, dan waypoint di dekat lintasan diproyeksikan ke penampang. Dip hasil ukur menggantikan dip asumsi.</p>
+        </div>
+      </div>
+      <div class="feat flip">
+        <img class="shot" src="/landing/export-map.webp" alt="Ekspor PNG peta dengan legenda dan tabel waypoint" loading="lazy" width="1600" height="1007" />
+        <div>
+          <h3 data-en="Export">Ekspor</h3>
+          <p data-en="Save the map as PNG or PDF with legend and waypoint table, the section as PNG or SVG, and waypoints as GPX or CSV for QGIS, Avenza or a GPS unit.">Simpan peta sebagai PNG atau PDF lengkap dengan legenda dan tabel waypoint, penampang sebagai PNG atau SVG, dan waypoint sebagai GPX atau CSV untuk QGIS, Avenza, atau GPS.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" id="cara-pakai">
+      <div class="wrap">
+        <h2 data-en="Using it on a phone in the field">Cara pakai di HP saat di lapangan</h2>
+        <ol class="steps">
+          <li>
+            <strong data-en="Open your work area while you still have signal">Buka area kerja selagi ada sinyal</strong>
+            <span data-en="Pan and zoom over the area you will visit. Map tiles you have viewed are kept on the phone, so they still load where the signal drops.">Geser dan perbesar ke area yang akan didatangi. Tile peta yang sudah dibuka disimpan di HP, jadi tetap tampil saat sinyal hilang.</span>
+          </li>
+          <li>
+            <strong data-en="Install it to the home screen">Pasang ke layar utama</strong>
+            <span data-en="See the install steps below. It then opens full screen like an app.">Lihat langkah pemasangan di bawah. Setelah itu terbuka layar penuh seperti aplikasi.</span>
+          </li>
+          <li>
+            <strong data-en="Tap the location button and allow GPS">Ketuk tombol lokasi dan izinkan GPS</strong>
+            <span data-en="The blue dot shows where you are; the card names the unit under you. Pan the map and following pauses; tap the button again to recentre.">Titik biru menunjukkan posisi Anda; kartu menyebut unit di bawah Anda. Peta digeser, mode ikuti berhenti; ketuk tombol lagi untuk kembali ke posisi.</span>
+          </li>
+          <li>
+            <strong data-en="Record each stop with the pin button">Catat tiap titik amatan dengan tombol pin</strong>
+            <span data-en="Pick the type, add strike and dip for structures, write a note. Waypoints are saved on the phone.">Pilih jenis, isi strike/dip untuk struktur, tulis catatan. Waypoint tersimpan di HP.</span>
+          </li>
+          <li>
+            <strong data-en="Draw a section">Buat penampang</strong>
+            <span data-en="Tap the line button, use “My position” or tap the map for each point, then “View section”. Download it as PNG.">Ketuk tombol lintasan, pakai “Posisi saya” atau ketuk peta untuk tiap titik, lalu “Lihat penampang”. Unduh sebagai PNG.</span>
+          </li>
+          <li>
+            <strong data-en="Export at the end of the day">Ekspor di akhir hari</strong>
+            <span data-en="Download the waypoints as GPX or CSV. Clearing the browser data also clears waypoints stored on the phone.">Unduh waypoint sebagai GPX atau CSV. Menghapus data browser juga menghapus waypoint yang tersimpan di HP.</span>
+          </li>
+        </ol>
+        <div class="phone-row" aria-hidden="true">
+          <div class="phone"><img src="/landing/m-gps.webp" alt="" loading="lazy" width="780" height="1688" /></div>
+          <div class="phone"><img src="/landing/m-waypoint-editor.webp" alt="" loading="lazy" width="780" height="1688" /></div>
+          <div class="phone"><img src="/landing/m-section.webp" alt="" loading="lazy" width="780" height="1688" /></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap" id="pasang">
+      <h2 data-en="Install on a phone">Pasang di HP</h2>
+      <div class="install">
+        <div class="box">
+          <h3>Android · Chrome</h3>
+          <ol>
+            <li data-en="Open atlas.orebit.id/app">Buka atlas.orebit.id/app</li>
+            <li data-en="Tap “Install app” in the panel, or menu ⋮ → Install app">Ketuk “Pasang aplikasi” di panel, atau menu ⋮ → Instal aplikasi</li>
+            <li data-en="Open GeoAtlas from the home screen">Buka GeoAtlas dari layar utama</li>
+          </ol>
+        </div>
+        <div class="box">
+          <h3>iPhone · Safari</h3>
+          <ol>
+            <li data-en="Open atlas.orebit.id/app in Safari">Buka atlas.orebit.id/app di Safari</li>
+            <li data-en="Tap Share → Add to Home Screen">Ketuk Bagikan → Tambahkan ke Layar Utama</li>
+            <li data-en="Open GeoAtlas from the home screen">Buka GeoAtlas dari layar utama</li>
+          </ol>
+        </div>
+        <div class="box">
+          <h3 data-en="Desktop">Desktop</h3>
+          <p data-en="Use it in any modern browser. On the desktop you also get SHP/GeoJSON/KML import, 3D terrain and PDF export.">Pakai di browser modern apa saja. Di desktop tersedia juga impor SHP/GeoJSON/KML, medan 3D, dan ekspor PDF.</p>
+        </div>
+      </div>
+      <p class="fine" data-en="GPS needs location permission for atlas.orebit.id. If it was refused, allow it again in the browser’s site settings.">GPS butuh izin lokasi untuk atlas.orebit.id. Bila pernah ditolak, izinkan lagi di pengaturan situs browser.</p>
+    </section>
+
+    <section class="band">
+      <div class="wrap two">
+        <div>
+          <h2 data-en="Data and limits">Data dan batasan</h2>
+          <p data-en="Detailed units come from Badan Geologi (Pusat Survei Geologi, ESDM) map data where it has been processed; elsewhere the map falls back to Macrostrat (CC BY 4.0). Elevation from Mapterhorn. Scale, coverage and verification follow each source.">Unit rinci berasal dari data peta Badan Geologi (Pusat Survei Geologi, ESDM) di area yang sudah diproses; di luar itu peta memakai Macrostrat (CC BY 4.0). Elevasi dari Mapterhorn. Skala, cakupan, dan tingkat verifikasi mengikuti tiap sumber.</p>
+          <p data-en="This is not an official geological map. Check the original map sheets before technical decisions. Sections are interpretive: contacts are projected to depth, assumed dips are marked with *.">Ini bukan peta geologi resmi. Periksa lembar peta asli sebelum keputusan teknis. Penampang bersifat interpretatif: kontak diproyeksikan ke kedalaman, dip asumsi ditandai *.</p>
+        </div>
+        <div>
+          <h2 data-en="Open source">Open source</h2>
+          <p data-en="The code is GPL-3.0. Run it yourself:">Kode berlisensi GPL-3.0. Jalankan sendiri:</p>
+          <pre><code>git clone https://github.com/ghoziankarami/orebit-geoatlas.git
+cd orebit-geoatlas/app
+npm ci
+npm run dev</code></pre>
+          <p><a href="https://github.com/ghoziankarami/orebit-geoatlas" target="_blank" rel="noopener" data-en="Source code and issues on GitHub ↗">Kode sumber dan laporan masalah di GitHub ↗</a></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap end">
+      <h2 data-en="Take it to your next field day.">Bawa ke hari lapangan berikutnya.</h2>
+      <a class="btn primary" href="/app/" data-en="Open GeoAtlas">Buka GeoAtlas</a>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot-row">
+      <span>© 2026 <a href="https://orebit.id" target="_blank" rel="noopener">Orebit</a> · GPL-3.0</span>
+      <span>Badan Geologi (PSG, ESDM) · Macrostrat · © OpenStreetMap · OpenFreeMap · Mapterhorn</span>
     </div>
-    <div class="foot-top">
-      <button type="button" id="coordBar" class="coord-bar" title="Salin koordinat"></button>
-      <div id="scaleSlot"></div>
-    </div>
-    <p class="attrib">
-      <a href="https://macrostrat.org" target="_blank" rel="noopener">Macrostrat</a> (CC-BY 4.0),
-      <a href="https://geologi.esdm.go.id/geomap" target="_blank" rel="noopener">Pusat Survei Geologi</a>,
-      © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>,
-      <a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a>
-      · © <a href="https://openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a>
-      <span id="satAttribution" hidden> · Imagery © <a href="https://www.esri.com/" target="_blank" rel="noopener">Esri</a>, Maxar, Earthstar Geographics</span>
-      <span id="terrainAttribution" hidden> · <a href="https://mapterhorn.com/attribution" target="_blank" rel="noopener">Terrain © Mapterhorn</a></span>
-    </p>
-  </div>
+  </footer>
 
-  <p class="toast" id="toast" role="status" hidden></p>
-
-  <dialog class="about" id="aboutDialog" aria-labelledby="aboutTitle">
-    <div class="about-body" id="aboutBody"></div>
-    <form method="dialog"><button class="btn primary" id="aboutClose" type="submit"></button></form>
-  </dialog>
-
-  <script type="module" src="/src/main.ts"></script>
+  <script type="module" src="/src/landing.ts"></script>
 </body>
 </html>

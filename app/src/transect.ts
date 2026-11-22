@@ -961,7 +961,7 @@ export function createTransectController(
         )
         .join("")}</ul>`;
 
-      body.innerHTML = `
+      body.innerHTML = `<div class="tb-main">
         <div class="transect-metrics">
           <div><span>${esc(t("transectDistance"))} (A–A')</span><strong>${totalKm.toFixed(2)} km</strong></div>
           <div><span>${esc(t("transectAzimuth"))}</span><strong>${azimuthDeg.toFixed(0)}°</strong></div>
@@ -969,9 +969,11 @@ export function createTransectController(
         </div>
         ${sectionHtml}
         ${legendHtml}
+        </div><div class="tb-side">
         ${markHtml}
         ${structHtml}
         ${listHtml}
+        </div>
       `;
       bindSectionHover(sampleHits);
       body.querySelectorAll<HTMLElement>(".att-row").forEach((row) => {
@@ -1028,7 +1030,7 @@ export function createTransectController(
     if (n >= 2) {
       const { totalKm, azimuthDeg } = computeTransectStats(points);
       drawMeta.textContent = `${n} ${t("transectPts")} · ${totalKm.toFixed(2)} km · ${azimuthDeg.toFixed(0)}°`;
-    } else drawMeta.textContent = n ? `1 ${t("transectPts")}` : "";
+    } else drawMeta.textContent = n ? `1 ${t("transectPt")}` : "";
     drawUndo.disabled = n === 0;
     document.getElementById("drawGpsLabel")!.textContent = t("transectGpsPoint");
     drawGps.classList.toggle("is-live", Boolean(gpsHooks?.getFix()));

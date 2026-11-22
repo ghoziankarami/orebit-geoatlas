@@ -66,10 +66,10 @@ tandai sambungan bermasalah) → `05_export` (GeoJSONSeq) → `06_tile.sh` (PMTi
 
 ## Publikasi dan data
 
-- Aplikasi produksi tersedia di **[atlas.orebit.id](https://atlas.orebit.id)**; build web statis berada di `app/dist`.
+- Halaman pengantar ada di **[atlas.orebit.id](https://atlas.orebit.id)** dan aplikasi peta di **[atlas.orebit.id/app](https://atlas.orebit.id/app/)**; build web statis (dua halaman) berada di `app/dist`. Tautan lama `atlas.orebit.id/#map=…` dialihkan otomatis ke `/app/`.
 - Tile geologi PMTiles dapat di-host sebagai berkas statis yang mendukung HTTP Range. Saat mengganti host, atur `VITE_TILES_URL` dan pastikan CORS mengizinkan origin aplikasi.
 - Situs Quarto orebit.id dapat menautkan atau menyematkan atlas:
-  `<iframe src="https://atlas.orebit.id" width="100%" height="640" style="border:0"></iframe>`
+  `<iframe src="https://atlas.orebit.id/app/" width="100%" height="640" style="border:0"></iframe>`
 
 ## Atribusi & disclaimer
 
