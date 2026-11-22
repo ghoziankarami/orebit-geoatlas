@@ -36,13 +36,13 @@ export function readState(hashStr = location.hash): AppState {
     ageMax: Number.isFinite(b) ? Math.min(CONFIG.ageMaxMa, b) : CONFIG.ageMaxMa,
     lithFilter: lith || undefined,
     confFilter: conf === "curated" || conf === "review" ? conf : "all",
-    basemap: base === "dark" || base === "topo" ? base : "light",
+    basemap: base === "dark" || base === "topo" || base === "satellite" ? base : "light",
     region: region || undefined,
     lines: p.get("lines") !== "0",
     lang: lang === "en" || lang === "id" ? lang : undefined,
     topo: p.get("topo") === "1" || base === "topo",
     view3d: p.get("view") === "3d",
-    geologyOpacity: Math.min(100, Math.max(15, Number(p.get("geo") ?? 75) || 75)),
+    geologyOpacity: Math.min(100, Math.max(0, Number(p.get("geo") ?? 75))),
   };
 }
 

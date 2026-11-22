@@ -3,7 +3,7 @@
 import maplibregl from "maplibre-gl";
 import { esc, safeColor } from "./detail";
 import { getLang, t } from "./i18n";
-import { QUERY_LAYERS } from "./layers";
+import { QUERY_LAYERS, styleReady } from "./layers";
 import { LITH_CLASSES } from "./lithology";
 import type { NationalUnit } from "./search";
 
@@ -533,7 +533,7 @@ export function createShpImportController(
 
   const ensureLayers = () => {
     try {
-      if (!map.isStyleLoaded()) return;
+      if (!styleReady(map)) return;
       if (!map.getSource(IMPORT_SRC)) {
         map.addSource(IMPORT_SRC, {
           type: "geojson",
@@ -629,7 +629,7 @@ export function createShpImportController(
     const lang = getLang();
     let layers: string[] = [];
     try {
-      if (map.isStyleLoaded()) layers = QUERY_LAYERS.filter((id) => Boolean(map.getLayer(id)));
+      if (styleReady(map)) layers = QUERY_LAYERS.filter((id) => Boolean(map.getLayer(id)));
     } catch {
       layers = [];
     }
@@ -760,7 +760,7 @@ export function createShpImportController(
 
   const syncSource = () => {
     try {
-      if (!map.isStyleLoaded()) return;
+      if (!styleReady(map)) return;
       ensureLayers();
       (map.getSource(IMPORT_SRC) as maplibregl.GeoJSONSource | undefined)?.setData(
         currentFc ?? { type: "FeatureCollection", features: [] },

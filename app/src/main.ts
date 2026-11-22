@@ -17,12 +17,14 @@ import {
   QUERY_LAYERS,
   setColorMode,
   setLinesVisible,
+  styleReady,
 } from "./layers";
 import { renderLegend } from "./legend";
 import { getLoadedNationalUnits, initSearch, type NationalUnit } from "./search";
 import { readState, writeState, type ConfidenceFilter } from "./state";
 import { ERA_PRESETS } from "./timescale";
 import { createTransectController } from "./transect";
+import { createGps } from "./gps";
 import { createShpImportController } from "./shp_import";
 
 const state = readState();
@@ -69,7 +71,7 @@ $("zoomOut").addEventListener("click", () => map.zoomOut());
 
 function ensureTerrainSource(): boolean {
   try {
-    if (!map.isStyleLoaded()) return false;
+    if (!styleReady(map)) return false;
     if (map.getSource("terrain-dem")) return true;
     map.addSource("terrain-dem", {
       type: "raster-dem",
@@ -100,7 +102,7 @@ function ensureTerrainSource(): boolean {
 }
 
 function bringHillshadeAboveGeology() {
-  if (!map.isStyleLoaded()) return;
+  if (!styleReady(map)) return;
   const labelLayer = map.getStyle().layers?.find((layer) => layer.type === "symbol")?.id;
   if (map.getLayer("terrain-hillshade") && labelLayer) map.moveLayer("terrain-hillshade", labelLayer);
 }
@@ -171,7 +173,7 @@ function set3D(enabled: boolean) {
   } else if (ready) {
     const flatten = () => {
       try {
-        if (transitionId === terrainTransition && map.isStyleLoaded()) map.setTerrain(null);
+        if (transitionId === terrainTransition && styleReady(map)) map.setTerrain(null);
       } catch {
         // Style belum siap
       }
@@ -310,6 +312,7 @@ function syncBasemapButtons() {
   document.querySelectorAll<HTMLButtonElement>("#basemapGroup button").forEach((b) => {
     b.setAttribute("aria-pressed", String(b.dataset.base === state.basemap));
   });
+  $("satAttribution").hidden = state.basemap !== "satellite";
 }
 
 function setupGeologyOnMap() {
@@ -326,6 +329,9 @@ function setupGeologyOnMap() {
   shpImport.refresh();
   syncOrientationControls();
   $("opacityValue").textContent = state.geologyOpacity + "%";
+  // Label tempat satelit tetap di atas geologi agar terbaca di lapangan.
+  if (map.getLayer("sat-labels")) map.moveLayer("sat-labels");
+  gps.refresh();
 }
 
 document.querySelectorAll<HTMLButtonElement>("#basemapGroup button").forEach((b) => {
@@ -337,8 +343,9 @@ document.querySelectorAll<HTMLButtonElement>("#basemapGroup button").forEach((b)
     syncBasemapButtons();
     writeState(state);
     toolsMenu.open = false;
-    map.setStyle(BASEMAPS[nextBase]);
+    // Daftarkan sebelum setStyle: gaya objek (satelit) bisa memicu style.load seketika.
     map.once("style.load", setupGeologyOnMap);
+    map.setStyle(BASEMAPS[nextBase]);
   });
 });
 
@@ -511,7 +518,8 @@ function composeExport(): HTMLCanvasElement {
   ctx.font = "500 10px Instrument Sans, sans-serif";
   footerLines.push(...wrapText("Geologi: Macrostrat (CC BY 4.0) · Katalog Nasional 8 Wilayah: Pusat Survei Geologi, Badan Geologi, ESDM", layoutWidth - 44));
   const terrainCredit = state.topo || state.view3d ? " · Elevasi: © Mapterhorn" : "";
-  footerLines.push(...wrapText("Peta dasar: OpenFreeMap · © OpenMapTiles · © OpenStreetMap" + terrainCredit, layoutWidth - 44));
+  const baseCredit = state.basemap === "satellite" ? "Peta dasar: Imagery © Esri, Maxar, Earthstar Geographics" : "Peta dasar: OpenFreeMap · © OpenMapTiles · © OpenStreetMap";
+  footerLines.push(...wrapText(baseCredit + terrainCredit, layoutWidth - 44));
   ctx.fillStyle = "#64747c";
   ctx.font = "400 9px Instrument Sans, sans-serif";
   footerLines.push(...wrapText("Peta ini bersifat generalisasi dan bukan peta resmi untuk keputusan teknis. Rujuk lembar asli Badan Geologi.", layoutWidth - 44));
@@ -626,28 +634,6 @@ for (const format of ["png", "pdf"] as const) {
     }
   });
 }
-
-let meMarker: maplibregl.Marker | undefined;
-$("locateBtn").addEventListener("click", () => {
-  if (!("geolocation" in navigator)) {
-    toast(t("locateFail"));
-    return;
-  }
-  navigator.geolocation.getCurrentPosition(
-    ({ coords }) => {
-      const at: [number, number] = [coords.longitude, coords.latitude];
-      if (!meMarker) {
-        const dot = document.createElement("div");
-        dot.className = "me-dot";
-        meMarker = new maplibregl.Marker({ element: dot });
-      }
-      meMarker.setLngLat(at).addTo(map);
-      map.flyTo({ center: at, zoom: Math.max(map.getZoom(), 11) });
-    },
-    () => toast(t("locateFail")),
-    { enableHighAccuracy: false, timeout: 10000 },
-  );
-});
 
 // ---------- Island Quick-Jump Bar ----------
 function renderRegionBar() {
@@ -765,6 +751,8 @@ const TEXT_IDS: Record<string, Key> = {
   "t-baseLight": "baseLight",
   "t-baseDark": "baseDark",
   "t-baseTopo": "baseTopo",
+  "t-baseSat": "baseSat",
+  installBtn: "installApp",
   aboutBtn: "about",
   aboutClose: "close",
   githubLink: "github",
@@ -778,6 +766,9 @@ const TEXT_IDS: Record<string, Key> = {
   transectExport: "transectExportCsv",
   transectExportSvg: "transectExportSvg",
   transectVeLabel: "transectVe",
+  transectEdit: "transectEdit",
+  drawUndo: "transectUndo",
+  drawDone: "transectDone",
   snapPeek: "sheetSnapPeek",
   snapHalf: "sheetSnapHalf",
   snapFull: "sheetSnapFull",
@@ -806,6 +797,7 @@ const LABEL_IDS: Record<string, Key> = {
   tiltUp: "tiltUp",
   tiltDown: "tiltDown",
   searchClear: "clearSearch",
+  drawCancel: "transectCancel",
 };
 
 function syncLegend() {
@@ -843,10 +835,9 @@ function applyText() {
   for (const [id, key] of Object.entries(LABEL_IDS)) $(id).setAttribute("aria-label", t(key));
   $<HTMLInputElement>("searchInput").placeholder = t("searchPlaceholder");
   $("langBtn").textContent = getLang() === "id" ? "EN" : "ID";
-  $("topographyToggle").textContent = getLang() === "id" ? "Topografi" : "Terrain";
-  $("toolsSummary").textContent = getLang() === "id" ? "Alat" : "Tools";
-  $("toolsSummary").setAttribute("aria-label", getLang() === "id" ? "Lapisan terrain dan ekspor" : "Terrain and export tools");
-  $("toolsSummary").title = getLang() === "id" ? "Lapisan dan ekspor" : "Layers and export";
+  $("topographyToggle").textContent = getLang() === "id" ? "Relief bayangan (hillshade)" : "Hillshade relief";
+  $("toolsSummary").setAttribute("aria-label", getLang() === "id" ? "Lapisan peta dan ekspor" : "Map layers and export");
+  $("toolsSummary").title = getLang() === "id" ? "Lapisan peta & ekspor" : "Map layers & export";
   $("transectBtn").title = t("transectBtn");
   $("coordBar").title = t("copyCoordHint");
   updatePanelToggleLabel();
@@ -863,6 +854,7 @@ function applyText() {
   else if (activeIndexUnit && !$<HTMLElement>("detail").hidden) selectIndexUnit(activeIndexUnit);
   transect.refresh();
   shpImport.refresh();
+  gps.refresh();
 }
 
 function updateSheetHint() {
@@ -987,7 +979,7 @@ function setSnap(snap: SnapPoint) {
   panel.dataset.snap = snap;
   document.documentElement.style.setProperty(
     "--sheet-h",
-    snap === "peek" ? "calc(154px + env(safe-area-inset-bottom, 0px))" : snap === "half" ? "54dvh" : "86dvh",
+    snap === "peek" ? "calc(108px + env(safe-area-inset-bottom, 0px))" : snap === "half" ? "54dvh" : "86dvh",
   );
   panel.classList.toggle("collapsed", snap === "peek");
   $("sheetHandle").setAttribute("aria-expanded", String(snap !== "peek"));
@@ -1037,7 +1029,7 @@ sheetHandle.addEventListener("click", () => {
     skipSheetClick = false;
     return;
   }
-  setSnap(currentSnap === "peek" ? "half" : "peek");
+  setSnap(currentSnap === "peek" ? "half" : currentSnap === "half" ? "full" : "peek");
 });
 
 // ---------- Detail unit & GeoJSON download ----------
@@ -1156,6 +1148,14 @@ const transect = createTransectController(
   getLoadedNationalUnits,
 );
 
+// ---------- GPS lapangan ----------
+const gps = createGps(map, {
+  toast,
+  queryLayers: () => queryLayers(),
+  onPickFeature: (f) => selectFeature(f),
+  onFix: (fix) => updateCoordBar(fix.lat, fix.lng),
+});
+
 // ---------- Impor SHP / GeoJSON (Cek Lokasi) ----------
 const shpImport = createShpImportController(map, pushViewHistory, toast, getLoadedNationalUnits);
 
@@ -1200,7 +1200,7 @@ map.on("zoom", () => {
 
 const queryLayers = () => {
   try {
-    return map.isStyleLoaded() ? QUERY_LAYERS.filter((id) => Boolean(map.getLayer(id))) : [];
+    return styleReady(map) ? QUERY_LAYERS.filter((id) => Boolean(map.getLayer(id))) : [];
   } catch {
     return [];
   }
@@ -1220,7 +1220,7 @@ map.on("click", (e) => {
     activeNearbyLines = undefined;
     return;
   }
-  const lineLayers = map.isStyleLoaded() ? ["ob-lines", "ms-lines"].filter((id) => map.getLayer(id)) : [];
+  const lineLayers = styleReady(map) ? ["ob-lines", "ms-lines"].filter((id) => map.getLayer(id)) : [];
   const nearbyLines = lineLayers.length
     ? map.queryRenderedFeatures([[e.point.x - 14, e.point.y - 14], [e.point.x + 14, e.point.y + 14]], { layers: lineLayers })
     : [];
@@ -1246,19 +1246,21 @@ coordBar.addEventListener("click", async () => {
 const initC = map.getCenter();
 updateCoordBar(initC.lat, initC.lng);
 map.on("move", () => {
-  if (isMobile()) {
+  if (isMobile() && !gps.isTracking()) {
     const c = map.getCenter();
     updateCoordBar(c.lat, c.lng);
   }
 });
 map.on("zoomend", () => {
+  const fix = gps.lastFix();
+  if (fix) return updateCoordBar(fix.lat, fix.lng);
   const c = map.getCenter();
   updateCoordBar(c.lat, c.lng);
 });
 
 const hoverTip = $<HTMLDivElement>("hoverTip");
 map.on("mousemove", (e) => {
-  updateCoordBar(e.lngLat.lat, e.lngLat.lng);
+  if (!gps.isTracking()) updateCoordBar(e.lngLat.lat, e.lngLat.lng);
   if (transect.isActive()) {
     hoverTip.hidden = true;
     return;
@@ -1296,6 +1298,29 @@ initSearch(map, {
   onPickFeature: (f) => selectFeature(f),
   onPickIndexUnit: (u) => selectIndexUnit(u),
 });
+
+// ---------- PWA: pasang ke layar utama + offline ----------
+let installPrompt: (Event & { prompt: () => Promise<void> }) | null = null;
+const installBtn = $<HTMLButtonElement>("installBtn");
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  installPrompt = e as Event & { prompt: () => Promise<void> };
+  installBtn.hidden = false;
+});
+installBtn.addEventListener("click", async () => {
+  if (!installPrompt) return;
+  await installPrompt.prompt();
+  installPrompt = null;
+  installBtn.hidden = true;
+});
+window.addEventListener("appinstalled", () => {
+  installBtn.hidden = true;
+});
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+  });
+}
 
 syncConfButtons();
 syncBasemapButtons();

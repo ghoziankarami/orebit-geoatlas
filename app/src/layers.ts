@@ -26,6 +26,13 @@ const OB = "orebit";
 
 export const QUERY_LAYERS = ["ob-units", "ms-units"];
 
+/**
+ * True once the style JSON is parsed. Unlike map.isStyleLoaded(), this stays true while tiles are
+ * still loading, so layer queries and overlay updates do not silently skip during pans/zooms.
+ */
+export const styleReady = (map: maplibregl.Map): boolean =>
+  Boolean((map as unknown as { style?: { _loaded?: boolean } }).style?._loaded);
+
 function firstSymbolLayer(map: maplibregl.Map): string | undefined {
   return map.getStyle().layers?.find((l) => l.type === "symbol")?.id;
 }

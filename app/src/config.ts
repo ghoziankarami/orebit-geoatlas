@@ -19,12 +19,41 @@ export const REGIONS: readonly RegionInfo[] = [
   { id: "papua", labelId: "Papua", labelEn: "Papua", bbox: [[129.6, -9.2], [141.1, -0.5]] },
 ] as const;
 
-export type BasemapId = "light" | "dark" | "topo";
+import type { StyleSpecification } from "maplibre-gl";
 
-export const BASEMAPS: Record<BasemapId, string> = {
+export type BasemapId = "light" | "dark" | "topo" | "satellite";
+
+// Citra satelit Esri World Imagery + label referensi (raster); atribusi wajib tampil di peta & ekspor.
+const SATELLITE_STYLE: StyleSpecification = {
+  version: 8,
+  glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
+  sources: {
+    sat: {
+      type: "raster",
+      tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
+      tileSize: 256,
+      maxzoom: 19,
+      attribution: "Imagery © Esri, Maxar, Earthstar Geographics",
+    },
+    "sat-ref": {
+      type: "raster",
+      tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"],
+      tileSize: 256,
+      maxzoom: 19,
+    },
+  },
+  layers: [
+    { id: "sat-bg", type: "background", paint: { "background-color": "#0b1a20" } },
+    { id: "sat", type: "raster", source: "sat" },
+    { id: "sat-labels", type: "raster", source: "sat-ref" },
+  ],
+};
+
+export const BASEMAPS: Record<BasemapId, string | StyleSpecification> = {
   light: "https://tiles.openfreemap.org/styles/positron",
   dark: "https://tiles.openfreemap.org/styles/dark",
   topo: "https://tiles.openfreemap.org/styles/positron",
+  satellite: SATELLITE_STYLE,
 };
 
 export const CONFIG = {

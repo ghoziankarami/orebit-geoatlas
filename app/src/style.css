@@ -252,13 +252,60 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
 
 /* ---------- Panel Transek Geologi (Wide Panoramic Cross-Section Dock) ---------- */
 .transect-panel {
-  position: absolute; top: var(--detail-top, 64px); right: 14px;
-  width: min(740px, calc(100vw - 392px));
-  max-height: calc(100% - var(--detail-top, 64px) - 72px);
+  position: absolute; left: 362px; right: 14px; bottom: 72px;
+  max-height: min(56vh, calc(100% - 190px));
   overflow-y: auto; z-index: 3; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius);
   padding: 14px 16px; box-shadow: 0 12px 32px rgba(21,39,48,.18);
 }
 .transect-panel[hidden] { display: none; }
+.panel.compact ~ .transect-panel { left: 14px; }
+@media (min-width: 1100px) {
+  /* Lebar: penampang di kiri, struktur & daftar unit di kanan agar tidak perlu gulir panjang. */
+  #transectBody { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr); gap: 0 14px; align-items: start; }
+  #transectBody > .transect-metrics, #transectBody > .transect-section, #transectBody > .transect-legend { grid-column: 1; }
+  #transectBody > .transect-att, #transectBody > .transect-list { grid-column: 2; }
+  #transectBody > .transect-att { grid-row: 1 / span 3; max-height: 40vh; overflow-y: auto; }
+  #transectBody > .transect-list { grid-row: 4; }
+  #transectBody > .muted { grid-column: 1 / -1; }
+  .transect-section { max-height: 40vh; }
+  #transectBody .att-row { grid-template-columns: 1fr 1fr; }
+  #transectBody .att-name { grid-column: 1 / -1; }
+  .transect-actions { grid-template-columns: auto repeat(4, minmax(0, max-content)); justify-content: end; align-items: center; }
+  .transect-ve { grid-column: auto; justify-content: flex-start; margin-right: auto; }
+}
+
+/* ---------- Bar mode gambar lintasan (ringkas, peta tetap bebas diketuk) ---------- */
+.draw-bar {
+  position: absolute; z-index: 4; left: calc(362px + (100% - 362px) / 2); bottom: 76px; transform: translateX(-50%);
+  width: min(560px, calc(100% - 392px)); display: flex; align-items: center; gap: 10px;
+  padding: 8px 8px 8px 14px; border-radius: 14px; background: rgba(255,255,255,.97); border: 1px solid var(--line);
+  box-shadow: 0 10px 30px rgba(21,39,48,.22); backdrop-filter: blur(10px);
+}
+.panel.compact ~ .draw-bar { left: 50%; width: min(560px, calc(100% - 28px)); }
+.draw-info { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+.draw-info strong { font-size: 13px; }
+.draw-info span { font-size: 11.5px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.draw-info span:empty { display: none; }
+.draw-actions { display: flex; gap: 6px; align-items: center; flex: none; }
+.draw-actions .btn { min-height: 38px; }
+.draw-actions .btn:disabled { opacity: .45; cursor: not-allowed; }
+.draw-cancel { width: 38px; height: 38px; border: 0; border-radius: 8px; background: none; color: var(--ink-soft); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.draw-cancel:hover { background: var(--field); }
+
+/* ---------- GPS lapangan ---------- */
+.ctrl.solo.is-tracking, .ctrl.solo.is-tracking:hover:not(:disabled) { background: #1D7FE0; color: #fff; border-color: #1D7FE0; }
+.ctrl.solo.is-tracking.is-free, .ctrl.solo.is-tracking.is-free:hover:not(:disabled) { background: #fff; color: #1D7FE0; border-color: #1D7FE0; }
+.gps-card {
+  display: flex; align-items: center; gap: 8px; max-width: min(420px, calc(100vw - 24px));
+  padding: 5px 10px 5px 9px; border-radius: 10px; background: rgba(255,255,255,.96); border: 1px solid rgba(29,127,224,.45);
+  box-shadow: 0 4px 14px rgba(21,39,48,.14); backdrop-filter: blur(8px);
+}
+.gps-pulse { width: 9px; height: 9px; border-radius: 50%; background: #1D7FE0; flex: none; animation: gps-pulse 1.8s ease-out infinite; }
+@keyframes gps-pulse { 0% { box-shadow: 0 0 0 0 rgba(29,127,224,.55); } 100% { box-shadow: 0 0 0 9px rgba(29,127,224,0); } }
+.gps-main { min-width: 0; border: 0; background: none; padding: 2px 0; font-size: 12px; font-weight: 650; color: var(--ink); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.gps-main:disabled { cursor: default; color: var(--ink-soft); font-weight: 600; }
+.gps-main:not(:disabled) { text-decoration: underline; text-decoration-color: rgba(29,127,224,.5); text-underline-offset: 3px; }
+.gps-acc { flex: none; font-size: 11px; font-weight: 700; color: #1D7FE0; font-variant-numeric: tabular-nums; }
 .transect-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 .transect-head h2 { margin: 0; font-size: 16px; }
 .transect-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
@@ -326,7 +373,7 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
 .compass-arrow { color: #D9381E; font-size: 10px; line-height: 1; display: inline-block; transition: transform .15s ease; }
 .compass-n { color: var(--ink); font-size: 9.5px; line-height: 1; }
 .ctrl.solo.transect-toggle { grid-area: transect; }
-.ctrl.solo.transect-toggle[aria-pressed="true"] { background: var(--tin); color: #fff; border-color: var(--tin); }
+.ctrl.solo.transect-toggle[aria-pressed="true"], .ctrl.solo.transect-toggle[aria-pressed="true"]:hover:not(:disabled) { background: var(--tin); color: #fff; border-color: var(--tin); }
 .view-group { display: flex; gap: 3px; padding: 3px; background: rgba(255,255,255,.94); border: 1px solid rgba(214,221,225,.9); border-radius: 13px; overflow: hidden; box-shadow: 0 5px 18px rgba(21,39,48,.15); backdrop-filter: blur(10px); }
 .view-group button { flex: 1; height: 34px; min-width: 40px; border: 0; border-radius: 9px; background: transparent; cursor: pointer; font-size: 12px; font-weight: 700; color: var(--ink-soft); transition: background-color .2s ease, color .2s ease; }
 .view-group button:hover { background: var(--tin-soft); color: var(--tin-dark); }
@@ -334,7 +381,7 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
 .topo-toggle { width: 100%; min-width: 0; height: 36px; padding: 0 10px; border: 1px solid rgba(214,221,225,.9); border-radius: 8px; background: rgba(255,255,255,.94); font-size: 12px; font-weight: 650; }
 .topo-toggle[aria-pressed="true"] { background: #1f4c61; color: white; border-color: #1f4c61; }
 .popover-label { margin: 2px 0 0; font-size: 11px; font-weight: 700; color: var(--ink-soft); }
-.basemap-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.basemap-group { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
 .basemap-group button { border: 1px solid var(--line); background: var(--field); border-radius: 7px; padding: 6px 4px; font-size: 11px; font-weight: 600; cursor: pointer; }
 .basemap-group button[aria-pressed="true"] { background: var(--tin); border-color: var(--tin); color: #fff; }
 .export-group { display: flex; overflow: hidden; border: 1px solid rgba(214,221,225,.9); border-radius: 10px; background: rgba(255,255,255,.94); }
@@ -413,11 +460,12 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
     transition: height .24s ease, max-height .24s ease;
   }
   .panel[data-snap="peek"] {
-    height: calc(154px + env(safe-area-inset-bottom, 0px));
-    max-height: calc(154px + env(safe-area-inset-bottom, 0px));
+    height: calc(108px + env(safe-area-inset-bottom, 0px));
+    max-height: calc(108px + env(safe-area-inset-bottom, 0px));
     overflow: hidden;
   }
   .panel[data-snap="peek"] .brand,
+  .panel[data-snap="peek"] .region-bar,
   .panel[data-snap="peek"] .active-filter-bar,
   .panel[data-snap="peek"] .panel-controls { display: none; }
   .panel[data-snap="half"] { height: 54vh; height: 54dvh; max-height: 54dvh; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
@@ -431,7 +479,7 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
     border: 0; background: none; padding: 0; cursor: grab; touch-action: none;
   }
   .sheet-handle span { display: block; width: 42px; height: 4px; border-radius: 3px; background: #C3CDD2; }
-  .sheet-snap-btns { display: flex; gap: 4px; }
+  .sheet-snap-btns { display: none; }
   .sheet-snap-btns button {
     min-height: 28px; padding: 0 8px; border-radius: 999px; border: 1px solid var(--line);
     background: var(--field); color: var(--ink-soft); font-size: 11px; font-weight: 600; cursor: pointer;
@@ -447,23 +495,32 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
   .search input { height: 44px; font-size: 16px; }
   .region-chip { min-height: 34px; padding: 4px 12px; font-size: 12px; }
 
+  /* Pola app peta: kontrol sekunder bertumpuk di kanan atas, zoom via pinch, lokasi & lintasan sebagai FAB di atas sheet. */
   .map-ctrls {
-    top: max(10px, env(safe-area-inset-top, 0px)); right: 8px; width: min(358px, calc(100vw - 16px));
-    grid-template-columns: 72px 36px 36px 36px 36px minmax(64px, 1fr) 38px;
-    grid-template-areas: "zoom back north locate transect view tools";
-    gap: 4px; align-items: start; transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
+    top: max(10px, env(safe-area-inset-top, 0px)); right: 10px; width: auto;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+    transition: opacity .16s ease, visibility .16s ease;
   }
-  .panel[data-snap="full"] ~ .map-ctrls { opacity: 0; transform: translateY(-6px); visibility: hidden; pointer-events: none; }
-  .ctrl-group { border-radius: 10px; }
-  .map-ctrls > .ctrl-group { width: 72px; height: 40px; }
-  .map-ctrls > .ctrl-group .ctrl { width: 35px; height: 40px; }
-  .ctrl.solo { width: 36px; height: 40px; border-radius: 10px; }
-  .view-group { width: 100%; min-width: 0; border-radius: 10px; }
-  .view-group button { min-width: 0; height: 34px; padding: 0 4px; }
+  .panel[data-snap="full"] ~ .map-ctrls { opacity: 0; visibility: hidden; pointer-events: none; }
+  .map-ctrls > .ctrl-group, .ctrl.solo.nav-back { display: none; }
+  .tools-menu { order: 1; }
+  .view-group { order: 2; }
+  .ctrl.solo.compass-north { order: 3; }
+  .tools-menu > summary { width: 48px; height: 48px; border-radius: 14px; }
+  .view-group { flex-direction: column; width: 48px; padding: 3px; border-radius: 14px; gap: 2px; }
+  .view-group button { min-width: 0; height: 40px; padding: 0; }
+  .ctrl.solo { width: 48px; height: 48px; border-radius: 14px; }
   .map-ctrls.is-3d .rotation-group, .rotation-group { display: none; }
-  .tools-menu > summary { width: 38px; height: 40px; border-radius: 10px; }
-  .tools-popover { width: 184px; }
-  .map-foot { right: auto; left: 10px; bottom: calc(var(--sheet-h, 160px) + 6px); align-items: flex-start; }
+  .ctrl.solo.fab { position: fixed; right: 12px; z-index: 2; width: 52px; height: 52px; border-radius: 16px; box-shadow: 0 6px 18px rgba(21,39,48,.24); }
+  #locateBtn.fab { bottom: calc(var(--sheet-h, 112px) + 12px); }
+  #transectBtn.fab { bottom: calc(var(--sheet-h, 112px) + 74px); }
+  .ctrl.solo.fab svg { width: 22px; height: 22px; }
+  .draw-bar:not([hidden]) ~ .map-ctrls .fab,
+  .detail:not([hidden]) ~ .map-ctrls .fab,
+  .transect-panel:not([hidden]) ~ .map-ctrls .fab,
+  .panel:not([data-snap="peek"]) ~ .map-ctrls .fab { display: none; }
+  .tools-popover { top: 0; right: 56px; width: 200px; }
+  .map-foot { right: 76px; left: 10px; bottom: calc(var(--sheet-h, 112px) + 8px); align-items: flex-start; }
   .foot-top { justify-content: flex-start; }
   .map-foot .attrib { display: none; }
 
@@ -489,10 +546,33 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
   .detail-actions .btn { min-width: 0; min-height: 44px; padding: 0 8px; white-space: nowrap; }
   .toast { bottom: calc(var(--sheet-h, 160px) + 10px); }
   .panel[data-snap="full"] ~ .detail, .panel[data-snap="full"] ~ .transect-panel { visibility: hidden; }
+
+  /* Penampang mobile: maksimal ~52% layar agar lintasan tetap terlihat di atasnya. */
+  .transect-panel { bottom: calc(var(--sheet-h, 160px) + 8px); max-height: 52dvh; max-height: 52vh; padding: 10px 12px 12px; }
+  @supports (height: 1dvh) { .transect-panel { max-height: 52dvh; } }
+  .panel:not([hidden]) ~ .transect-panel:not([hidden]) ~ .map-foot { display: none; }
+  .transect-section { max-height: 34dvh; }
+  .transect-actions { grid-template-columns: repeat(2, 1fr); }
+  .draw-bar {
+    left: 8px; right: 8px; width: auto; transform: none; bottom: calc(var(--sheet-h, 160px) + 10px);
+    flex-wrap: wrap; padding: 10px 10px 10px 14px; gap: 8px;
+  }
+  .draw-bar:not([hidden]) ~ .map-foot { display: none; }
+  .draw-actions { width: 100%; }
+  .draw-actions .btn { flex: 1; min-height: 44px; }
+  .draw-cancel { width: 44px; height: 44px; border: 1px solid var(--line); }
+  .gps-card { max-width: 100%; }
+  /* Detail mulai di bawah tumpukan kontrol kanan (±170px) agar lapisan/2D-3D tetap bisa diketuk. */
+  .detail { max-height: calc(100vh - var(--sheet-h, 112px) - 250px); max-height: calc(100dvh - var(--sheet-h, 112px) - 250px); }
+  .foot-top { max-width: 100%; flex-wrap: nowrap; }
+  .coord-bar { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .gps-main { font-size: 13px; padding: 6px 0; }
 }
-@media (prefers-reduced-motion: reduce) { .panel { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .panel { transition: none; } .gps-pulse { animation: none; } }
 
 .shp-dragging { outline: 3px dashed #E11D48; outline-offset: -8px; }
 .shp-attr { border-collapse: collapse; font-size: 12px; }
 .shp-attr th { text-align: left; padding: 2px 8px 2px 0; color: var(--ink-soft); font-weight: 600; vertical-align: top; }
 .shp-attr td { padding: 2px 0; word-break: break-word; }
+.install-btn { background: var(--tin); border-color: var(--tin); color: #fff; white-space: nowrap; }
+.install-btn:hover { background: var(--tin-dark); }

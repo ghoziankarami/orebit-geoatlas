@@ -7,6 +7,12 @@
   <meta name="description" content="Atlas geologi interaktif Full Satu Indonesia (8 wilayah kepulauan). Skala dan cakupan mengikuti sumber data yang tersedia." />
   <link rel="canonical" href="https://atlas.orebit.id/" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="GeoAtlas" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://atlas.orebit.id/" />
   <meta property="og:site_name" content="Orebit GeoAtlas" />
@@ -50,6 +56,7 @@
         <button id="panelToggle" class="panel-toggle" type="button" aria-expanded="true" aria-controls="panelControls" title="Minimize control panel">
           <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M11 3 L5 9 L11 15 M5 9 H16" /></svg>
         </button>
+        <button class="lang install-btn" id="installBtn" type="button" hidden></button>
         <button class="lang" id="langBtn" type="button"></button>
       </div>
     </header>
@@ -106,7 +113,7 @@
 
       <section class="block opacity-block">
         <div class="control-heading"><h2 id="opacityLabel"></h2><output id="opacityValue" for="geologyOpacity">75%</output></div>
-        <input type="range" id="geologyOpacity" min="15" max="100" step="5" value="75" aria-labelledby="opacityLabel" />
+        <input type="range" id="geologyOpacity" min="0" max="100" step="5" value="75" aria-labelledby="opacityLabel" />
         <p class="opacity-hint" id="opacityHint"></p>
       </section>
 
@@ -165,11 +172,23 @@
           <option value="10">10×</option>
         </select>
       </label>
+      <button type="button" class="btn" id="transectEdit"></button>
       <button type="button" class="btn" id="transectClear"></button>
       <button type="button" class="btn primary" id="transectExport"></button>
       <button type="button" class="btn" id="transectExportSvg"></button>
     </div>
   </aside>
+
+  <div class="draw-bar" id="drawBar" hidden role="status" aria-live="polite">
+    <div class="draw-info"><strong id="drawTitle"></strong><span id="drawMeta"></span></div>
+    <div class="draw-actions">
+      <button type="button" class="btn" id="drawUndo"></button>
+      <button type="button" class="btn primary" id="drawDone"></button>
+      <button type="button" class="draw-cancel" id="drawCancel">
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3 L13 13 M13 3 L3 13" /></svg>
+      </button>
+    </div>
+  </div>
 
   <div class="map-ctrls" id="mapControls" aria-label="Navigasi peta">
     <div class="ctrl-group">
@@ -186,10 +205,10 @@
     <button type="button" id="compassNorthBtn" class="ctrl solo compass-north" title="Northing Up">
       <span class="compass-arrow" id="compassArrow" aria-hidden="true">▲</span><span class="compass-n">N</span>
     </button>
-    <button type="button" id="locateBtn" class="ctrl solo">
+    <button type="button" id="locateBtn" class="ctrl solo fab">
       <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="5" /><path d="M9 1 V4 M9 14 V17 M1 9 H4 M14 9 H17" /></svg>
     </button>
-    <button type="button" id="transectBtn" class="ctrl solo transect-toggle" aria-pressed="false">
+    <button type="button" id="transectBtn" class="ctrl solo fab transect-toggle" aria-pressed="false">
       <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 14 L7 6 L12 11 L16 4" /><circle cx="2" cy="14" r="1.5" /><circle cx="16" cy="4" r="1.5" /></svg>
     </button>
     <div class="view-group" role="group" aria-label="Tampilan peta">
@@ -204,13 +223,16 @@
       <button type="button" id="tiltDown" aria-label="Kurangi kemiringan kamera" title="Tilt down">∨</button>
     </div>
     <details class="tools-menu" id="toolsMenu">
-      <summary id="toolsSummary" aria-label="Terrain and export tools">Tools</summary>
+      <summary id="toolsSummary" aria-label="Map layers and export">
+        <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5 L18 6.8 L10 11.1 L2 6.8 Z" /><path d="M2 10.4 L10 14.7 L18 10.4" /><path d="M2 13.9 L10 18.2 L18 13.9" /></svg>
+      </summary>
       <div class="tools-popover">
         <p class="popover-label" id="t-basemapTitle"></p>
         <div class="basemap-group" id="basemapGroup" role="group">
           <button type="button" data-base="light" id="t-baseLight" aria-pressed="true"></button>
           <button type="button" data-base="dark" id="t-baseDark" aria-pressed="false"></button>
           <button type="button" data-base="topo" id="t-baseTopo" aria-pressed="false"></button>
+          <button type="button" data-base="satellite" id="t-baseSat" aria-pressed="false"></button>
         </div>
         <button type="button" id="topographyToggle" class="ctrl topo-toggle" aria-pressed="false"></button>
         <div class="export-group" role="group" aria-label="Export peta">
@@ -222,6 +244,11 @@
   </div>
 
   <div class="map-foot">
+    <div class="gps-card" id="gpsCard" hidden role="status" aria-live="polite">
+      <span class="gps-pulse" aria-hidden="true"></span>
+      <button type="button" class="gps-main" id="gpsUnit"></button>
+      <span class="gps-acc" id="gpsAcc"></span>
+    </div>
     <div class="foot-top">
       <button type="button" id="coordBar" class="coord-bar" title="Salin koordinat"></button>
       <div id="scaleSlot"></div>
@@ -232,6 +259,7 @@
       © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>,
       <a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a>
       · © <a href="https://openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a>
+      <span id="satAttribution" hidden> · Imagery © <a href="https://www.esri.com/" target="_blank" rel="noopener">Esri</a>, Maxar, Earthstar Geographics</span>
       <span id="terrainAttribution" hidden> · <a href="https://mapterhorn.com/attribution" target="_blank" rel="noopener">Terrain © Mapterhorn</a></span>
     </p>
   </div>

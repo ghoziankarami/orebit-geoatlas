@@ -121,15 +121,25 @@ class TestBrowserUIUX(unittest.TestCase):
             )
             page.locator("#resetFiltersBtn").click()
 
-            # 5. Verify Transect tool opens below .map-ctrls without overlap
+            # 5. Transect: drawing keeps the map free (compact bar only), section docks after "View section"
             page.locator("#transectBtn").click()
             transect_panel = page.locator("#transectPanel")
+            self.assertTrue(transect_panel.is_hidden(), "section panel must not cover the map while drawing")
+            draw_bar = page.locator("#drawBar")
+            self.assertTrue(draw_bar.is_visible())
+            self.assertTrue(page.locator("#drawDone").is_disabled())
+            page.mouse.click(700, 250)
+            page.mouse.click(820, 320)
+            page.mouse.click(900, 280)
+            self.assertIn("3", page.locator("#drawMeta").inner_text())
+            page.locator("#drawUndo").click()
+            self.assertIn("2", page.locator("#drawMeta").inner_text())
+            page.locator("#drawDone").click()
             transect_panel.wait_for(state="visible")
             box_transect = transect_panel.bounding_box()
             assert box_transect
             self.assertFalse(boxes_overlap(box_transect, box_ctrls))
-            page.mouse.click(700, 350)
-            page.mouse.click(820, 420)
+            self.assertFalse(boxes_overlap(box_transect, page.locator("#panel").bounding_box()))
             self.assertIn("km", transect_panel.inner_text())
             page.locator("#transectClose").click()
 
@@ -189,31 +199,50 @@ class TestBrowserUIUX(unittest.TestCase):
             page.goto(self.base_url, wait_until="domcontentloaded")
             page.wait_for_selector("#searchInput")
 
-            # Peek state must keep search & region bar unclipped inside #panel
+            # Peek state must keep search unclipped inside #panel
             panel_box = page.locator("#panel").bounding_box()
             search_box = page.locator("#searchInput").bounding_box()
-            reg_box = page.locator("#regionBar").bounding_box()
-            chip_box = page.locator("#regionBar .region-chip").first.bounding_box()
-            assert panel_box and search_box and reg_box and chip_box
+            assert panel_box and search_box
             self.assertEqual(page.locator("#panel").get_attribute("data-snap"), "peek")
-            self.assertGreaterEqual(reg_box["height"], 30, f"regionBar squashed in peek: {reg_box}")
-            self.assertGreaterEqual(chip_box["height"], 30, f"region-chip squashed in peek: {chip_box}")
+            self.assertGreaterEqual(search_box["height"], 44, f"search below touch target: {search_box}")
             self.assertLessEqual(
-                chip_box["y"] + chip_box["height"],
+                search_box["y"] + search_box["height"],
                 panel_box["y"] + panel_box["height"] + 1,
-                f"region-chip clipped at bottom in peek: {chip_box} vs {panel_box}",
+                f"search clipped at bottom in peek: {search_box} vs {panel_box}",
             )
 
-            # Snap to half & verify regionBar stays unclipped
-            page.locator("#snapHalf").click()
+            # Peek = handle + search only (map-app pattern); region chips live in half/full
+            self.assertFalse(page.locator("#regionBar").is_visible(), "regionBar should be hidden in peek")
+            self.assertFalse(page.locator("#zoomIn").is_visible(), "zoom buttons hidden on mobile (pinch)")
+            fab = page.locator("#locateBtn").bounding_box()
+            assert fab
+            self.assertGreaterEqual(fab["width"], 48, f"GPS FAB below 48px touch target: {fab}")
+            self.assertLessEqual(fab["y"] + fab["height"], panel_box["y"], f"GPS FAB overlaps sheet: {fab}")
+
+            # Handle tap cycles peek -> half -> full -> peek
+            page.locator("#sheetHandle").click()
             self.assertEqual(page.locator("#panel").get_attribute("data-snap"), "half")
             reg_half = page.locator("#regionBar").bounding_box()
             assert reg_half
             self.assertGreaterEqual(reg_half["height"], 30, f"regionBar squashed in half: {reg_half}")
 
-            page.locator("#snapFull").click()
+            page.locator("#sheetHandle").click()
             self.assertEqual(page.locator("#panel").get_attribute("data-snap"), "full")
-            page.locator("#snapPeek").click()
+            page.locator("#sheetHandle").click()
+            self.assertEqual(page.locator("#panel").get_attribute("data-snap"), "peek")
+
+            # Transect draw mode: compact bar only, panel opens after "View section"
+            page.wait_for_function("document.getElementById('panel').getBoundingClientRect().height < 160")
+            page.locator("#transectBtn").click()
+            self.assertTrue(page.locator("#drawBar").is_visible())
+            self.assertTrue(page.locator("#transectPanel").is_hidden())
+            page.mouse.click(120, 200)
+            page.mouse.click(260, 330)
+            page.locator("#drawDone").click()
+            page.locator("#transectPanel").wait_for(state="visible")
+            self.assertTrue(page.locator("#drawBar").is_hidden())
+            self.assertIn("km", page.locator("#transectPanel").inner_text())
+            page.locator("#transectClose").click()
 
             # Open detail on mobile and verify zero overlap with .map-foot
             page.locator("#searchInput").fill("TRJkg")

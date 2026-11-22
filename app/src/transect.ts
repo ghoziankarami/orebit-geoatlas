@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (c) 2026 Orebit (Ghozian Islam Karami)
-import type maplibregl from "maplibre-gl";
+import maplibregl from "maplibre-gl";
 import { esc, safeColor } from "./detail";
 import { getLang, t } from "./i18n";
-import { QUERY_LAYERS } from "./layers";
+import { QUERY_LAYERS, styleReady } from "./layers";
 import { LITH_CLASSES } from "./lithology";
 import type { NationalUnit } from "./search";
 import {
@@ -217,7 +217,7 @@ function findStructureIntersections(
   if (points.length < 2 || totalKm <= 0) return hits;
 
   try {
-    if (map.isStyleLoaded()) {
+    if (styleReady(map)) {
       const lineLayers = ["ob-lines", "ms-lines"].filter((id) => map.getLayer(id));
       if (lineLayers.length) {
         const screenPts = points.map((p) => map.project([p.lng, p.lat]));
@@ -545,7 +545,7 @@ export function createTransectController(
   // Tampilkan titik hover penampang di peta (kosong = sembunyikan)
   const setHoverPoint = (p: TransectPoint | null) => {
     try {
-      if (!map.isStyleLoaded()) return;
+      if (!styleReady(map)) return;
       ensureLayers();
       const features = p
         ? [{ type: "Feature" as const, properties: {}, geometry: { type: "Point" as const, coordinates: [p.lng, p.lat] } }]
@@ -624,7 +624,7 @@ export function createTransectController(
 
   const syncGeojson = () => {
     try {
-      if (!map.isStyleLoaded()) return;
+      if (!styleReady(map)) return;
       ensureLayers();
       const features: Array<{ type: "Feature"; properties: Record<string, unknown>; geometry: { type: string; coordinates: unknown } }> = points.map((p, idx) => ({
         type: "Feature",
@@ -762,7 +762,7 @@ export function createTransectController(
     let layers: string[] = [];
     let hasTerrain = false;
     try {
-      if (map.isStyleLoaded()) {
+      if (styleReady(map)) {
         layers = QUERY_LAYERS.filter((id) => Boolean(map.getLayer(id)));
         hasTerrain = Boolean(map.getTerrain());
       }
@@ -847,7 +847,7 @@ export function createTransectController(
         })
         .join("");
       const structHtml = model.boundaries.length
-        ? `<details class="transect-att" open><summary>${esc(X.attTitle)}</summary><p class="muted">${esc(X.attNote)}</p>${rowsHtml}</details>`
+        ? `<details class="transect-att"${window.matchMedia("(max-width: 760px)").matches ? "" : " open"}><summary>${esc(X.attTitle)}</summary><p class="muted">${esc(X.attNote)}</p>${rowsHtml}</details>`
         : "";
       const legendHtml = `<div class="transect-legend" aria-label="${esc(X.lgd)}">${(["fault", "intrusive", "unconformity", "conformable"] as ContactKind[])
         .map((k) => {
@@ -916,13 +916,69 @@ export function createTransectController(
     }
   };
 
+  const drawBar = document.getElementById("drawBar")!;
+  const drawTitle = document.getElementById("drawTitle")!;
+  const drawMeta = document.getElementById("drawMeta")!;
+  const drawUndo = document.getElementById("drawUndo") as HTMLButtonElement;
+  const drawDone = document.getElementById("drawDone") as HTMLButtonElement;
+  const drawCancel = document.getElementById("drawCancel") as HTMLButtonElement;
+  const editBtn = document.getElementById("transectEdit") as HTMLButtonElement;
+
+  // Mode gambar: hanya bar ringkas yang tampil agar peta bebas diketuk; panel penampang muncul setelah "Selesai".
+  const syncDrawBar = () => {
+    drawBar.hidden = !active;
+    if (!active) return;
+    const n = points.length;
+    drawTitle.textContent = t(n === 0 ? "transectDrawStart" : n === 1 ? "transectDrawNext" : "transectDrawMore");
+    if (n >= 2) {
+      const { totalKm, azimuthDeg } = computeTransectStats(points);
+      drawMeta.textContent = `${n} ${t("transectPts")} · ${totalKm.toFixed(2)} km · ${azimuthDeg.toFixed(0)}°`;
+    } else drawMeta.textContent = n ? `1 ${t("transectPts")}` : "";
+    drawUndo.disabled = n === 0;
+    drawDone.disabled = n < 2;
+  };
+
   const setActive = (next: boolean) => {
     active = next;
     btn.setAttribute("aria-pressed", String(active));
     map.getCanvas().style.cursor = active ? "crosshair" : "";
-    panel.hidden = !active && points.length === 0;
+    if (active) panel.hidden = true;
     onActiveChange(active);
-    if (active) renderPanel();
+    syncDrawBar();
+  };
+
+  // Paskan lintasan ke area peta yang tidak tertutup panel.
+  const fitToLine = () => {
+    if (points.length < 2) return;
+    const b = new maplibregl.LngLatBounds();
+    points.forEach((p) => b.extend([p.lng, p.lat]));
+    const H = window.innerHeight;
+    const pr = panel.getBoundingClientRect();
+    const ctrl = document.getElementById("mapControls")?.getBoundingClientRect();
+    const side = document.getElementById("panel")?.getBoundingClientRect();
+    const mobile = window.matchMedia("(max-width: 760px)").matches;
+    let top = (ctrl ? ctrl.bottom : 60) + 24;
+    let bottom = panel.hidden ? 40 : H - pr.top + 24;
+    const left = !mobile && side ? side.right + 32 : 32;
+    if (top + bottom > H - 60) {
+      const k = (H - 60) / (top + bottom);
+      top *= k;
+      bottom *= k;
+    }
+    try {
+      map.fitBounds(b, { padding: { top, bottom, left, right: 32 }, maxZoom: 13, duration: 700 });
+    } catch {
+      /* padding melebihi kanvas; abaikan */
+    }
+  };
+
+  const finish = () => {
+    if (points.length < 2) return;
+    setActive(false);
+    panel.hidden = false;
+    renderPanel();
+    panel.scrollTop = 0;
+    requestAnimationFrame(fitToLine);
   };
 
   const clear = () => {
@@ -933,14 +989,41 @@ export function createTransectController(
     overrides = {};
     lastElevRange = null;
     syncGeojson();
-    if (active) renderPanel();
-    else panel.hidden = true;
+    syncDrawBar();
   };
 
-  btn.addEventListener("click", () => setActive(!active));
-  clearBtn.addEventListener("click", clear);
-  closeBtn.addEventListener("click", () => {
+  btn.addEventListener("click", () => {
+    if (active) {
+      if (points.length >= 2) finish();
+      else {
+        setActive(false);
+        clear();
+      }
+    } else if (!panel.hidden) {
+      panel.hidden = true;
+      clear();
+    } else {
+      clear();
+      setActive(true);
+    }
+  });
+  drawUndo.addEventListener("click", () => {
+    points.pop();
+    syncGeojson();
+    syncDrawBar();
+  });
+  drawDone.addEventListener("click", finish);
+  drawCancel.addEventListener("click", () => {
     setActive(false);
+    clear();
+  });
+  editBtn.addEventListener("click", () => setActive(true));
+  clearBtn.addEventListener("click", () => {
+    clear();
+    setActive(true);
+  });
+  closeBtn.addEventListener("click", () => {
+    panel.hidden = true;
     clear();
   });
 
@@ -983,20 +1066,19 @@ export function createTransectController(
       btn.setAttribute("aria-pressed", "false");
       map.getCanvas().style.cursor = "";
       panel.hidden = true;
+      syncDrawBar();
     },
     addPoint: (lng: number, lat: number) => {
       if (!active) return false;
       points.push({ lng, lat });
       syncGeojson();
-      panel.hidden = false;
-      renderPanel();
+      syncDrawBar();
       return true;
     },
     refresh: () => {
-      if (points.length) {
-        syncGeojson();
-        renderPanel();
-      }
+      syncGeojson();
+      syncDrawBar();
+      if (points.length >= 2 && !panel.hidden) renderPanel();
     },
     clear,
   };

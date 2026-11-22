@@ -19,7 +19,7 @@ globalThis.document = { documentElement: { lang: "id" } };
 globalThis.importMetaEnv = {};
 
 const tempDir = mkdtempSync(join(tmpdir(), "geoatlas-contracts-"));
-const modulesToCompile = ["config", "i18n", "timescale", "lithology", "layers", "state", "coords", "search", "detail", "transect", "section_model", "shp_import"];
+const modulesToCompile = ["config", "i18n", "timescale", "lithology", "layers", "state", "coords", "search", "detail", "transect", "section_model", "shp_import", "gps"];
 
 for (const name of modulesToCompile) {
   let src = readFileSync(resolve(ROOT, `app/src/${name}.ts`), "utf-8");
@@ -122,6 +122,18 @@ try {
   assert.equal(parsed.topo, true);
   assert.equal(parsed.view3d, true);
   assert.equal(parsed.geologyOpacity, 60);
+  // Basemap satelit & opasitas 0 (geologi disembunyikan) bertahan di URL
+  const sat = readState(serializeState({ ...initial, basemap: "satellite", geologyOpacity: 0 }, "#map=5/-7.2/110.4"));
+  assert.equal(sat.basemap, "satellite");
+  assert.equal(sat.geologyOpacity, 0);
+
+  // 6. Lingkar akurasi GPS: radius meter -> derajat, tertutup, simetris
+  const { accuracyRing } = await import(join(tempDir, "gps.mjs"));
+  const ring = accuracyRing(119.87, -0.9, 100, 32);
+  assert.equal(ring.length, 33);
+  assert.deepEqual(ring[0], ring[32]);
+  const dLatM = (ring[8][1] - -0.9) * 111320;
+  assert.ok(Math.abs(dLatM - 100) < 0.5, `accuracy ring radius off: ${dLatM}`);
 
   // 8. Impor SHP: reproyeksi UTM 48S ke WGS84 (known answer) dan deteksi .prj
   const shp = await import(join(tempDir, "shp_import.mjs"));
