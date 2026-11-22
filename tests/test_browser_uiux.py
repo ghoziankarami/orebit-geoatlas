@@ -249,6 +249,105 @@ class TestBrowserUIUX(unittest.TestCase):
             self.assertEqual(errors, [], f"Unexpected pageerrors: {errors}")
             browser.close()
 
+    def test_waypoint_field_photos(self) -> None:
+        """FLD-01: foto per waypoint dikompres (<=1600 px), tetap ada setelah reload, hapus butuh konfirmasi, dip 0-90 divalidasi."""
+        import struct
+        import tempfile
+        import zlib
+
+        def write_png(path: Path, w: int, h: int, rgb: tuple[int, int, int]) -> None:
+            def chunk(tag: bytes, data: bytes) -> bytes:
+                return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
+
+            raw = (b"\x00" + bytes(rgb) * w) * h
+            ihdr = struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0)
+            path.write_bytes(b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", ihdr) + chunk(b"IDAT", zlib.compress(raw, 1)) + chunk(b"IEND", b""))
+
+        tmp = Path(tempfile.mkdtemp(prefix="geoatlas-photo-"))
+        big = tmp / "big-4000x3000.png"
+        small = tmp / "small-300x200.png"
+        write_png(big, 4000, 3000, (255, 128, 0))
+        write_png(small, 300, 200, (0, 128, 255))
+        stored_js = (
+            "new Promise((res, rej) => { const r = indexedDB.open('geoatlas-photos');"
+            " r.onerror = () => rej(r.error);"
+            " r.onsuccess = () => { const db = r.result; const q = db.transaction('photos').objectStore('photos').getAll();"
+            " q.onsuccess = () => { db.close(); res(q.result.map(x => ({ id: x.id, wpId: x.wpId, w: x.w, h: x.h, caption: x.caption, azimuth: x.azimuth }))); };"
+            " q.onerror = () => rej(q.error); }; })"
+        )
+        thumbs_loaded_js = "[...document.querySelectorAll('#wpPhotoGrid img')].every(i => i.complete && i.naturalWidth > 0)"
+
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            context = browser.new_context(viewport={"width": 1366, "height": 768}, locale="id-ID")
+            page = context.new_page()
+            errors: list[str] = []
+            page.on("pageerror", lambda err: errors.append(str(err)))
+            page.goto(self.app_url + "#map=9/-0.95/119.9", wait_until="domcontentloaded")
+            page.wait_for_selector("#regionBar .region-chip")
+            page.locator("#wpBtn").click()
+            page.mouse.click(800, 400)
+            page.locator("#wpPanel").wait_for(state="visible")
+            page.locator("#wpName").fill("Foto 1")
+
+            # Dua foto (satu 4000x3000) dari galeri
+            page.locator("#wpPhotoGal").set_input_files([str(big), str(small)])
+            page.wait_for_function("document.querySelectorAll('#wpPhotoGrid li.wp-photo').length === 2")
+            page.wait_for_function(thumbs_loaded_js)
+            records = page.evaluate(stored_js)
+            self.assertEqual(len(records), 2)
+            self.assertTrue(all(max(r["w"], r["h"]) <= 1600 for r in records), records)
+            self.assertIn((1600, 1200), [(r["w"], r["h"]) for r in records])
+
+            # Keterangan dan arah foto disimpan saat isian kehilangan fokus
+            first = page.locator("#wpPhotoGrid li.wp-photo").nth(0)
+            first.locator('input[data-k="caption"]').fill("Singkapan utara")
+            first.locator('input[data-k="az"]').fill("90")
+            first.locator('input[data-k="az"]').press("Tab")
+            page.locator("#wpSave").click()
+            page.locator("#wpPanel").wait_for(state="hidden")
+            self.assertEqual(page.locator("#wpCount").inner_text(), "1")
+            self.assertGreaterEqual(page.locator("#wpList .wp-cam").count(), 1)
+
+            # Reload: dua thumbnail, keterangan, dan arah tetap ada
+            page.goto(self.app_url, wait_until="domcontentloaded")
+            page.wait_for_selector("#regionBar .region-chip")
+            page.locator("#wpList .wp-item").first.click()
+            page.locator("#wpPanel").wait_for(state="visible")
+            page.wait_for_function("document.querySelectorAll('#wpPhotoGrid li.wp-photo').length === 2")
+            page.wait_for_function(thumbs_loaded_js)
+            self.assertEqual(page.locator("#wpPhotoGrid li.wp-photo").nth(0).locator('input[data-k="caption"]').input_value(), "Singkapan utara")
+            self.assertEqual(page.locator("#wpPhotoGrid li.wp-photo").nth(0).locator('input[data-k="az"]').input_value(), "90")
+
+            # Dip 120 ditolak dengan pesan; setelah diperbaiki baru tersimpan
+            page.locator('#wpKind button[data-kind="structure"]').click()
+            page.locator("#wpStrike").fill("30")
+            page.locator("#wpDip").fill("120")
+            page.locator("#wpSave").click()
+            self.assertTrue(page.locator("#wpPanel").is_visible())
+            self.assertTrue(page.locator("#wpDipErr").is_visible())
+            self.assertIn("0–90", page.locator("#wpDipErr").inner_text())
+            page.locator("#wpDip").fill("45")
+            page.locator("#wpSave").click()
+            page.locator("#wpPanel").wait_for(state="hidden")
+            self.assertIn("030/45", page.locator("#wpList").inner_text())
+
+            # Hapus waypoint: dibatalkan di dialog -> data tetap; dikonfirmasi -> foto ikut terhapus
+            page.locator("#wpList .wp-item").first.click()
+            page.locator("#wpPanel").wait_for(state="visible")
+            page.once("dialog", lambda d: d.dismiss())
+            page.locator("#wpDelete").click()
+            page.wait_for_timeout(300)
+            self.assertTrue(page.locator("#wpPanel").is_visible())
+            self.assertEqual(len(page.evaluate(stored_js)), 2)
+            page.once("dialog", lambda d: d.accept())
+            page.locator("#wpDelete").click()
+            page.locator("#wpPanel").wait_for(state="hidden")
+            self.assertEqual(page.locator("#wpCount").inner_text(), "0")
+            self.assertEqual(page.evaluate(stored_js), [])
+            self.assertEqual(errors, [], f"Unexpected pageerrors: {errors}")
+            browser.close()
+
     def test_landing_page_and_legacy_redirects(self) -> None:
         with sync_playwright() as p:
             browser = p.chromium.launch()

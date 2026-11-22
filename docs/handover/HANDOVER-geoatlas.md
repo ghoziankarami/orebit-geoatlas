@@ -26,4 +26,5 @@ Dokumen ini mencatat `ACTIVE CHECKPOINT` tunggal untuk kelanjutan sesi manusia m
 - **Penghalang (STOP-TANYA):**
   - `HUM-01` (`WP-19`): menunggu sesi uji usability ≥5 peserta nyata.
 - **Gelombang H dibuka 23 Nov 2026** dari [Audit Produksi & Lapangan](../audits/audit-produksi-lapangan-2026-11-23.md): `local-ci --full` PASS 8/8 di `ad239fb`; coverage unit baseline 29%; tombol pasang PWA tak terlihat di HP (header di bawah sheet `peek` + `preventDefault` menekan infobar Chrome).
+- **WP-29 (`FLD-01`) selesai di branch `feat/waypoint-field-photos`** (belum di-push/merge): foto lapangan per waypoint; `local-ci --fast` PASS; `test_browser_uiux.py` 6/6 PASS termasuk `test_waypoint_field_photos`. Penghapusan foto/waypoint kini meminta konfirmasi.
 - **Satu Langkah Berikutnya (Next Action):** Jalankan gelombang H1 paralel (`WP-28`, `WP-29`, `WP-32`, `WP-34`) via `python3 ops/scripts/agents/wp.py workflow WP-28 WP-29 WP-32 WP-34 --exec-model flash --review-model pro`. Rollback: `current` ke `releases/20261121T160417Z-38e566e`.

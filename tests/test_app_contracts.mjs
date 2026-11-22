@@ -19,7 +19,7 @@ globalThis.document = { documentElement: { lang: "id" } };
 globalThis.importMetaEnv = {};
 
 const tempDir = mkdtempSync(join(tmpdir(), "geoatlas-contracts-"));
-const modulesToCompile = ["config", "i18n", "timescale", "lithology", "layers", "state", "coords", "search", "detail", "transect", "section_model", "shp_import", "gps", "waypoints"];
+const modulesToCompile = ["config", "i18n", "timescale", "lithology", "layers", "state", "coords", "search", "detail", "transect", "section_model", "shp_import", "gps", "photos", "waypoints"];
 
 for (const name of modulesToCompile) {
   let src = readFileSync(resolve(ROOT, `app/src/${name}.ts`), "utf-8");
@@ -158,6 +158,27 @@ try {
   assert.equal(hasAttitude(st), true);
   assert.equal(attitudeText(st), "030/45");
   assert.equal(hasAttitude({ ...st, kind: "sample" }), false);
+
+  // 7b. Validasi strike/dip (ditolak, bukan dipotong) dan arah foto
+  const { parseAttitude, parseAzimuth } = await import(join(tempDir, "waypoints.mjs"));
+  assert.deepEqual(parseAttitude("30", "45"), { ok: true, strike: 30, dip: 45 });
+  assert.deepEqual(parseAttitude("-30", ""), { ok: true, strike: 330, dip: null }, "negative strike normalises to 330");
+  assert.deepEqual(parseAttitude("", "90"), { ok: true, strike: null, dip: 90 });
+  assert.deepEqual(parseAttitude("30", "120"), { ok: false, field: "dip", key: "wpDipErr" }, "dip above 90 must be rejected");
+  assert.deepEqual(parseAttitude("30", "-1"), { ok: false, field: "dip", key: "wpDipErr" });
+  assert.deepEqual(parseAttitude("abc", "45"), { ok: false, field: "strike", key: "wpStrikeErr" });
+  assert.deepEqual(parseAzimuth(""), { ok: true, value: null });
+  assert.deepEqual(parseAzimuth("360"), { ok: true, value: 360 });
+  assert.equal(parseAzimuth("361").ok, false);
+
+  // 7c. Foto: ukuran sisi terpanjang <= 1600 px tanpa memperbesar; berkas non-gambar dan > 25 MB ditolak
+  const { fitSize, photoFileError, PHOTO_MAX_SRC_BYTES } = await import(join(tempDir, "photos.mjs"));
+  assert.deepEqual(fitSize(4000, 3000), { w: 1600, h: 1200 });
+  assert.deepEqual(fitSize(3000, 4000), { w: 1200, h: 1600 });
+  assert.deepEqual(fitSize(800, 600), { w: 800, h: 600 }, "small images are not upscaled");
+  assert.equal(photoFileError({ type: "image/jpeg", size: 1000 }), null);
+  assert.equal(photoFileError({ type: "application/pdf", size: 1000 }), "wpPhotoNotImage");
+  assert.equal(photoFileError({ type: "image/png", size: PHOTO_MAX_SRC_BYTES + 1 }), "wpPhotoTooLarge");
   assert.ok(toCsv([st]).split("\n")[1].startsWith('"WP-002",structure,bedding,30,45,'));
   assert.ok(toGpx([st]).includes("<type>structure</type>") && toGpx([st]).includes("bedding 030/45"));
 

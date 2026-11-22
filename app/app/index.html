@@ -176,10 +176,20 @@
       <label class="wp-field"><span id="t-wpStructType"></span><select id="wpStructType"></select></label>
       <label class="wp-field"><span id="t-wpStrike"></span><input id="wpStrike" type="number" inputmode="numeric" min="0" max="360" step="1" placeholder="030" /></label>
       <label class="wp-field"><span id="t-wpDip"></span><input id="wpDip" type="number" inputmode="numeric" min="0" max="90" step="1" placeholder="45" /></label>
+      <p class="wp-err" id="wpStrikeErr" role="alert" hidden></p>
+      <p class="wp-err" id="wpDipErr" role="alert" hidden></p>
       <p class="opacity-hint wp-rhr" id="t-wpRhr"></p>
     </div>
     <label class="wp-field"><span id="t-wpName"></span><input id="wpName" type="text" maxlength="60" autocomplete="off" enterkeyhint="done" /></label>
     <label class="wp-field"><span id="t-wpNote"></span><textarea id="wpNote" rows="3" maxlength="1000"></textarea></label>
+    <div class="wp-field wp-photos">
+      <span id="t-wpPhotoTitle"></span>
+      <div class="wp-photo-add">
+        <label class="btn"><span id="t-wpPhotoCamera"></span><input id="wpPhotoCam" type="file" accept="image/*" capture="environment" hidden /></label>
+        <label class="btn"><span id="t-wpPhotoGallery"></span><input id="wpPhotoGal" type="file" accept="image/*" multiple hidden /></label>
+      </div>
+      <ul class="wp-photo-grid" id="wpPhotoGrid"></ul>
+    </div>
     <div id="wpMeta" class="wp-meta"></div>
     <div class="detail-actions">
       <button type="button" class="btn primary" id="wpSave"></button>
