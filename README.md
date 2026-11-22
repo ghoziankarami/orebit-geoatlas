@@ -3,11 +3,37 @@
 [![Buka atlas.orebit.id](https://img.shields.io/badge/Live-atlas.orebit.id-167f77?style=for-the-badge)](https://atlas.orebit.id)
 [![Lisensi kode: GPL-3.0](https://img.shields.io/badge/Code-GPL--3.0-52616b?style=flat-square)](LICENSE)
 
-Atlas geologi interaktif Indonesia untuk menjelajahi umur batuan, litologi, formasi, dan relief medan dalam tampilan 2D maupun 3D.
+Peta geologi Indonesia untuk lapangan dan kantor: unit geologi di bawah posisi GPS, waypoint dengan strike/dip, penampang geologi, dan ekspor PNG/GPX, langsung di browser HP maupun desktop.
 
-![Preview Orebit GeoAtlas](app/public/og-geoatlas.png)
+![Orebit GeoAtlas di lapangan](app/public/og-geoatlas-2026-11.png)
 
-**[Buka atlas](https://atlas.orebit.id) · [Lihat kode](https://github.com/ghoziankarami/orebit-geoatlas) · [Laporkan masalah](https://github.com/ghoziankarami/orebit-geoatlas/issues)**
+**[Halaman pengantar](https://atlas.orebit.id) · [Buka peta](https://atlas.orebit.id/app/) · [Video cara pakai (72 dtk)](https://atlas.orebit.id/#video) · [Laporkan masalah](https://github.com/ghoziankarami/orebit-geoatlas/issues)**
+
+<p>
+  <img src="app/public/landing/m-gps.webp" alt="GPS: titik biru dan unit geologi di bawah posisi" width="180" />
+  <img src="app/public/landing/m-waypoint-editor.webp" alt="Waypoint struktur dengan strike/dip" width="180" />
+  <img src="app/public/landing/m-section.webp" alt="Penampang geologi dengan waypoint terproyeksi" width="180" />
+</p>
+
+## Fitur
+
+**Di lapangan (HP)**
+- GPS langsung dengan lingkar akurasi dan mode ikuti; kartu menyebut unit geologi di bawah posisi (ketuk untuk detail).
+- Waypoint singkapan, sampel, struktur, foto, lainnya. Struktur diisi strike/dip (kaidah tangan kanan) dan digambar sebagai simbol strike/dip.
+- Penampang geologi dari posisi Anda: topografi DEM, kontak dari peta, waypoint di dekat lintasan diproyeksikan, dip hasil ukur menggantikan dip asumsi.
+- Pasang ke layar utama (PWA) tanpa app store; tile yang pernah dibuka tetap tampil saat sinyal lemah; sesi (tampilan, filter, lintasan) tersimpan otomatis.
+
+**Peta dan data**
+- Warna menurut umur (skala waktu ICS) atau litologi; filter rentang umur, preset era, legenda yang bisa diklik.
+- Pencarian formasi, simbol peta, atau lokasi; lompat cepat ke 8 wilayah kepulauan.
+- Detail unit (umur, litologi, simbol, luas, tautan katalog Badan Geologi); sesar dan kontak; opasitas geologi 0–100%.
+- Peta dasar terang, gelap, topografi, satelit; relief bayangan; medan 3D.
+
+**Ekspor dan integrasi**
+- Peta PNG/PDF dengan legenda, skala, panah utara, dan tabel waypoint; penampang PNG/SVG.
+- Waypoint GPX/CSV (QGIS, Avenza, GPS); unit sebagai GeoJSON; tautan berbagi tampilan.
+- Impor SHP, GeoJSON, KML untuk mengecek formasi di area kerja; koordinat lat/lon dan UTM.
+- Bahasa Indonesia dan Inggris.
 
 Peta dirender di browser menggunakan MapLibre GL JS dan PMTiles. Legenda/harmonisasi menyatukan sumber yang berbeda; cakupan, skala, atribut, dan tingkat verifikasi tetap mengikuti tiap sumber. Ini bukan peta geologi resmi.
 
