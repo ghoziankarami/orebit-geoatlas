@@ -26,6 +26,7 @@ BEGIN, END = "<!-- BEGIN wp-registry -->", "<!-- END wp-registry -->"
 MODELS = {
     "gpt-luna-6": 1,
     "deepseek-flash": 1,
+    "claude-haiku-5-5": 1,
     "claude-sonnet-5-5": 2,
     "claude-opus-5-5": 3,
     "gpt-sol-6-1": 3,
