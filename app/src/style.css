@@ -264,7 +264,8 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
   #transectBody { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr); gap: 0 14px; align-items: start; }
   #transectBody > .transect-metrics, #transectBody > .transect-section, #transectBody > .transect-legend { grid-column: 1; }
   #transectBody > .transect-att, #transectBody > .transect-list { grid-column: 2; }
-  #transectBody > .transect-att { grid-row: 1 / span 3; max-height: 40vh; overflow-y: auto; }
+  #transectBody > .transect-att { grid-row: 2 / span 2; max-height: 40vh; overflow-y: auto; }
+  #transectBody > .transect-wp { grid-row: 1; max-height: 24vh; }
   #transectBody > .transect-list { grid-row: 4; }
   #transectBody > .muted { grid-column: 1 / -1; }
   .transect-section { max-height: 40vh; }

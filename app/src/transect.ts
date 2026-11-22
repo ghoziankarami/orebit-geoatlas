@@ -938,7 +938,7 @@ export function createTransectController(
         marks.length
           ? `<ul class="transect-wp-list">${[...marks]
               .sort((a, b) => a.frac - b.frac)
-              .map((m) => `<li><i class="wp-dot" style="background:${m.color}"></i><strong>${esc(m.name)}</strong><span>${(m.frac * totalKm).toFixed(2)} km · ${Math.round(m.offsetM)} m ${m.side === "L" ? "kiri/left" : "kanan/right"}${m.att ? ` · ${esc(m.att)}${m.appDipDeg !== null ? ` → ${Math.round(m.appDipDeg)}° (${m.toward === "B" ? "A'" : "A"})` : ""}` : ""}</span></li>`)
+              .map((m) => `<li><i class="wp-dot" style="background:${m.color}"></i><strong>${esc(m.name)}</strong><span>${(m.frac * totalKm).toFixed(2)} km · ${Math.round(m.offsetM)} m ${esc(t(m.side === "L" ? "sideL" : "sideR"))}${m.att ? ` · ${esc(m.att)}${m.appDipDeg !== null ? ` → ${Math.round(m.appDipDeg)}° (${m.toward === "B" ? "A'" : "A"})` : ""}` : ""}</span></li>`)
               .join("")}</ul>`
           : `<p class="muted">${esc(t("transectWpNone"))}</p>`
       }</details>`;
