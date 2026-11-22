@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (c) 2026 Orebit (Ghozian Islam Karami)
 // Service worker GeoAtlas: app shell offline + cache tile peta yang pernah dibuka (untuk sinyal lemah di lapangan).
-const VERSION = "v1";
+const VERSION = "v2";
 const SHELL = `geoatlas-shell-${VERSION}`;
 const TILES = `geoatlas-tiles-${VERSION}`;
 const MAX_TILES = 3000;
-const SHELL_URLS = ["/", "/index.html", "/manifest.webmanifest", "/favicon.svg", "/icon-192.png", "/data/indonesia-units-index.json"];
+const SHELL_URLS = ["/", "/index.html", "/manifest.json", "/favicon.svg", "/icon-192.png", "/data/indonesia-units-index.json"];
 const TILE_HOSTS = ["tiles.openfreemap.org", "tiles.macrostrat.org", "server.arcgisonline.com", "tiles.mapterhorn.com"];
 
 self.addEventListener("install", (event) => {
@@ -57,7 +57,7 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET" || req.headers.has("range")) return; // PMTiles memakai Range (206), tidak bisa di-cache utuh.
   const url = new URL(req.url);
   if (url.origin === self.location.origin) {
-    if (req.mode === "navigate" || url.pathname === "/" || url.pathname.endsWith(".json") || url.pathname.endsWith(".webmanifest")) {
+    if (req.mode === "navigate" || url.pathname === "/" || url.pathname.endsWith(".json")) {
       event.respondWith(networkFirst(req, SHELL));
     } else if (url.pathname.startsWith("/assets/") || /\.(png|svg|woff2?)$/.test(url.pathname)) {
       event.respondWith(cacheFirst(req, SHELL, false)); // berkas /assets/ ber-hash, aman cache-first
