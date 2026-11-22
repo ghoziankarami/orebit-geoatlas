@@ -15,6 +15,26 @@ Peta geologi Indonesia untuk lapangan dan kantor: unit geologi di bawah posisi G
   <img src="app/public/landing/m-section.webp" alt="Penampang geologi dengan waypoint terproyeksi" width="180" />
 </p>
 
+## Pasang dan pakai (tanpa kode)
+
+GeoAtlas adalah aplikasi web. Tidak perlu app store atau terminal; buka [atlas.orebit.id/app](https://atlas.orebit.id/app/) lalu pasang lewat browser:
+
+- **Desktop (Chrome/Edge):** klik ikon Instal di ujung kanan address bar, atau menu ⋮ → instal halaman ini sebagai aplikasi.
+- **Android (Chrome):** buka di Chrome, lalu menu ⋮ → Instal aplikasi.
+- **iPhone (Safari):** buka di Safari, lalu Bagikan → Tambahkan ke Layar Utama. Pemasangan tidak tersedia di browser iPhone lain.
+- **Dibuka dari LinkedIn atau WhatsApp:** browser bawaan aplikasi tidak bisa memasang dan sering memblokir GPS. Ketuk ⋯ → Buka di browser dulu.
+
+**Install and use (no code):** open [atlas.orebit.id/app](https://atlas.orebit.id/app/) and install it from your browser. Desktop Chrome/Edge: click the install icon in the address bar. Android Chrome: menu ⋮ → Install app. iPhone Safari: Share → Add to Home Screen (Safari only). Opened from LinkedIn or WhatsApp? Tap ⋯ → Open in browser first, because in-app browsers cannot install the app and often block GPS.
+
+## Data Anda
+
+Waypoint, foto, dan penampang hanya tersimpan di browser perangkat ini. Data tidak dikirim ke server GeoAtlas, karena aplikasi ini tidak punya akun dan tidak punya backend. Menghapus data situs di browser juga menghapus data Anda. Di iPhone, Safari dapat menghapus data situs yang tidak dipasang ke layar utama dan tidak dibuka selama 7 hari.
+
+- **Cadangan sekarang:** ekspor waypoint sebagai GPX atau CSV. Ini hanya ekspor; belum bisa diimpor kembali.
+- **Segera hadir:** Paket Lapangan (.zip) berisi waypoint, foto, dan penampang yang bisa diimpor kembali, termasuk di HP baru; serta foto yang melekat pada tiap waypoint.
+
+**Your data:** waypoints, photos and sections stay only in this device's browser. Nothing is sent to a GeoAtlas server. Clearing the site's data in the browser deletes them. On iPhone, Safari may delete the data of a site that is not installed to the home screen and has not been opened for 7 days. Today you can back up waypoints as GPX or CSV only, which cannot be imported back yet. Coming soon: a Field package (.zip) you can import again, including on a new phone, and photos attached to each waypoint.
+
 ## Fitur
 
 **Di lapangan (HP)**
@@ -50,7 +70,11 @@ Data geologi rinci kini mencakup **seluruh Indonesia**, 8 wilayah kepulauan: Sum
 
 Katalog unit nasional (`app/public/data/indonesia-units-index.json`) berisi 2.130 unit: Sumatra 640, Jawa 581, Kalimantan 214, Papua 210, Sulawesi 181, Bali–Nusra 153, Maluku 130, Bangka–Belitung 21. Setiap unit diselaraskan ke umur ICS (Ma) dan 8 kelas litologi. Tingkat kepercayaan dicatat per unit: 106 dikurasi manual (`curated`), 2.022 dipetakan otomatis dari istilah umur dan kata kunci litologi sumber (`auto`), 2 ditandai untuk ditinjau (`flagged`). Unit otomatis belum ditelaah geolog secara independen; geometri yang lolos pipeline bukan bukti bahwa interpretasi umur dan litologinya sudah benar.
 
-## Pengembangan lokal
+## Kembangkan atau self-host (developer)
+
+Bagian ini hanya untuk developer. Pengguna biasa cukup membuka [atlas.orebit.id/app](https://atlas.orebit.id/app/).
+
+**For developers:** requires Node.js 22+ and npm. Clone the repository, run `npm ci` and `npm run dev` in `app/`. Code is GPL-3.0; geology data follows the PSG Open License (attribution required, no sale).
 
 Persyaratan: Node.js 22+ dan npm.
 

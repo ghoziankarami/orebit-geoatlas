@@ -4,6 +4,10 @@ GeoAtlas terdiri dari aplikasi web statis dan pipeline pengolahan data.
 README menjelaskan cakupan data yang tersedia; target pada PRD bukan bukti
 bahwa cakupan atau kurasi tersebut sudah selesai.
 
+Pengguna biasa tidak perlu menjalankan kode: pasang lewat
+[atlas.orebit.id/app](https://atlas.orebit.id/app/) (lihat README, bagian
+"Pasang dan pakai"). Bagian ini untuk self-host dan kontribusi.
+
 ## Komponen
 
 | Path | Fungsi |
