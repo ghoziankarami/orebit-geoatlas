@@ -28,12 +28,12 @@ GeoAtlas adalah aplikasi web. Tidak perlu app store atau terminal; buka [atlas.o
 
 ## Data Anda
 
-Waypoint, foto, dan penampang hanya tersimpan di browser perangkat ini. Data tidak dikirim ke server GeoAtlas, karena aplikasi ini tidak punya akun dan tidak punya backend. Menghapus data situs di browser juga menghapus data Anda. Di iPhone, Safari dapat menghapus data situs yang tidak dipasang ke layar utama dan tidak dibuka selama 7 hari.
+Waypoint dan penampang hanya tersimpan di browser perangkat ini. Data tidak dikirim ke server GeoAtlas, karena aplikasi ini tidak punya akun dan tidak punya backend. Menghapus data situs di browser juga menghapus waypoint dan penampang Anda. Foto waypoint belum bisa dilampirkan; fitur ini **segera hadir**. Di iPhone, Safari dapat menghapus data situs yang tidak dipasang ke layar utama dan tidak dibuka selama 7 hari.
 
 - **Cadangan sekarang:** ekspor waypoint sebagai GPX atau CSV. Ini hanya ekspor; belum bisa diimpor kembali.
 - **Segera hadir:** Paket Lapangan (.zip) berisi waypoint, foto, dan penampang yang bisa diimpor kembali, termasuk di HP baru; serta foto yang melekat pada tiap waypoint.
 
-**Your data:** waypoints, photos and sections stay only in this device's browser. Nothing is sent to a GeoAtlas server. Clearing the site's data in the browser deletes them. On iPhone, Safari may delete the data of a site that is not installed to the home screen and has not been opened for 7 days. Today you can back up waypoints as GPX or CSV only, which cannot be imported back yet. Coming soon: a Field package (.zip) you can import again, including on a new phone, and photos attached to each waypoint.
+**Your data:** waypoints and sections stay only in this device's browser. Nothing is sent to a GeoAtlas server. Clearing the site's data in the browser deletes your waypoints and sections. On iPhone, Safari may delete the data of a site that is not installed to the home screen and has not been opened for 7 days. Today you can back up waypoints as GPX or CSV only, which cannot be imported back yet. Photos cannot be attached to waypoints yet; this is **coming soon**. Also coming soon: a Field package (.zip) you can import again, including on a new phone.
 
 ## Fitur
 
@@ -74,26 +74,19 @@ Katalog unit nasional (`app/public/data/indonesia-units-index.json`) berisi 2.13
 
 Bagian ini hanya untuk developer. Pengguna biasa cukup membuka [atlas.orebit.id/app](https://atlas.orebit.id/app/).
 
-**For developers:** requires Node.js 22+ and npm. Clone the repository, run `npm ci` and `npm run dev` in `app/`. Code is GPL-3.0; geology data follows the PSG Open License (attribution required, no sale).
+**For developers:** requires Node.js 22+ and npm. Clone the repository, install the app dependencies once with `cd app && npm ci`, then run `make dev` from the repository root (dev server at http://localhost:5173) or `make app` for a production build in `app/dist`. Code is GPL-3.0; geology data follows the PSG Open License (attribution required, no sale).
 
 Persyaratan: Node.js 22+ dan npm.
 
 ```bash
 git clone https://github.com/ghoziankarami/orebit-geoatlas.git
-cd orebit-geoatlas/app
-npm ci
-npm run dev          # http://localhost:5173
+cd orebit-geoatlas
+(cd app && npm ci)     # sekali saja: pasang dependensi app
+make dev               # http://localhost:5173
+make app               # build produksi ke app/dist
 ```
 
-Server pengembangan memakai sumber konfigurasi aplikasi. Untuk mengarahkan overlay PMTiles ke tile lain, salin `app/.env.example` ke `app/.env` dan atur `VITE_TILES_URL`.
-
-Build produksi:
-
-```bash
-cd app
-npm run build          # hasil statis di app/dist
-npm run preview        # cek build lokal
-```
+Untuk mengarahkan overlay PMTiles ke tile lain, salin `app/.env.example` ke `app/.env` dan atur `VITE_TILES_URL`.
 
 ## Membangun data satu wilayah
 
