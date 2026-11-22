@@ -100,24 +100,28 @@ export function nextName(wps: readonly Waypoint[]): string {
 
 const xml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-export function toGpx(wps: readonly Waypoint[]): string {
+/** `photos` opsional: foto per waypoint sebagai path relatif, ditulis sebagai <link href>. */
+export function toGpx(wps: readonly Waypoint[], photos?: ReadonlyMap<string, readonly string[]>): string {
   const body = wps
     .map((w) => {
       const att = attitudeText(w);
       const desc = [att && `${w.structType ?? "bedding"} ${att}`, w.note, w.unit && `${w.unit}${w.symbol ? ` (${w.symbol})` : ""}`, w.accM !== null ? `±${Math.round(w.accM)} m` : ""].filter(Boolean).join(" | ");
-      return `  <wpt lat="${w.lat.toFixed(7)}" lon="${w.lng.toFixed(7)}">${w.elevM !== null ? `<ele>${w.elevM.toFixed(1)}</ele>` : ""}<time>${xml(w.time)}</time><name>${xml(w.name)}</name>${desc ? `<desc>${xml(desc)}</desc>` : ""}<type>${kindOf(w)}</type></wpt>`;
+      const links = (photos?.get(w.id) ?? []).map((p) => `<link href="${xml(p)}"/>`).join("");
+      return `  <wpt lat="${w.lat.toFixed(7)}" lon="${w.lng.toFixed(7)}">${w.elevM !== null ? `<ele>${w.elevM.toFixed(1)}</ele>` : ""}<time>${xml(w.time)}</time><name>${xml(w.name)}</name>${desc ? `<desc>${xml(desc)}</desc>` : ""}${links}<type>${kindOf(w)}</type></wpt>`;
     })
     .join("\n");
   return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Orebit GeoAtlas" xmlns="http://www.topografix.com/GPX/1/1">\n${body}\n</gpx>\n`;
 }
 
+export const CSV_HEADER = "name,kind,structure,strike,dip,lat,lon,elev_m,accuracy_m,unit,symbol,note,time";
+const csvQuote = (s: string) => `"${s.replace(/"/g, '""')}"`;
+export function csvRow(w: Waypoint): string {
+  const st = hasAttitude(w);
+  return [csvQuote(w.name), kindOf(w), st ? w.structType ?? "bedding" : "", st ? Math.round(w.strike as number) : "", st ? Math.round(w.dip as number) : "", w.lat.toFixed(7), w.lng.toFixed(7), w.elevM ?? "", w.accM === null ? "" : Math.round(w.accM), csvQuote(w.unit), csvQuote(w.symbol), csvQuote(w.note), w.time].join(",");
+}
+
 export function toCsv(wps: readonly Waypoint[]): string {
-  const q = (s: string) => `"${s.replace(/"/g, '""')}"`;
-  const rows = wps.map((w) => {
-    const st = hasAttitude(w);
-    return [q(w.name), kindOf(w), st ? w.structType ?? "bedding" : "", st ? Math.round(w.strike as number) : "", st ? Math.round(w.dip as number) : "", w.lat.toFixed(7), w.lng.toFixed(7), w.elevM ?? "", w.accM === null ? "" : Math.round(w.accM), q(w.unit), q(w.symbol), q(w.note), w.time].join(",");
-  });
-  return "name,kind,structure,strike,dip,lat,lon,elev_m,accuracy_m,unit,symbol,note,time\n" + rows.join("\n") + "\n";
+  return CSV_HEADER + "\n" + wps.map(csvRow).join("\n") + "\n";
 }
 
 /**
@@ -629,6 +633,11 @@ export function createWaypoints(
 
   return {
     all: (): readonly Waypoint[] => wps,
+    /** Ganti seluruh daftar (dipakai impor paket setelah konfirmasi) lalu simpan dan gambar ulang. */
+    commit: (next: Waypoint[]) => {
+      wps = next;
+      save();
+    },
     isPlacing: () => placing,
     /** Ketukan peta saat mode tempatkan aktif. */
     place: (lng: number, lat: number) => {

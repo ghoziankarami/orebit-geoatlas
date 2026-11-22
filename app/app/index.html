@@ -133,6 +133,14 @@
         <h2><span id="t-wpTitle"></span> <span class="wp-count" id="wpCount">0</span></h2>
         <p class="opacity-hint" id="t-wpHint"></p>
         <ul class="wp-list" id="wpList"></ul>
+        <p class="opacity-hint wp-backup" id="wpBackupNote" aria-live="polite" hidden></p>
+        <div class="shp-actions">
+          <button type="button" class="btn primary" id="wpExportPkg"></button>
+          <button type="button" class="btn" id="wpShare" hidden></button>
+          <button type="button" class="btn" id="wpExportKmz"></button>
+          <button type="button" class="btn" id="wpImport"></button>
+          <input type="file" id="wpImportFile" accept=".zip,.gpx,.csv,.geojson,.json" hidden />
+        </div>
         <div class="shp-actions">
           <button type="button" class="btn" id="wpExportGpx"></button>
           <button type="button" class="btn" id="wpExportCsv"></button>

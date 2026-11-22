@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Garmin eTrex 22x" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata><name>Contoh gaya Garmin</name></metadata>
+  <wpt lat="-0.9012345" lon="119.8712345">
+    <ele>42.5</ele>
+    <time>2026-11-22T06:00:00Z</time>
+    <name>GRM001</name>
+    <desc>Singkapan andesit &amp; kekar</desc>
+    <sym>Flag, Blue</sym>
+  </wpt>
+  <wpt lat="-0.9100000" lon="119.8800000">
+    <time>2026-11-22T06:05:00Z</time>
+    <name><![CDATA[GRM002 - batu pasir]]></name>
+  </wpt>
+  <wpt lat="-0.9200000" lon="119.8900000"/>
+</gpx>
