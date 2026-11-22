@@ -280,6 +280,7 @@ class TestBrowserUIUX(unittest.TestCase):
             page.wait_for_function("document.getElementById('panel').getBoundingClientRect().height < 160")
             page.locator("#transectBtn").click()
             self.assertTrue(page.locator("#drawBar").is_visible())
+            self.assertTrue(page.locator("#drawGps").is_visible(), "GPS point button must be visible while drawing")
             self.assertTrue(page.locator("#transectPanel").is_hidden())
             page.mouse.click(120, 200)
             page.mouse.click(260, 330)

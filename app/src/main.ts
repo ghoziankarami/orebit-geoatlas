@@ -1159,6 +1159,7 @@ const transect = createTransectController(
   map,
   (isActive) => {
     if (isActive) {
+      gps.pauseFollow();
       wp.close();
       hideDetail();
       hoverTip.hidden = true;
@@ -1167,6 +1168,7 @@ const transect = createTransectController(
   },
   getLoadedNationalUnits,
   (pts) => saveSession({ transect: pts }),
+  { getFix: () => gps.lastFix(), ensureOn: () => gps.ensureOn(), toast: (m) => toast(m) },
 );
 
 // ---------- GPS lapangan ----------
@@ -1174,7 +1176,10 @@ const gps = createGps(map, {
   toast,
   queryLayers: () => queryLayers(),
   onPickFeature: (f) => selectFeature(f),
-  onFix: (fix) => updateCoordBar(fix.lat, fix.lng),
+  onFix: (fix) => {
+    updateCoordBar(fix.lat, fix.lng);
+    transect.syncGps();
+  },
 });
 
 // ---------- Waypoint lapangan ----------

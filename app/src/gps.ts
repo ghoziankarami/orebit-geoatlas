@@ -187,6 +187,20 @@ export function createGps(
 
   return {
     isTracking: () => watchId !== null && fix !== null,
+    /** Lepas mode ikuti (mis. saat menggambar lintasan) agar peta tidak melompat; titik tetap tampil. */
+    pauseFollow: () => {
+      if (watchId !== null && follow) {
+        follow = false;
+        syncBtn();
+      }
+    },
+    /** Nyalakan pelacakan tanpa memindahkan peta bila belum aktif. */
+    ensureOn: () => {
+      if (watchId !== null) return;
+      start();
+      follow = false;
+      syncBtn();
+    },
     lastFix: () => fix,
     refresh: () => {
       draw();

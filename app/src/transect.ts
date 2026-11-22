@@ -524,6 +524,7 @@ export function createTransectController(
   onActiveChange: (active: boolean) => void,
   getNationalUnits?: () => NationalUnit[],
   onPointsChange?: (points: TransectPoint[]) => void,
+  gpsHooks?: { getFix: () => TransectPoint | null; ensureOn: () => void; toast: (msg: string) => void },
 ) {
   let active = false;
   let points: TransectPoint[] = [];
@@ -921,6 +922,7 @@ export function createTransectController(
   const drawTitle = document.getElementById("drawTitle")!;
   const drawMeta = document.getElementById("drawMeta")!;
   const drawUndo = document.getElementById("drawUndo") as HTMLButtonElement;
+  const drawGps = document.getElementById("drawGps") as HTMLButtonElement;
   const drawDone = document.getElementById("drawDone") as HTMLButtonElement;
   const drawCancel = document.getElementById("drawCancel") as HTMLButtonElement;
   const editBtn = document.getElementById("transectEdit") as HTMLButtonElement;
@@ -936,6 +938,9 @@ export function createTransectController(
       drawMeta.textContent = `${n} ${t("transectPts")} · ${totalKm.toFixed(2)} km · ${azimuthDeg.toFixed(0)}°`;
     } else drawMeta.textContent = n ? `1 ${t("transectPts")}` : "";
     drawUndo.disabled = n === 0;
+    document.getElementById("drawGpsLabel")!.textContent = t("transectGpsPoint");
+    drawGps.classList.toggle("is-live", Boolean(gpsHooks?.getFix()));
+    drawGps.hidden = !gpsHooks;
     drawDone.disabled = n < 2;
   };
 
@@ -1010,6 +1015,18 @@ export function createTransectController(
       clear();
       setActive(true);
     }
+  });
+  drawGps.addEventListener("click", () => {
+    const fix = gpsHooks?.getFix();
+    if (!fix) {
+      gpsHooks?.ensureOn();
+      gpsHooks?.toast(t("transectGpsWait"));
+      return;
+    }
+    points.push({ lng: fix.lng, lat: fix.lat });
+    onPointsChange?.(points.slice());
+    syncGeojson();
+    syncDrawBar();
   });
   drawUndo.addEventListener("click", () => {
     points.pop();
@@ -1146,6 +1163,8 @@ export function createTransectController(
       points = pts.filter((p) => Number.isFinite(p.lng) && Number.isFinite(p.lat)).map((p) => ({ lng: p.lng, lat: p.lat }));
       syncGeojson();
     },
+    /** Dipanggil saat status GPS berubah agar tombol "Posisi saya" ikut menyala. */
+    syncGps: () => syncDrawBar(),
     refresh: () => {
       syncGeojson();
       syncDrawBar();
