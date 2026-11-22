@@ -9,6 +9,7 @@ import { BASEMAPS, CONFIG, REGIONS, type BasemapId } from "./config";
 import { formatCoordReadout } from "./coords";
 import { hideDetail, showDetail, showIndexUnitDetail } from "./detail";
 import { getLang, setLang, t, type Key } from "./i18n";
+import { initInstall } from "./install";
 import {
   addGeologyLayers,
   applyGeologyFilters,
@@ -1441,27 +1442,7 @@ initSearch(map, {
 });
 
 // ---------- PWA: pasang ke layar utama + offline ----------
-let installPrompt: (Event & { prompt: () => Promise<void> }) | null = null;
-const installBtn = $<HTMLButtonElement>("installBtn");
-window.addEventListener("beforeinstallprompt", (e) => {
-  e.preventDefault();
-  installPrompt = e as Event & { prompt: () => Promise<void> };
-  installBtn.hidden = false;
-});
-installBtn.addEventListener("click", async () => {
-  if (!installPrompt) return;
-  await installPrompt.prompt();
-  installPrompt = null;
-  installBtn.hidden = true;
-});
-window.addEventListener("appinstalled", () => {
-  installBtn.hidden = true;
-});
-if (import.meta.env.PROD && "serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch(() => undefined);
-  });
-}
+initInstall({ isMobile, toast });
 
 syncConfButtons();
 syncBasemapButtons();

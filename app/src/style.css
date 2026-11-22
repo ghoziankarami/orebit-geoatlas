@@ -577,6 +577,27 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
 .shp-attr td { padding: 2px 0; word-break: break-word; }
 .install-btn { background: var(--tin); border-color: var(--tin); color: #fff; white-space: nowrap; }
 .install-btn:hover { background: var(--tin-dark); }
+.install-chip { display: none; }
+.install-sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; max-width: 520px; margin: 0 auto;
+  padding: 16px 18px calc(16px + env(safe-area-inset-bottom, 0px));
+  background: var(--paper); color: var(--ink); border-radius: 14px 14px 0 0; box-shadow: 0 -6px 24px rgba(21,39,48,.24);
+}
+.install-sheet h2 { margin: 0 0 8px; font-size: 17px; }
+.install-sheet ol { margin: 0 0 12px; padding-left: 20px; font-size: 14px; line-height: 1.5; }
+.install-sheet-close { min-height: 36px; padding: 0 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--field); color: var(--ink); font: inherit; cursor: pointer; }
+.inapp-banner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 60; display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; background: var(--tin-dark); color: #fff; font-size: 13px;
+}
+.inapp-banner p { margin: 0; flex: 1; min-width: 0; }
+.inapp-banner button { min-height: 32px; padding: 0 10px; border: 1px solid rgba(255,255,255,.6); border-radius: 8px; background: transparent; color: #fff; font: inherit; cursor: pointer; white-space: nowrap; }
+@media (max-width: 760px) {
+  .install-chip:not([hidden]) {
+    display: inline-flex; align-items: center; min-height: 36px; padding: 0 12px; border: 0; border-radius: 999px;
+    background: var(--tin); color: #fff; font: inherit; font-size: 14px; font-weight: 600; white-space: nowrap; cursor: pointer;
+  }
+}
 
 /* ---------- Waypoint ---------- */
 .wp-block h2 { display: flex; align-items: center; gap: 6px; }

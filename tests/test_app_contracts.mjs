@@ -19,7 +19,7 @@ globalThis.document = { documentElement: { lang: "id" } };
 globalThis.importMetaEnv = {};
 
 const tempDir = mkdtempSync(join(tmpdir(), "geoatlas-contracts-"));
-const modulesToCompile = ["config", "i18n", "timescale", "lithology", "layers", "state", "coords", "search", "detail", "transect", "section_model", "shp_import", "gps", "waypoints"];
+const modulesToCompile = ["config", "i18n", "timescale", "lithology", "layers", "state", "coords", "search", "detail", "transect", "section_model", "shp_import", "gps", "waypoints", "detail", "install"];
 
 for (const name of modulesToCompile) {
   let src = readFileSync(resolve(ROOT, `app/src/${name}.ts`), "utf-8");
@@ -236,6 +236,34 @@ try {
   assert.ok(path[path.length - 1][0] > path[0][0], "dip toward B moves the contact to the right with depth");
   const vert = secm.layoutSection(noFault, geo, 10).boundaries[0].path;
   near(vert[vert.length - 1][0], vert[0][0], 0.01);                            // unknown dip = vertical
+
+  // 10. PWA install context: pure UA + standalone classification (>= 8 UAs)
+  const { detectInstallContext } = await import(join(tempDir, "install.mjs"));
+  const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko)";
+  const ANDROID = "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36";
+  const installCases = [
+    [`${IPHONE} Version/17.5 Mobile/15E148 Safari/604.1`, false, "ios-safari"],
+    [`${IPHONE} Version/17.5 Mobile/15E148 CriOS/126.0.6478.153 Safari/604.1`, false, "ios-other"],
+    [`${IPHONE} Mobile/15E148 FxiOS/127.0 Safari/605.1.15`, false, "ios-other"],
+    [`${IPHONE} Mobile/15E148 EdgiOS/126.0 Safari/604.1`, false, "ios-other"],
+    [`${IPHONE} Mobile/15E148 LinkedInApp`, false, "in-app"],
+    [`${IPHONE} Mobile/15E148 Line/14.0.0`, false, "in-app"],
+    [`${ANDROID} [FBAN/MessengerForiOS;FBAV/450]`, false, "in-app"],
+    [`${ANDROID.replace("Pixel 7)", "Pixel 7; wv)").replace("Chrome/126.0.0.0 Mobile Safari/537.36", "Version/4.0 Chrome/126.0.0.0 Mobile Safari/537.36")}`, false, "in-app"],
+    [`${ANDROID} Instagram 320.0.0.33.109 Android`, false, "in-app"],
+    [`${ANDROID} WhatsApp/2.24`, false, "in-app"],
+    [ANDROID, false, "prompt"],
+    ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36", false, "prompt"],
+    ["Mozilla/5.0 (X11; Linux x86_64; rv:127.0) Gecko/20100101 Firefox/127.0", false, "unsupported"],
+    ["Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15", false, "unsupported"],
+    [`${IPHONE} Version/17.5 Mobile/15E148 Safari/604.1`, true, "installed"],
+    [ANDROID, true, "installed"],
+    [`${IPHONE} Mobile/15E148 LinkedInApp`, true, "installed"],
+  ];
+  assert.ok(installCases.length >= 8);
+  for (const [ua, standalone, expected] of installCases) {
+    assert.equal(detectInstallContext(ua, standalone), expected, `UA: ${ua}`);
+  }
 
   console.log("✓ app contracts PASS (real module imports: UTM, i18n parity, searchNationalIndex, transect math, state roundtrip)");
 } finally {
