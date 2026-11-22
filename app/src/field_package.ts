@@ -204,10 +204,16 @@ const finiteOrNull = (v: unknown, lo: number, hi: number): number | null => {
   if (typeof v !== "number" || !Number.isFinite(v) || v < lo || v > hi) return bad();
   return v;
 };
-/** Elevasi dan akurasi: hanya non-finite dan negatif yang ditolak; tidak ada batas atas. */
+/** Akurasi: non-finite dan negatif ditolak; tidak ada batas atas. */
 const nonNegOrNull = (v: unknown): number | null => {
   if (v === null || v === undefined) return null;
   if (typeof v !== "number" || !Number.isFinite(v) || v < 0) return bad();
+  return v;
+};
+/** Elevasi: semua angka finite diterima, termasuk negatif (di bawah permukaan laut); non-finite ditolak. */
+const elevOrNull = (v: unknown): number | null => {
+  if (v === null || v === undefined) return null;
+  if (typeof v !== "number" || !Number.isFinite(v)) return bad();
   return v;
 };
 const str = (v: unknown): string => (typeof v === "string" ? v : bad());
@@ -226,7 +232,7 @@ function parseWaypoint(raw: unknown): Waypoint {
     note: str(raw.note),
     lat: finiteOrNull(raw.lat, -90, 90) ?? bad(),
     lng: finiteOrNull(raw.lng, -180, 180) ?? bad(),
-    elevM: nonNegOrNull(raw.elevM),
+    elevM: elevOrNull(raw.elevM),
     accM: nonNegOrNull(raw.accM),
     unit: str(raw.unit),
     symbol: str(raw.symbol),

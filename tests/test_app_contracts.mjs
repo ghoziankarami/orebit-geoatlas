@@ -352,11 +352,13 @@ try {
     transect: [{ lng: 119.8, lat: -0.9 }],
   };
   const fpWithPhoto = [{ name: "photos/WP-001_1.jpg", data: fpPhoto }];
-  // M1: elevasi dan akurasi hanya ditolak bila non-finite atau negatif; tidak ada batas atas
+  // M1: akurasi ditolak bila non-finite atau negatif; elevasi menerima semua angka finite (termasuk negatif); tidak ada batas atas
   const m1 = await readFieldFile(pkgFile({ ...fpGood, waypoints: [{ ...fpGood.waypoints[0], accM: 150000, elevM: 12000 }] }, fpWithPhoto));
   assert.deepEqual([m1.waypoints[0].accM, m1.waypoints[0].elevM], [150000, 12000], "no upper bound on accM/elevM");
   await assert.rejects(readFieldFile(pkgFile({ ...fpGood, waypoints: [{ ...fpGood.waypoints[0], accM: -1 }] }, fpWithPhoto)), (e) => e.key === "wpImportErr", "negative accM rejected");
-  await assert.rejects(readFieldFile(pkgFile({ ...fpGood, waypoints: [{ ...fpGood.waypoints[0], elevM: -5 }] }, fpWithPhoto)), (e) => e.key === "wpImportErr", "negative elevM rejected");
+  const belowSea = await readFieldFile(pkgFile({ ...fpGood, waypoints: [{ ...fpGood.waypoints[0], elevM: -5 }] }, fpWithPhoto));
+  assert.equal(belowSea.waypoints[0].elevM, -5, "elevation below sea level is valid and must import");
+  await assert.rejects(readFieldFile(pkgFile({ ...fpGood, waypoints: [{ ...fpGood.waypoints[0], elevM: "12" }] }, fpWithPhoto)), (e) => e.key === "wpImportErr", "non-numeric elevM rejected");
   const fpRead = await readFieldFile(pkgFile(fpGood, fpWithPhoto));
   assert.equal(fpRead.kind, "package");
   assert.deepEqual(fpRead.waypoints[0], fpGood.waypoints[0], "package waypoint restored field by field");
