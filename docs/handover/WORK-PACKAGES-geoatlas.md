@@ -67,13 +67,13 @@ Urutan baris adalah urutan prioritas dan topologis (setiap dependensi selalu ber
 | WP-25 | Navigasi kamera Back dan Northing Up 2D/3D, pembersihan jargon internal, dan optimasi seluler | `ux/navigation-clean-about-mobile` | UIX | UIX-06 | UIX-06 | WP-15 | G4 | deepseek-flash | claude-sonnet-5-5 | — | MEDIUM | browser |
 | WP-26 | Suite pengujian kontrak dan Playwright E2E untuk penampang geologi, SHP UTM, dan navigasi | `test/geologist-workstation-e2e` | TEST | TEST-03 | TEST-03 | WP-22, WP-23, WP-24, WP-25 | G4 | gpt-luna-6 | claude-sonnet-5-5 | — | HIGH | full |
 | WP-27 | Rebuild nasional all-v3.pmtiles dengan provenance lembar P3G dan deploy produksi atlas.orebit.id | `release/national-atlas-v3` | REL | REL-02 | REL-02 | WP-26 | G4 | gpt-luna-6 | gpt-sol-6-1, pemilik | — | RELEASE | full |
-| WP-28 | Pemasangan PWA terlihat di HP, petunjuk iOS Safari, banner in-app browser, dan penyimpanan persisten | `ux/pwa-install-mobile` | UIX | PWA-01 | PWA-01 | — | G4 | gpt-luna-6 | claude-sonnet-5-5 | — | MEDIUM | browser |
-| WP-29 | Foto lapangan per waypoint dengan kompresi, IndexedDB, keterangan, dan validasi strike/dip | `feat/waypoint-field-photos` | TOOLS | FLD-01 | FLD-01 | — | G4 | gpt-luna-6 | claude-opus-5-5 | — | HIGH | browser |
-| WP-30 | Paket Lapangan zip (GeoJSON, GPX, CSV, foto, KMZ), Bagikan, dan impor kembali round-trip | `feat/field-package-export-import` | TOOLS | FLD-02, FLD-03 | FLD-02, FLD-03 | WP-29 | G4 | gpt-luna-6 | claude-opus-5-5 | — | HIGH | browser |
+| WP-28 | Pemasangan PWA terlihat di HP, petunjuk iOS Safari, banner in-app browser, dan penyimpanan persisten | `ux/pwa-install-mobile` | UIX | PWA-01 | PWA-01 | — | G4 | claude-haiku-5-5 | claude-sonnet-5-5 | — | MEDIUM | browser |
+| WP-29 | Foto lapangan per waypoint dengan kompresi, IndexedDB, keterangan, dan validasi strike/dip | `feat/waypoint-field-photos` | TOOLS | FLD-01 | FLD-01 | — | G4 | claude-haiku-5-5 | claude-opus-5-5 | — | HIGH | browser |
+| WP-30 | Paket Lapangan zip (GeoJSON, GPX, CSV, foto, KMZ), Bagikan, dan impor kembali round-trip | `feat/field-package-export-import` | TOOLS | FLD-02, FLD-03 | FLD-02, FLD-03 | WP-29 | G4 | claude-haiku-5-5 | claude-opus-5-5 | — | HIGH | browser |
 | WP-31 | Geologi offline: cache Range PMTiles di service worker dan simpan area untuk offline | `feat/offline-geology-area` | MAP | PWA-02 | PWA-02 | WP-28 | G4 | gpt-luna-6 | claude-opus-5-5 | — | HIGH | browser |
-| WP-32 | Perintah coverage berulang dan tes unit modul murni hingga coverage 60 persen | `test/coverage-pure-modules` | TEST | TEST-04 | TEST-04 | — | G4 | deepseek-flash | claude-sonnet-5-5 | — | MEDIUM | targeted |
-| WP-33 | E2E pengguna baru untuk foto, Paket Lapangan, pemasangan, offline, dan smoke produksi | `test/new-user-e2e-prod-smoke` | TEST | TEST-05 | TEST-05 | WP-30, WP-31, WP-32 | G4 | gpt-luna-6 | claude-sonnet-5-5 | — | HIGH | full |
-| WP-34 | Panduan pengguna pemasangan desktop, Android, iOS, LinkedIn, serta penyimpanan dan cadangan data | `docs/user-install-data-guide` | DOCS | DOC-02 | DOC-02 | — | G6 | deepseek-flash | claude-sonnet-5-5 | — | LOW | targeted |
+| WP-32 | Perintah coverage berulang dan tes unit modul murni hingga coverage 60 persen | `test/coverage-pure-modules` | TEST | TEST-04 | TEST-04 | — | G4 | claude-haiku-5-5 | claude-sonnet-5-5 | — | MEDIUM | targeted |
+| WP-33 | E2E pengguna baru untuk foto, Paket Lapangan, pemasangan, offline, dan smoke produksi | `test/new-user-e2e-prod-smoke` | TEST | TEST-05 | TEST-05 | WP-30, WP-31, WP-32 | G4 | claude-haiku-5-5 | claude-sonnet-5-5 | — | HIGH | full |
+| WP-34 | Panduan pengguna pemasangan desktop, Android, iOS, LinkedIn, serta penyimpanan dan cadangan data | `docs/user-install-data-guide` | DOCS | DOC-02 | DOC-02 | — | G6 | claude-haiku-5-5 | claude-sonnet-5-5 | — | LOW | targeted |
 | WP-35 | Rilis produksi v4 lapangan ke atlas.orebit.id dengan receipt exact-SHA dan smoke produksi | `release/field-v4` | REL | REL-03 | REL-03 | WP-33, WP-34 | G4 | gpt-luna-6 | gpt-sol-6-1, pemilik | pemilik: setujui deploy kandidat ke atlas.orebit.id | RELEASE | full |
 <!-- END wp-registry -->
 
@@ -650,7 +650,7 @@ Sumber: [Audit Produksi & Lapangan 23 Nov 2026](../audits/audit-produksi-lapanga
 
 ### WP-28 — Pemasangan PWA terlihat di HP, petunjuk iOS Safari, banner in-app browser, dan penyimpanan persisten
 
-Branch `ux/pwa-install-mobile` · Lane `UIX` · Gerbang `G4` · Exec `gpt-luna-6` · Review `claude-sonnet-5-5`
+Branch `ux/pwa-install-mobile` · Lane `UIX` · Gerbang `G4` · Exec `claude-haiku-5-5` · Review `claude-sonnet-5-5`
 
 **Tujuan:** Pengguna HP menemukan cara memasang GeoAtlas tanpa membaca dokumentasi. Hari ini `beforeinstallprompt` di-`preventDefault()` sehingga mini-infobar Chrome hilang, sementara `#installBtn` berada di header bottom sheet yang di luar layar saat `peek` (audit §3). iOS Safari dan in-app browser LinkedIn tidak punya jalur pasang sama sekali.
 
@@ -675,7 +675,7 @@ Branch `ux/pwa-install-mobile` · Lane `UIX` · Gerbang `G4` · Exec `gpt-luna-6
 
 ### WP-29 — Foto lapangan per waypoint dengan kompresi, IndexedDB, keterangan, dan validasi strike/dip
 
-Branch `feat/waypoint-field-photos` · Lane `TOOLS` · Gerbang `G4` · Exec `gpt-luna-6` · Review `claude-opus-5-5`
+Branch `feat/waypoint-field-photos` · Lane `TOOLS` · Gerbang `G4` · Exec `claude-haiku-5-5` · Review `claude-opus-5-5`
 
 **Tujuan:** Waypoint bisa membawa dokumentasi lapangan (masukan pengguna pasca-peluncuran): beberapa foto per titik dari kamera atau galeri, tersimpan aman di perangkat dan tidak memenuhi `localStorage`.
 
@@ -699,7 +699,7 @@ Branch `feat/waypoint-field-photos` · Lane `TOOLS` · Gerbang `G4` · Exec `gpt
 
 ### WP-30 — Paket Lapangan zip (GeoJSON, GPX, CSV, foto, KMZ), Bagikan, dan impor kembali round-trip
 
-Branch `feat/field-package-export-import` · Lane `TOOLS` · Gerbang `G4` · Exec `gpt-luna-6` · Review `claude-opus-5-5`
+Branch `feat/field-package-export-import` · Lane `TOOLS` · Gerbang `G4` · Exec `claude-haiku-5-5` · Review `claude-opus-5-5`
 
 **Tujuan:** Satu berkas yang bisa dikirim, dibuka di QGIS/Google Earth/Excel, **dan dibuka kembali di GeoAtlas** di perangkat lain. Menjawab "data disimpan dan dibuka lagi seperti apa" tanpa backend.
 
@@ -747,7 +747,7 @@ Branch `feat/offline-geology-area` · Lane `MAP` · Gerbang `G4` · Exec `gpt-lu
 
 ### WP-32 — Perintah coverage berulang dan tes unit modul murni hingga coverage 60 persen
 
-Branch `test/coverage-pure-modules` · Lane `TEST` · Gerbang `G4` · Exec `deepseek-flash` · Review `claude-sonnet-5-5`
+Branch `test/coverage-pure-modules` · Lane `TEST` · Gerbang `G4` · Exec `claude-haiku-5-5` · Review `claude-sonnet-5-5`
 
 **Tujuan:** Coverage bisa diukur ulang dengan satu perintah dan naik dari baseline 29% (audit §2), terutama logika murni berisiko: parser SHP/DBF/PRJ/KML, ekspor waypoint, parser state URL, pencarian, transect.
 
@@ -769,7 +769,7 @@ Branch `test/coverage-pure-modules` · Lane `TEST` · Gerbang `G4` · Exec `deep
 
 ### WP-33 — E2E pengguna baru untuk foto, Paket Lapangan, pemasangan, offline, dan smoke produksi
 
-Branch `test/new-user-e2e-prod-smoke` · Lane `TEST` · Gerbang `G4` · Exec `gpt-luna-6` · Review `claude-sonnet-5-5`
+Branch `test/new-user-e2e-prod-smoke` · Lane `TEST` · Gerbang `G4` · Exec `claude-haiku-5-5` · Review `claude-sonnet-5-5`
 
 **Tujuan:** Aplikasi sudah produksi; setiap rilis harus lolos skenario pengguna baru dari ujung ke ujung dan diperiksa langsung di `atlas.orebit.id` setelah deploy.
 
@@ -795,7 +795,7 @@ Branch `test/new-user-e2e-prod-smoke` · Lane `TEST` · Gerbang `G4` · Exec `gp
 
 ### WP-34 — Panduan pengguna pemasangan desktop, Android, iOS, LinkedIn, serta penyimpanan dan cadangan data
 
-Branch `docs/user-install-data-guide` · Lane `DOCS` · Gerbang `G6` · Exec `deepseek-flash` · Review `claude-sonnet-5-5`
+Branch `docs/user-install-data-guide` · Lane `DOCS` · Gerbang `G6` · Exec `claude-haiku-5-5` · Review `claude-sonnet-5-5`
 
 **Tujuan:** Pengguna awam tahu bahwa GeoAtlas **tidak perlu di-install lewat kode**, cara memasangnya di tiap perangkat, dan bahwa datanya hanya ada di perangkat sampai diekspor.
 
