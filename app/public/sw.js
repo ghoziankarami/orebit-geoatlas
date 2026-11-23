@@ -146,14 +146,29 @@ function validRange(range, net, byteLength) {
   const cr = /^bytes (\d+)-(\d+)\/(\d+|\*)$/.exec(net.headers.get("content-range") || "");
   const rq = /^bytes=(\d+)-(\d*)$/.exec(range);
   if (!cr || !rq) return false;
-  const [start, end, total] = [Number(cr[1]), Number(cr[2]), cr[3]];
+  const [start, end] = [Number(cr[1]), Number(cr[2])];
   if (start !== Number(rq[1]) || byteLength !== end - start + 1) return false;
-  if (rq[2] === "") return true; // "bytes=a-": sampai akhir berkas
-  return end === Number(rq[2]) || (total !== "*" && end === Number(total) - 1); // dipotong server hanya di akhir berkas
+  const rqEnd = rq[2] === "" ? Infinity : Number(rq[2]);
+  if (cr[3] === "*") return rqEnd === Infinity || end === rqEnd; // total tidak diketahui: harus persis yang diminta
+  return end === Math.min(rqEnd, Number(cr[3]) - 1); // server hanya boleh memotong di akhir berkas
+}
+
+// Salin respons dari cache penjelajahan ke area tersimpan lalu sajikan; gagal menyalin = klien diberi tahu (simpan dianggap tidak lengkap).
+async function serveHit(hit, hitSaved, toSaved, key) {
+  if (toSaved && !hitSaved) {
+    try {
+      await pmSaveEntry(key, await hit.clone().arrayBuffer(), hit.headers);
+    } catch {
+      notifyClients({ type: "geoatlas-cache-full" });
+    }
+  }
+  return as206(hit);
 }
 
 self.addEventListener("message", (e) => {
   if (e.data?.type === "geoatlas-pm-reset") savedBytes = null;
+  // Halaman memastikan SW yang mengendalikannya adalah versi ini (yang paham header x-geoatlas-save) sebelum Simpan area.
+  if (e.data?.type === "geoatlas-ping") e.ports[0]?.postMessage({ type: "geoatlas-pong", version: VERSION });
 });
 
 async function pmRange(req) {
@@ -162,31 +177,24 @@ async function pmRange(req) {
   const key = pmKey(url, range);
   const { hit, saved: hitSaved } = await pmLookup(key);
   const toSaved = req.headers.has("x-geoatlas-save");
-  if (req.headers.has("x-geoatlas-cache-only")) return hit ? as206(hit) : new Response("not cached", { status: 504 }); // verifikasi simpan area
-  // req.cache sengaja tidak dipakai: Chromium melaporkan "reload" untuk SEMUA request ber-Range (diuji: default, no-store, setelah reload),
-  // jadi menghormatinya mematikan cache dan offline. Kasus yang dituju (pmtiles.js mustReload setelah ETag tidak cocok) ditangani oleh
-  // pengecekan ETag/isi pada permintaan header di bawah, yang membuang cache usang.
+  // Verifikasi simpan area: hanya cache area tersimpan yang dihitung (tile yang cuma ada di cache penjelajahan bisa terpangkas).
+  if (req.headers.has("x-geoatlas-cache-only")) return hit && hitSaved ? as206(hit) : new Response("not cached", { status: 504 });
+  // req.cache sengaja tidak dipakai. Dua alasan: (1) pmtiles.js menyetel mustReload = true setelah ETag tidak cocok dan tidak pernah
+  // meresetnya, sehingga semua request berikutnya dari instance itu "reload"; (2) di Chrome Windows pmtiles.js selalu memakai
+  // cache: "no-store". Menghormati keduanya mematikan cache dan offline. Pengganti yang benar-benar menangani ETag berubah adalah
+  // pengecekan ETag/isi pada permintaan header di bawah, yang membuang cache usang. (Catatan: "reload" yang tampak pada semua request
+  // Range di tes Playwright berasal dari routing Playwright, bukan dari Chromium; jangan dijadikan bukti perilaku peramban.)
   // Rentang mulai 0 memuat header + direktori akar: selalu coba jaringan dulu agar berkas yang diganti terdeteksi.
   const isHead = /^bytes=0-/.test(range);
-  if (hit && !isHead) {
-    if (toSaved && !hitSaved) {
-      // Tile sudah ada di cache penjelajahan: salin ke area tersimpan, kalau tidak bisa terpangkas dan hilang offline.
-      try {
-        await pmSaveEntry(key, await hit.clone().arrayBuffer(), hit.headers);
-      } catch {
-        notifyClients({ type: "geoatlas-cache-full" });
-      }
-    }
-    return as206(hit);
-  }
-  const fallback = () => (hit ? as206(hit) : Response.error());
+  if (hit && !isHead) return serveHit(hit, hitSaved, toSaved, key);
+  const fallback = () => (hit ? serveHit(hit, hitSaved, toSaved, key) : Response.error());
   const ctl = new AbortController();
   const timer = hit && isHead ? setTimeout(() => ctl.abort(), 3000) : 0; // sinyal buruk: jangan menahan peta, pakai salinan
   let net;
   let buf;
   try {
     net = await fetch(req, { signal: ctl.signal });
-    if (net.status !== 206) return hit ? as206(hit) : net; // 200/4xx/5xx: pakai salinan bila ada, jangan di-cache
+    if (net.status !== 206) return hit ? serveHit(hit, hitSaved, toSaved, key) : net; // 200/4xx/5xx: pakai salinan bila ada, jangan di-cache
     buf = await net.arrayBuffer();
   } catch {
     return fallback();

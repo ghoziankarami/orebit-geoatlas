@@ -274,6 +274,25 @@ class TestOfflineGeology(unittest.TestCase):
             finally:
                 browser.close()
 
+    def test_save_refused_unless_sw_v4_answers_ping(self) -> None:
+        with sync_playwright() as p:
+            browser, ctx, page, errors = self.new_page(p)
+            try:
+                page.goto(f"{self.origin}/app/{VIEW}", wait_until="load")
+                page.wait_for_function("navigator.serviceWorker && navigator.serviceWorker.controller", timeout=20000)
+                pong = page.evaluate("""() => new Promise((res) => { const ch = new MessageChannel(); ch.port1.onmessage = (e) => res(e.data);
+                  navigator.serviceWorker.controller.postMessage({ type: 'geoatlas-ping' }, [ch.port2]); })""")
+                self.assertEqual(pong, {"type": "geoatlas-pong", "version": "v4"})
+                # SW lama (v3) tidak menjawab ping: simulasikan dengan postMessage yang tidak pernah dijawab.
+                page.evaluate("navigator.serviceWorker.controller.postMessage = () => {}")
+                page.click("#offSave")
+                page.wait_for_function("document.getElementById('offStatus').textContent.includes('Offline mode is not active')", timeout=10000)
+                self.assertIsNone(page.evaluate("localStorage.getItem('geoatlas.offline.v1')"))
+                self.assertEqual(page.evaluate("caches.open('geoatlas-pmtiles-v1').then(c => c.keys()).then(k => k.length)"), 0)
+                self.assertEqual(errors, [])
+            finally:
+                browser.close()
+
     def test_precache_assets_and_version(self) -> None:
         with sync_playwright() as p:
             browser, ctx, page, errors = self.new_page(p)

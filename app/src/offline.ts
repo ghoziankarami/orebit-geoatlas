@@ -10,6 +10,8 @@ import { getLang, t } from "./i18n";
 
 export const PMTILES_CACHE = "geoatlas-pmtiles-v1"; // area yang disimpan pengguna (tidak pernah dipangkas otomatis)
 export const PMTILES_BROWSE_CACHE = "geoatlas-pmtiles-browse-v1"; // tile hasil menjelajah (dipangkas)
+/** Harus sama dengan VERSION di public/sw.js (dicek tes kontrak): hanya SW ini yang mengerti x-geoatlas-save/cache-only. */
+export const SW_VERSION = "v4";
 export const MAX_TILES = 2000;
 export const MAX_EXTRA_ZOOM = 3;
 export const ABS_MAX_ZOOM = 14;
@@ -79,6 +81,21 @@ async function cacheBytes(name: string): Promise<number> {
 /** Service worker hanya mencegat PMTiles satu origin; di origin lain tile tidak bisa disimpan offline. */
 export const tilesSameOrigin = (url: string, base: string = location.href): boolean => new URL(url, base).origin === new URL(base).origin;
 
+/** Ping ke SW pengendali; true hanya bila ia menjawab dengan versi yang diharapkan (SW lama v3 tidak menjawab). */
+export function pingSw(timeoutMs = 1500): Promise<boolean> {
+  const ctl = navigator.serviceWorker?.controller;
+  if (!ctl) return Promise.resolve(false);
+  return new Promise((resolve) => {
+    const ch = new MessageChannel();
+    const timer = setTimeout(() => resolve(false), timeoutMs);
+    ch.port1.onmessage = (e) => {
+      clearTimeout(timer);
+      resolve((e.data as { version?: string } | null)?.version === SW_VERSION);
+    };
+    ctl.postMessage({ type: "geoatlas-ping" }, [ch.port2]);
+  });
+}
+
 export function initOffline(opts: { map: MLMap; toast: (msg: string) => void }): void {
   const block = document.getElementById("offlineBlock");
   if (!block) return;
@@ -94,6 +111,7 @@ export function initOffline(opts: { map: MLMap; toast: (msg: string) => void }):
   const clearBtn = el("offClear") as HTMLButtonElement;
   const cancelBtn = el("offCancel") as HTMLButtonElement;
   const prog = el("offProgress") as HTMLProgressElement;
+  const progText = el("offProgText");
   const status = el("offStatus");
 
   let abort: AbortController | null = null;
@@ -112,7 +130,9 @@ export function initOffline(opts: { map: MLMap; toast: (msg: string) => void }):
     }
   });
 
-  async function render() {
+  let lastSize = 0;
+  // light=true: tanpa menghitung ukuran cache (dipakai di awal simpan; selama unduhan hanya teks progres yang diperbarui).
+  async function render(light = false) {
     title.textContent = t("offTitle");
     hint.textContent = t("offHint");
     saveBtn.textContent = t("offSave");
@@ -121,9 +141,11 @@ export function initOffline(opts: { map: MLMap; toast: (msg: string) => void }):
     saveBtn.disabled = !!abort;
     cancelBtn.hidden = !abort;
     prog.hidden = !abort;
-    const [savedSize, browseSize] = await Promise.all([cacheBytes(PMTILES_CACHE), cacheBytes(PMTILES_BROWSE_CACHE)]);
+    progText.hidden = !abort;
+    const [savedSize, browseSize] = light ? [lastSize, 0] : await Promise.all([cacheBytes(PMTILES_CACHE), cacheBytes(PMTILES_BROWSE_CACHE)]);
     const size = savedSize + browseSize;
-    if (!abort && readSaved() && savedSize === 0) {
+    if (!light) lastSize = size;
+    if (!light && !abort && readSaved() && savedSize === 0) {
       writeSaved(null); // catatan area tanpa isi cache (dibersihkan peramban/SW): jangan klaim tersimpan
       note = esc(t("offLost"));
     }
@@ -151,7 +173,7 @@ export function initOffline(opts: { map: MLMap; toast: (msg: string) => void }):
 
   async function save() {
     if (!sameOrigin) return say(t("offCrossOrigin"));
-    if (!navigator.serviceWorker?.controller) return say(t("offNoSw"));
+    if (!(await pingSw())) return say(t("offNoSw")); // SW v4 harus mengendalikan halaman, kalau tidak tile tidak masuk cache area tersimpan
     note = "";
     cacheFull = false;
     const ctl = new AbortController();
@@ -192,11 +214,10 @@ export function initOffline(opts: { map: MLMap; toast: (msg: string) => void }):
           if (!ctl.signal.aborted) failed++;
         }
         prog.value = ++done;
-        note = esc(`${t("offProgress")} ${done}/${plan.total}`);
-        if (done % 10 === 0) void render();
+        progText.textContent = `${t("offProgress")} ${done}/${plan.total}`;
       }
     };
-    await render();
+    await render(true);
     await Promise.all([worker(), worker(), worker(), worker()]);
     const cancelled = ctl.signal.aborted;
     abort = null;
@@ -216,7 +237,8 @@ export function initOffline(opts: { map: MLMap; toast: (msg: string) => void }):
       }
     };
     await Promise.all([verifier(), verifier(), verifier(), verifier()]);
-    if (cacheFull || failed > 0 || missing > 0) say(`${t("offPartial")} (${failed + missing} ${t("offFailedTiles")})`);
+    const stored = await cacheBytes(PMTILES_CACHE); // cache area tersimpan harus benar-benar berisi
+    if (cacheFull || failed > 0 || missing > 0 || stored === 0) say(`${t("offPartial")} (${failed + missing} ${t("offFailedTiles")})`);
     else {
       const b = opts.map.getBounds();
       writeSaved({ savedAt: Date.now(), tiles: plan.total, bbox: { w: b.getWest(), s: b.getSouth(), e: b.getEast(), n: b.getNorth() } });

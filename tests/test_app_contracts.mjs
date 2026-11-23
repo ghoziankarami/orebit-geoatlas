@@ -1311,11 +1311,13 @@ try {
     assert.match(sw, /k !== PM_SAVED && k !== PM_BROWSE/, "cache PMTiles tidak dibuang saat activate");
     assert.match(sw, /net\.status !== 206/, "hanya 206 yang di-cache");
     assert.match(sw, /const TILES = "geoatlas-tiles-v3"/, "nama cache basemap tidak memuat VERSION (upgrade tidak menghapusnya)");
+    assert.equal(sw.match(/const VERSION = "(v\d+)"/)[1], off.SW_VERSION, "SW_VERSION di offline.ts sama dengan VERSION di sw.js");
+    assert.match(sw, /geoatlas-ping/, "SW menjawab ping versi");
     assert.match(sw, /validRange\(range, net, buf\.byteLength\)/, "Content-Range dan panjang divalidasi sebelum disajikan/disimpan");
     assert.equal(off.tilesSameOrigin("/tiles/all.pmtiles", "https://atlas.orebit.id/app/"), true);
     assert.equal(off.tilesSameOrigin("https://staging.example.com/all.pmtiles", "https://atlas.orebit.id/app/"), false, "origin lain: tidak bisa disimpan offline");
     const html = readFileSync(resolve(ROOT, "app/app/index.html"), "utf-8");
-    for (const id of ["offlineBlock", "offSave", "offClear", "offCancel", "offProgress", "offStatus", "t-offTitle", "t-offHint"]) assert.ok(html.includes(`id="${id}"`), `index.html memuat #${id}`);
+    for (const id of ["offlineBlock", "offSave", "offClear", "offCancel", "offProgress", "offStatus", "offProgText", "t-offTitle", "t-offHint"]) assert.ok(html.includes(`id="${id}"`), `index.html memuat #${id}`);
   }
 
   console.log("✓ app contracts PASS (real module imports: UTM, i18n parity, searchNationalIndex, transect math, state roundtrip, field package, SHP/ZIP parsing, waypoints, layers, session, PWA install)");
