@@ -3,9 +3,10 @@
 // Waypoint lapangan: tandai titik dari GPS atau ketuk peta, beri nama/catatan, simpan lokal, ekspor GPX/CSV.
 import type maplibregl from "maplibre-gl";
 import { esc } from "./detail";
-import { t } from "./i18n";
+import { t, type Key } from "./i18n";
 import { styleReady } from "./layers";
 import type { Fix } from "./gps";
+import { compressImage, deletePhotos, getPhoto, listPhotoMeta, newPhotoId, photoFileError, putPhoto, setPhotoNotifier, updatePhotoMeta, type PhotoMeta } from "./photos";
 
 export type WpKind = "outcrop" | "sample" | "structure" | "photo" | "other";
 export type StructType = "bedding" | "contact" | "fault" | "joint" | "foliation";
@@ -31,6 +32,10 @@ export interface Waypoint {
   unit: string;
   symbol: string;
   time: string;
+  /** Waktu perubahan terakhir: editor, tambah/hapus foto, keterangan atau arah foto. Dipakai impor dan pengingat cadangan. */
+  updatedAt?: string;
+  /** Id foto (IndexedDB `geoatlas-photos`); opsional, data lama tanpa field ini tetap sah. */
+  photos?: string[];
 }
 
 const KEY = "geoatlas.waypoints.v1";
@@ -46,9 +51,33 @@ export const kindOf = (w: Waypoint): WpKind => (WP_KINDS.includes(w.kind as WpKi
 /** True when the waypoint carries a usable strike/dip measurement. */
 export const hasAttitude = (w: Waypoint): boolean =>
   kindOf(w) === "structure" && Number.isFinite(w.strike as number) && Number.isFinite(w.dip as number);
+/** Isi yang diedit di panel; perubahan pada nilai ini (dan hanya ini) menaikkan updatedAt saat Simpan. */
+const editableKey = (w: Waypoint): string => JSON.stringify([w.name, w.note, kindOf(w), w.structType ?? null, w.strike ?? null, w.dip ?? null]);
 /** "030/45" style strike/dip text (right-hand rule). */
 export const attitudeText = (w: Waypoint): string =>
   hasAttitude(w) ? `${String(Math.round(w.strike as number) % 360).padStart(3, "0")}/${Math.round(w.dip as number)}` : "";
+
+/**
+ * Validasi isian strike/dip. Kosong = tidak diukur (null). Dip di luar 0–90 atau strike bukan angka ditolak,
+ * bukan dipotong diam-diam. Strike di luar 0–360 juga ditolak; 360 disimpan sebagai 0.
+ */
+export function parseAttitude(strikeRaw: string, dipRaw: string): { ok: true; strike: number | null; dip: number | null } | { ok: false; field: "strike" | "dip"; key: Key } {
+  const s = strikeRaw.trim();
+  const d = dipRaw.trim();
+  const st = s === "" ? null : Number(s);
+  if (st !== null && (!Number.isFinite(st) || st < 0 || st > 360)) return { ok: false, field: "strike", key: "wpStrikeErr" };
+  const dp = d === "" ? null : Number(d);
+  if (dp !== null && (!Number.isFinite(dp) || dp < 0 || dp > 90)) return { ok: false, field: "dip", key: "wpDipErr" };
+  return { ok: true, strike: st === null ? null : st % 360, dip: dp };
+}
+
+/** Arah foto 0..360; kosong = null. */
+export function parseAzimuth(raw: string): { ok: true; value: number | null } | { ok: false } {
+  const s = raw.trim();
+  if (s === "") return { ok: true, value: null };
+  const n = Number(s);
+  return Number.isFinite(n) && n >= 0 && n <= 360 ? { ok: true, value: n } : { ok: false };
+}
 
 export function loadWaypoints(): Waypoint[] {
   try {
@@ -75,24 +104,28 @@ export function nextName(wps: readonly Waypoint[]): string {
 
 const xml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-export function toGpx(wps: readonly Waypoint[]): string {
+/** `photos` opsional: foto per waypoint sebagai path relatif, ditulis sebagai <link href>. */
+export function toGpx(wps: readonly Waypoint[], photos?: ReadonlyMap<string, readonly string[]>): string {
   const body = wps
     .map((w) => {
       const att = attitudeText(w);
       const desc = [att && `${w.structType ?? "bedding"} ${att}`, w.note, w.unit && `${w.unit}${w.symbol ? ` (${w.symbol})` : ""}`, w.accM !== null ? `±${Math.round(w.accM)} m` : ""].filter(Boolean).join(" | ");
-      return `  <wpt lat="${w.lat.toFixed(7)}" lon="${w.lng.toFixed(7)}">${w.elevM !== null ? `<ele>${w.elevM.toFixed(1)}</ele>` : ""}<time>${xml(w.time)}</time><name>${xml(w.name)}</name>${desc ? `<desc>${xml(desc)}</desc>` : ""}<type>${kindOf(w)}</type></wpt>`;
+      const links = (photos?.get(w.id) ?? []).map((p) => `<link href="${xml(p)}"/>`).join("");
+      return `  <wpt lat="${w.lat.toFixed(7)}" lon="${w.lng.toFixed(7)}">${w.elevM !== null ? `<ele>${w.elevM.toFixed(1)}</ele>` : ""}<time>${xml(w.time)}</time><name>${xml(w.name)}</name>${desc ? `<desc>${xml(desc)}</desc>` : ""}${links}<type>${kindOf(w)}</type></wpt>`;
     })
     .join("\n");
   return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Orebit GeoAtlas" xmlns="http://www.topografix.com/GPX/1/1">\n${body}\n</gpx>\n`;
 }
 
+export const CSV_HEADER = "name,kind,structure,strike,dip,lat,lon,elev_m,accuracy_m,unit,symbol,note,time";
+const csvQuote = (s: string) => `"${s.replace(/"/g, '""')}"`;
+export function csvRow(w: Waypoint): string {
+  const st = hasAttitude(w);
+  return [csvQuote(w.name), kindOf(w), st ? w.structType ?? "bedding" : "", st ? Math.round(w.strike as number) : "", st ? Math.round(w.dip as number) : "", w.lat.toFixed(7), w.lng.toFixed(7), w.elevM ?? "", w.accM === null ? "" : Math.round(w.accM), csvQuote(w.unit), csvQuote(w.symbol), csvQuote(w.note), w.time].join(",");
+}
+
 export function toCsv(wps: readonly Waypoint[]): string {
-  const q = (s: string) => `"${s.replace(/"/g, '""')}"`;
-  const rows = wps.map((w) => {
-    const st = hasAttitude(w);
-    return [q(w.name), kindOf(w), st ? w.structType ?? "bedding" : "", st ? Math.round(w.strike as number) : "", st ? Math.round(w.dip as number) : "", w.lat.toFixed(7), w.lng.toFixed(7), w.elevM ?? "", w.accM === null ? "" : Math.round(w.accM), q(w.unit), q(w.symbol), q(w.note), w.time].join(",");
-  });
-  return "name,kind,structure,strike,dip,lat,lon,elev_m,accuracy_m,unit,symbol,note,time\n" + rows.join("\n") + "\n";
+  return CSV_HEADER + "\n" + wps.map(csvRow).join("\n") + "\n";
 }
 
 /**
@@ -228,6 +261,14 @@ export function createWaypoints(
   const strikeIn = $<HTMLInputElement>("wpStrike");
   const dipIn = $<HTMLInputElement>("wpDip");
   let editKind: WpKind = "outcrop";
+  const strikeErr = $<HTMLElement>("wpStrikeErr");
+  const dipErr = $<HTMLElement>("wpDipErr");
+  const photoGrid = $<HTMLElement>("wpPhotoGrid");
+  const camIn = $<HTMLInputElement>("wpPhotoCam");
+  const galIn = $<HTMLInputElement>("wpPhotoGal");
+  let photoUrls: string[] = [];
+  let photoSeq = 0;
+  setPhotoNotifier(opts.toast);
 
   const setEditKind = (k: WpKind) => {
     editKind = k;
@@ -251,6 +292,13 @@ export function createWaypoints(
     structSel.innerHTML = STRUCT_TYPES.map((st) => `<option value="${st}">${esc(t(`wpStruct_${st}` as Parameters<typeof t>[0]))}</option>`).join("");
   };
   renderKindButtons();
+  // Label foto yang statis (bukan bagian dari daftar yang dirender ulang).
+  const renderStatic = () => {
+    $("t-wpPhotoTitle").textContent = t("wpPhotoTitle");
+    $("t-wpPhotoCamera").textContent = t("wpPhotoCamera");
+    $("t-wpPhotoGallery").textContent = t("wpPhotoGallery");
+  };
+  renderStatic();
 
   const draw = () => {
     try {
@@ -311,11 +359,93 @@ export function createWaypoints(
             const att = attitudeText(w);
             const col = hasAttitude(w) ? STRUCT_COLOR[w.structType ?? "bedding"] : KIND_COLOR[kindOf(w)];
             const sub = [att && `${t(`wpStruct_${w.structType ?? "bedding"}` as Parameters<typeof t>[0])} ${att}`, w.unit || `${w.lat.toFixed(5)}, ${w.lng.toFixed(5)}`].filter(Boolean).join(" · ");
-            return `<li><button type="button" class="wp-item" data-id="${esc(w.id)}"><i class="wp-dot" style="background:${col}"></i><strong>${esc(w.name)}</strong><span>${esc(sub)}</span></button></li>`;
+            const cam = w.photos?.length
+              ? `<svg class="wp-cam" viewBox="0 0 24 24" role="img" aria-label="${esc(t("wpPhotoBadge"))}"><title>${esc(t("wpPhotoBadge"))}</title><path fill-rule="evenodd" d="M4 7h3.2l1.6-2h6.4l1.6 2H20v12H4zM12 9.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6z"/></svg>`
+              : "";
+            return `<li><button type="button" class="wp-item" data-id="${esc(w.id)}"><i class="wp-dot" style="background:${col}"></i><strong>${esc(w.name)}</strong><span>${esc(sub)}</span>${cam}</button></li>`;
           })
           .join("")
       : `<li class="muted">${esc(t("wpEmpty"))}</li>`;
     ["wpExportGpx", "wpExportCsv", "wpClearAll"].forEach((id) => ($(id) as HTMLButtonElement).toggleAttribute("disabled", wps.length === 0));
+  };
+
+  const revokePhotoUrls = () => {
+    photoUrls.forEach((u) => URL.revokeObjectURL(u));
+    photoUrls = [];
+  };
+
+  const photoItemHtml = (m: PhotoMeta) => {
+    const az = m.azimuth === null ? "" : String(m.azimuth);
+    return `<li class="wp-photo" data-pid="${esc(m.id)}"><img alt="" width="72" height="72" /><div class="wp-photo-fields"><input type="text" maxlength="200" data-k="caption" value="${esc(m.caption)}" placeholder="${esc(t("wpPhotoCaption"))}" aria-label="${esc(t("wpPhotoCaption"))}" /><input type="number" inputmode="decimal" min="0" max="360" step="1" data-k="az" value="${esc(az)}" placeholder="${esc(t("wpPhotoAzimuth"))}" aria-label="${esc(t("wpPhotoAzimuth"))}" /><button type="button" class="btn wp-clear" data-del="${esc(m.id)}">${esc(t("wpPhotoDelete"))}</button></div></li>`;
+  };
+  const setThumb = (pid: string, blob: Blob) => {
+    const li = photoGrid.querySelector<HTMLLIElement>(`li.wp-photo[data-pid="${CSS.escape(pid)}"]`);
+    if (!li) return;
+    const url = URL.createObjectURL(blob);
+    photoUrls.push(url);
+    li.querySelector("img")!.src = url;
+  };
+
+  /** Render penuh dari IndexedDB, hanya saat panel dibuka; thumbnail memakai object URL yang dicabut saat ditutup. */
+  const renderPhotos = async (w: Waypoint) => {
+    const seq = ++photoSeq;
+    revokePhotoUrls();
+    const metas = await listPhotoMeta(w.id);
+    if (seq !== photoSeq) return;
+    const byId = new Map(metas.map((m) => [m.id, m] as const));
+    const ordered = (w.photos ?? []).map((pid) => byId.get(pid)).filter((m): m is PhotoMeta => Boolean(m));
+    photoGrid.innerHTML = ordered.length ? ordered.map(photoItemHtml).join("") : `<li class="muted wp-photo-empty">${esc(t("wpPhotoEmpty"))}</li>`;
+    for (const m of ordered) {
+      const blob = await getPhoto(m.id);
+      if (seq !== photoSeq) return;
+      if (blob) setThumb(m.id, blob);
+    }
+  };
+
+  /** Tambah satu item tanpa menyentuh item lain, sehingga keterangan yang sedang diketik tidak hilang. */
+  const appendPhoto = (m: PhotoMeta, blob: Blob) => {
+    photoGrid.querySelector(".wp-photo-empty")?.remove();
+    photoGrid.insertAdjacentHTML("beforeend", photoItemHtml(m));
+    setThumb(m.id, blob);
+  };
+
+  /** Foto dikompres lalu disimpan; hanya masuk ke waypoint bila penyimpanan berhasil. */
+  const addPhotos = async (files: File[]) => {
+    const wid = openId;
+    if (!wid || !files.length) return;
+    for (const f of files) {
+      const bad = photoFileError(f);
+      if (bad) {
+        opts.toast(t(bad));
+        continue;
+      }
+      try {
+        const { blob, w: pw, h: ph } = await compressImage(f);
+        const id = newPhotoId();
+        const meta: PhotoMeta = {
+          id,
+          wpId: wid,
+          caption: "",
+          azimuth: null,
+          takenAt: new Date(f.lastModified || Date.now()).toISOString(),
+          w: pw,
+          h: ph,
+          bytes: blob.size,
+        };
+        if (!(await putPhoto(blob, meta))) continue;
+        const cur = wps.find((x) => x.id === wid);
+        if (!cur) {
+          await deletePhotos([id]); // panel ditutup selama proses: jangan tinggalkan yatim
+          continue;
+        }
+        cur.photos = [...(cur.photos ?? []), id];
+        cur.updatedAt = new Date().toISOString();
+        save();
+        if (openId === wid) appendPhoto(meta, blob);
+      } catch {
+        opts.toast(t("wpPhotoError"));
+      }
+    }
   };
 
   const save = () => {
@@ -323,6 +453,13 @@ export function createWaypoints(
     draw();
     renderList();
     opts.onChange?.();
+  };
+  /** Menandai waypoint yang sedang dibuka sebagai berubah (keterangan/arah foto) lalu menyimpan. */
+  const touchOpen = () => {
+    const w = wps.find((x) => x.id === openId);
+    if (!w) return;
+    w.updatedAt = new Date().toISOString();
+    save();
   };
 
   const open = (id: string) => {
@@ -336,6 +473,9 @@ export function createWaypoints(
     structSel.value = w.structType ?? "bedding";
     strikeIn.value = Number.isFinite(w.strike as number) ? String(w.strike) : "";
     dipIn.value = Number.isFinite(w.dip as number) ? String(w.dip) : "";
+    strikeErr.hidden = true;
+    dipErr.hidden = true;
+    void renderPhotos(w);
     meta.innerHTML = `<dl>
       <div><dt>${esc(t("wpCoords"))}</dt><dd>${w.lat.toFixed(6)}°, ${w.lng.toFixed(6)}°</dd></div>
       ${w.elevM !== null ? `<div><dt>${esc(t("wpElev"))}</dt><dd>${Math.round(w.elevM)} m</dd></div>` : ""}
@@ -349,6 +489,9 @@ export function createWaypoints(
   const close = () => {
     panel.hidden = true;
     openId = null;
+    photoSeq++; // batalkan render foto yang masih berjalan
+    revokePhotoUrls();
+    photoGrid.innerHTML = "";
   };
 
   const add = (lng: number, lat: number, fix: Fix | null) => {
@@ -362,6 +505,7 @@ export function createWaypoints(
         elev = null;
       }
     }
+    const now = new Date().toISOString();
     const w: Waypoint = {
       id: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
       name: nextName(wps),
@@ -373,7 +517,8 @@ export function createWaypoints(
       accM: fix?.acc ?? null,
       unit: u?.name ?? "",
       symbol: u?.symbol ?? "",
-      time: new Date().toISOString(),
+      time: now,
+      updatedAt: now,
     };
     wps.push(w);
     save();
@@ -397,30 +542,90 @@ export function createWaypoints(
   $("wpSave").addEventListener("click", () => {
     const w = wps.find((x) => x.id === openId);
     if (w) {
+      // validity.badInput: teks yang tidak bisa dibaca input number (value-nya "") harus ditolak, bukan disimpan sebagai null.
+      let att: ReturnType<typeof parseAttitude> = { ok: true, strike: null, dip: null };
+      if (editKind === "structure") {
+        if (strikeIn.validity.badInput) att = { ok: false, field: "strike", key: "wpStrikeErr" };
+        else if (dipIn.validity.badInput) att = { ok: false, field: "dip", key: "wpDipErr" };
+        else att = parseAttitude(strikeIn.value, dipIn.value);
+      }
+      strikeErr.textContent = !att.ok && att.field === "strike" ? t(att.key) : "";
+      strikeErr.hidden = strikeErr.textContent === "";
+      dipErr.textContent = !att.ok && att.field === "dip" ? t(att.key) : "";
+      dipErr.hidden = dipErr.textContent === "";
+      if (!att.ok) return; // isian salah: panel tetap terbuka, tidak ada yang tersimpan
+      if (Array.from(photoGrid.querySelectorAll<HTMLInputElement>('[data-k="az"]')).some((el) => !parseAzimuth(el.value).ok)) {
+        opts.toast(t("wpAzErr"));
+        return;
+      }
+      const before = editableKey(w);
       w.name = nameIn.value.trim() || w.name;
       w.note = noteIn.value.trim();
       w.kind = editKind;
       if (editKind === "structure") {
-        const st = strikeIn.value === "" ? NaN : Number(strikeIn.value);
-        const dp = dipIn.value === "" ? NaN : Number(dipIn.value);
         w.structType = structSel.value as StructType;
-        w.strike = Number.isFinite(st) ? ((st % 360) + 360) % 360 : null;
-        w.dip = Number.isFinite(dp) ? Math.max(0, Math.min(90, dp)) : null;
+        w.strike = att.strike;
+        w.dip = att.dip;
       } else {
         delete w.structType;
         w.strike = null;
         w.dip = null;
       }
+      // updatedAt hanya naik bila isi yang diedit benar-benar berubah.
+      if (editableKey(w) !== before) w.updatedAt = new Date().toISOString();
       save();
     }
     close();
   });
-  $("wpDelete").addEventListener("click", () => {
-    wps = wps.filter((x) => x.id !== openId);
+  // Hapus waypoint selalu minta konfirmasi; foto ikut terhapus dan hanya dilepas dari waypoint bila berkas foto berhasil dihapus.
+  $("wpDelete").addEventListener("click", async () => {
+    const w = wps.find((x) => x.id === openId);
+    if (!w || !window.confirm(t("wpDeleteConfirm"))) return;
+    if (w.photos?.length && !(await deletePhotos(w.photos))) return;
+    wps = wps.filter((x) => x.id !== w.id);
     save();
     close();
   });
   $("wpClose").addEventListener("click", close);
+  camIn.addEventListener("change", () => {
+    const files = Array.from(camIn.files ?? []);
+    camIn.value = "";
+    void addPhotos(files);
+  });
+  galIn.addEventListener("change", () => {
+    const files = Array.from(galIn.files ?? []);
+    galIn.value = "";
+    void addPhotos(files);
+  });
+  // Keterangan dan arah disimpan saat isian kehilangan fokus, sehingga render ulang tidak menghapus ketikan.
+  photoGrid.addEventListener("change", async (e) => {
+    const el = e.target as HTMLInputElement;
+    const pid = el.closest<HTMLElement>(".wp-photo")?.dataset.pid;
+    if (!pid) return;
+    let ok = false;
+    if (el.dataset.k === "caption") ok = await updatePhotoMeta(pid, { caption: el.value.trim() });
+    else if (el.dataset.k === "az") {
+      const a = parseAzimuth(el.value);
+      if (!a.ok) opts.toast(t("wpAzErr"));
+      else ok = await updatePhotoMeta(pid, { azimuth: a.value });
+    }
+    if (ok) touchOpen();
+  });
+  photoGrid.addEventListener("click", async (e) => {
+    const pid = (e.target as HTMLElement).closest<HTMLElement>("[data-del]")?.dataset.del;
+    const w = wps.find((x) => x.id === openId);
+    if (!pid || !w || !window.confirm(t("wpPhotoDeleteConfirm"))) return;
+    // Berkas dihapus dulu; bila gagal, foto tetap tercatat di waypoint.
+    if (!(await deletePhotos([pid]))) return;
+    w.photos = (w.photos ?? []).filter((x) => x !== pid);
+    w.updatedAt = new Date().toISOString();
+    save();
+    const li = photoGrid.querySelector<HTMLElement>(`[data-pid="${CSS.escape(pid)}"]`);
+    const src = li?.querySelector("img")?.src ?? "";
+    if (src.startsWith("blob:")) URL.revokeObjectURL(src);
+    li?.remove();
+    if (!photoGrid.querySelector("li.wp-photo")) photoGrid.innerHTML = `<li class="muted wp-photo-empty">${esc(t("wpPhotoEmpty"))}</li>`;
+  });
   $("wpFly").addEventListener("click", () => {
     const w = wps.find((x) => x.id === openId);
     if (w) map.flyTo({ center: [w.lng, w.lat], zoom: Math.max(map.getZoom(), 14), duration: 700 });
@@ -435,8 +640,10 @@ export function createWaypoints(
   const stamp = () => new Date().toISOString().slice(0, 10);
   $("wpExportGpx").addEventListener("click", () => opts.saveBlob(new Blob([toGpx(wps)], { type: "application/gpx+xml" }), `orebit-waypoints-${stamp()}.gpx`));
   $("wpExportCsv").addEventListener("click", () => opts.saveBlob(new Blob([toCsv(wps)], { type: "text/csv;charset=utf-8" }), `orebit-waypoints-${stamp()}.csv`));
-  $("wpClearAll").addEventListener("click", () => {
+  $("wpClearAll").addEventListener("click", async () => {
     if (!window.confirm(t("wpClearConfirm"))) return;
+    const pids = wps.flatMap((w) => w.photos ?? []);
+    if (pids.length && !(await deletePhotos(pids))) return;
     wps = [];
     save();
     close();
@@ -446,6 +653,11 @@ export function createWaypoints(
 
   return {
     all: (): readonly Waypoint[] => wps,
+    /** Ganti seluruh daftar (dipakai impor paket setelah konfirmasi) lalu simpan dan gambar ulang. */
+    commit: (next: Waypoint[]) => {
+      wps = next;
+      save();
+    },
     isPlacing: () => placing,
     /** Ketukan peta saat mode tempatkan aktif. */
     place: (lng: number, lat: number) => {
@@ -456,6 +668,7 @@ export function createWaypoints(
     close,
     refresh: () => {
       renderKindButtons();
+      renderStatic();
       setEditKind(editKind);
       draw();
       renderList();

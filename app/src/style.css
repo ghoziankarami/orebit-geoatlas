@@ -623,3 +623,21 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
 .transect-wp-list li { position: relative; padding-left: 18px; display: flex; flex-direction: column; font-size: 12px; }
 .transect-wp-list li .wp-dot { left: 2px; top: 7px; margin: 0; }
 .transect-wp-list span { color: var(--ink-soft); font-size: 11px; font-variant-numeric: tabular-nums; }
+.wp-err { grid-column: 1 / -1; margin: 4px 0 0; font-size: 12px; font-weight: 600; color: #B42318; }
+.wp-cam { position: absolute; right: 8px; top: 8px; width: 14px; height: 14px; fill: #0F766E; }
+.wp-photos { margin-top: 12px; }
+.wp-photo-add { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+.wp-photo-add .btn { display: inline-flex; align-items: center; min-height: 44px; cursor: pointer; }
+.wp-photo-grid { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+.wp-photo { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 8px; align-items: start; padding: 6px; border: 1px solid var(--line); border-radius: 9px; background: var(--paper); }
+.wp-photo img { width: 72px; height: 72px; object-fit: cover; border-radius: 6px; background: var(--field); }
+.wp-photo-fields { display: grid; gap: 6px; min-width: 0; }
+.wp-photo-fields input { font: inherit; font-size: 13px; color: var(--ink); width: 100%; min-width: 0; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--field); }
+.wp-photo-fields input:focus { outline: none; border-color: #E8590C; background: var(--paper); }
+.wp-photo-fields .btn { min-height: 40px; justify-content: center; }
+.wp-photo-fields .btn.wp-clear { color: #B42318; }
+.wp-backup { margin: 8px 0 0; font-size: 11.5px; }
+/* Pengingat cadangan: tombol paket disorot bila ada waypoint yang belum tercadangkan. */
+.btn.wp-due { border-color: #B45309; box-shadow: 0 0 0 2px #FDE68A; font-weight: 700; }
+.wp-photo-empty { font-size: 12px; }
+@media (max-width: 760px) { .wp-photo-fields input { font-size: 16px; } }

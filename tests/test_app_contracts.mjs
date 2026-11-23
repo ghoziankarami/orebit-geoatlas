@@ -19,7 +19,7 @@ globalThis.document = { documentElement: { lang: "id" } };
 globalThis.importMetaEnv = {};
 
 const tempDir = mkdtempSync(join(tmpdir(), "geoatlas-contracts-"));
-const modulesToCompile = ["config", "i18n", "timescale", "lithology", "layers", "state", "coords", "search", "detail", "transect", "section_model", "shp_import", "gps", "waypoints"];
+const modulesToCompile = ["config", "i18n", "timescale", "lithology", "layers", "state", "coords", "search", "detail", "transect", "section_model", "shp_import", "gps", "photos", "waypoints", "zip", "field_package"];
 
 for (const name of modulesToCompile) {
   let src = readFileSync(resolve(ROOT, `app/src/${name}.ts`), "utf-8");
@@ -158,6 +158,30 @@ try {
   assert.equal(hasAttitude(st), true);
   assert.equal(attitudeText(st), "030/45");
   assert.equal(hasAttitude({ ...st, kind: "sample" }), false);
+
+  // 7b. Validasi strike/dip (ditolak, bukan dipotong) dan arah foto
+  const { parseAttitude, parseAzimuth } = await import(join(tempDir, "waypoints.mjs"));
+  assert.deepEqual(parseAttitude("30", "45"), { ok: true, strike: 30, dip: 45 });
+  assert.deepEqual(parseAttitude("-30", ""), { ok: false, field: "strike", key: "wpStrikeErr" }, "strike below 0 must be rejected, not wrapped");
+  assert.deepEqual(parseAttitude("400", "45"), { ok: false, field: "strike", key: "wpStrikeErr" }, "strike above 360 must be rejected");
+  assert.deepEqual(parseAttitude("360", "45"), { ok: true, strike: 0, dip: 45 }, "360 is accepted and stored as 0");
+  assert.deepEqual(parseAttitude("0", ""), { ok: true, strike: 0, dip: null });
+  assert.deepEqual(parseAttitude("", "90"), { ok: true, strike: null, dip: 90 });
+  assert.deepEqual(parseAttitude("30", "120"), { ok: false, field: "dip", key: "wpDipErr" }, "dip above 90 must be rejected");
+  assert.deepEqual(parseAttitude("30", "-1"), { ok: false, field: "dip", key: "wpDipErr" });
+  assert.deepEqual(parseAttitude("abc", "45"), { ok: false, field: "strike", key: "wpStrikeErr" });
+  assert.deepEqual(parseAzimuth(""), { ok: true, value: null });
+  assert.deepEqual(parseAzimuth("360"), { ok: true, value: 360 });
+  assert.equal(parseAzimuth("361").ok, false);
+
+  // 7c. Foto: ukuran sisi terpanjang <= 1600 px tanpa memperbesar; berkas non-gambar dan > 25 MB ditolak
+  const { fitSize, photoFileError, PHOTO_MAX_SRC_BYTES } = await import(join(tempDir, "photos.mjs"));
+  assert.deepEqual(fitSize(4000, 3000), { w: 1600, h: 1200 });
+  assert.deepEqual(fitSize(3000, 4000), { w: 1200, h: 1600 });
+  assert.deepEqual(fitSize(800, 600), { w: 800, h: 600 }, "small images are not upscaled");
+  assert.equal(photoFileError({ type: "image/jpeg", size: 1000 }), null);
+  assert.equal(photoFileError({ type: "application/pdf", size: 1000 }), "wpPhotoNotImage");
+  assert.equal(photoFileError({ type: "image/png", size: PHOTO_MAX_SRC_BYTES + 1 }), "wpPhotoTooLarge");
   assert.ok(toCsv([st]).split("\n")[1].startsWith('"WP-002",structure,bedding,30,45,'));
   assert.ok(toGpx([st]).includes("<type>structure</type>") && toGpx([st]).includes("bedding 030/45"));
 
@@ -237,7 +261,144 @@ try {
   const vert = secm.layoutSection(noFault, geo, 10).boundaries[0].path;
   near(vert[vert.length - 1][0], vert[0][0], 0.01);                            // unknown dip = vertical
 
-  console.log("✓ app contracts PASS (real module imports: UTM, i18n parity, searchNationalIndex, transect math, state roundtrip)");
+  // 9. Paket Lapangan: ZIP store + CRC32, pembaca bersama (CRC wajib cocok), parser pihak ketiga, gabung per id, skema ditolak
+  const zipM = await import(join(tempDir, "zip.mjs"));
+  const enc = (s) => new TextEncoder().encode(s);
+  assert.equal(zipM.crc32(enc("123456789")), 0xcbf43926, "CRC32 check value");
+  const { unzipEntries } = await import(join(tempDir, "shp_import.mjs"));
+  const fpPhoto = Uint8Array.from({ length: 4096 }, (_, i) => (i * 37) & 0xff);
+  const fpZip = zipM.buildZip([{ name: "a/ünï.txt", data: enc("halo") }, { name: "photos/WP-001_1.jpg", data: fpPhoto }], new Date(2026, 10, 23, 10, 30, 0));
+  const fpEnts = await unzipEntries(fpZip.buffer);
+  assert.equal(new TextDecoder().decode(fpEnts.get("a/ünï.txt")), "halo", "UTF-8 entry name round-trip");
+  assert.deepEqual(new Uint8Array(fpEnts.get("photos/WP-001_1.jpg")), fpPhoto, "photo bytes identical after zip round-trip");
+  const fpCorrupt = fpZip.slice();
+  fpCorrupt[Buffer.from(fpZip).indexOf("halo")] ^= 0xff; // satu byte data rusak
+  await assert.rejects(unzipEntries(fpCorrupt.buffer), /CRC mismatch/, "corrupt entry must be rejected, not read silently");
+
+  const fp = await import(join(tempDir, "field_package.mjs"));
+  const { mergeWaypoints, parseGpx, parseCsv, parseGeojson, readFieldFile, buildFieldPackage, FieldImportError, FIELD_SCHEMA } = fp;
+  const fpBase = (id, time, extra = {}) => ({ id, name: `WP-${id}`, note: "", kind: "outcrop", lat: -0.9, lng: 119.87, elevM: null, accM: null, unit: "", symbol: "", time, ...extra });
+  const fixture = (f) => readFileSync(resolve(ROOT, `tests/fixtures/${f}`), "utf-8");
+
+  const gpxIn = parseGpx(fixture("garmin-style-waypoints.gpx"));
+  assert.equal(gpxIn.length, 3, "GPX fixture: 3 wpt read");
+  assert.equal(gpxIn[0].name, "GRM001");
+  assert.equal(gpxIn[0].note, "Singkapan andesit & kekar", "GPX entities decoded");
+  assert.equal(gpxIn[0].elevM, 42.5);
+  assert.equal(gpxIn[1].name, "GRM002 - batu pasir", "GPX CDATA name");
+  assert.equal(gpxIn[2].name, "", "unnamed wpt keeps empty name until merge");
+  assert.equal(gpxIn[0].kind, "other", "third-party waypoints are kind other");
+  const csvIn = parseCsv(fixture("avenza-style-points.csv"));
+  assert.equal(csvIn.length, 2, "CSV fixture: row without coordinates skipped");
+  assert.equal(csvIn[0].note, 'Batu gamping, "berlapis"', "CSV quoted field with escaped quotes");
+  assert.throws(() => parseCsv("a,b\n1,2"), (e) => e instanceof FieldImportError && e.key === "wpImportErr", "CSV without lat/lon is rejected");
+  const gjIn = parseGeojson(JSON.stringify({ type: "FeatureCollection", features: [{ type: "Feature", geometry: { type: "Point", coordinates: [119.86, -0.895] }, properties: { name: "G1" } }, { type: "Feature", geometry: { type: "LineString", coordinates: [[0, 0], [1, 1]] }, properties: {} }] }));
+  assert.equal(gjIn.length, 1, "GeoJSON: only Point features");
+  assert.equal(gjIn[0].name, "G1");
+
+  // Gabung paket: id sama + time lebih baru menang; isi identik dilewati; id baru ditambahkan
+  const fpLocal = [fpBase("a", "2026-11-22T06:00:00.000Z"), fpBase("b", "2026-11-22T06:00:00.000Z")];
+  const fpInc = [fpBase("a", "2026-11-22T06:00:00.000Z"), fpBase("b", "2026-11-23T06:00:00.000Z", { note: "baru" }), fpBase("c", "2026-11-22T07:00:00.000Z")];
+  const fpPlan = mergeWaypoints(fpLocal, fpInc, "package");
+  assert.deepEqual([fpPlan.added, fpPlan.updated, fpPlan.skipped], [1, 1, 1]);
+  assert.equal(fpPlan.next.length, 3);
+  assert.equal(fpPlan.next.find((w) => w.id === "b").note, "baru");
+  assert.deepEqual([...fpPlan.touched].sort(), ["b", "c"]);
+  // Isi berbeda dengan id sama: konflik eksplisit (bukan diam-diam memilih salah satu); rencana tetap memuat versi lokal sampai dikonfirmasi
+  const fpOlder = mergeWaypoints([fpBase("x", "2026-11-23T00:00:00.000Z", { note: "lokal" })], [fpBase("x", "2026-11-22T00:00:00.000Z", { note: "paket" })], "package");
+  assert.deepEqual([fpOlder.updated, fpOlder.conflicts, fpOlder.skipped], [0, 1, 0], "older package version with different content is a conflict");
+  assert.equal(fpOlder.replaced[0].note, "lokal", "the local version is kept in the plan until the user confirms");
+
+  // H1: updatedAt menentukan urutan; edit lokal yang lebih baru tidak diam-diam tertimpa paket lama
+  const h1Edited = fpBase("e", "2026-11-22T06:00:00.000Z", { note: "diedit", updatedAt: "2026-11-24T10:00:00.000Z" });
+  const h1Old = fpBase("e", "2026-11-22T06:00:00.000Z", { note: "lama", updatedAt: "2026-11-22T06:00:00.000Z" });
+  assert.deepEqual(mergeWaypoints([h1Edited], [h1Old], "package").conflicts, 1, "older export vs newer device edit is a conflict");
+  assert.deepEqual([mergeWaypoints([h1Old], [h1Edited], "package").updated], [1], "newer package version by updatedAt is an update");
+  assert.equal(mergeWaypoints([h1Edited], [{ ...h1Edited }], "package").skipped, 1, "identical content is skipped");
+  const h1Back = await readFieldFile(new File([(await buildFieldPackage([h1Edited], [], "")).zip], "h1.zip"));
+  assert.equal(h1Back.waypoints[0].updatedAt, h1Edited.updatedAt, "updatedAt survives export and import");
+
+  // M4 & T1: dua titik tanpa nama di koordinat sama (keterangan berbeda) tetap dua; dedup hanya terhadap data lokal
+  const fpTwin = (note) => fpBase("t" + note, "2026-11-22T06:00:00.000Z", { name: "", lat: -0.85, lng: 119.85, note });
+  const twins = mergeWaypoints([], [fpTwin("A"), fpTwin("B")], "external");
+  assert.equal(twins.added, 2, "two unnamed points at the same coordinates stay two");
+  assert.equal(new Set(twins.next.map((w) => w.name)).size, 2, "each gets its own name");
+  assert.equal(mergeWaypoints([], [fpTwin("A"), fpTwin("A")], "external").added, 2, "rows inside one file are not deduplicated against each other");
+  const extLocal = mergeWaypoints([{ ...gpxIn[0] }], gpxIn, "external");
+  assert.deepEqual([extLocal.added, extLocal.skipped], [2, 1], "point already present locally (name, coords, note, time) is skipped");
+  // Impor ulang GPX dari aplikasi sendiri tidak menggandakan: <desc> berisi struktur, catatan, unit, dan akurasi sekaligus
+  const ownWps = [
+    fpBase("g1", "2026-11-22T06:00:00.000Z", { name: "S-1", kind: "structure", structType: "bedding", strike: 30, dip: 45, accM: 8.6, unit: "Formasi Pakuli", symbol: "Qp", note: "catatan", elevM: 42.4 }),
+    fpBase("g2", "2026-11-22T06:05:00.000Z", { name: "", note: "tanpa nama", accM: 3, unit: "Formasi X", symbol: "Y" }),
+    fpBase("g3", "2026-11-22T06:06:00.000Z", { name: "O-3", accM: 5, unit: "Formasi Z", note: "" }),
+  ];
+  const wpM = await import(join(tempDir, "waypoints.mjs"));
+  const ownGpx = parseGpx(wpM.toGpx(ownWps));
+  const ownRe = mergeWaypoints(ownWps, ownGpx, "external");
+  assert.deepEqual([ownRe.added, ownRe.skipped], [0, 3], "re-importing our own GPX must not duplicate any point");
+  assert.notEqual(ownGpx[0].note, ownWps[0].note, "sanity: GPX desc is combined, so it differs from the stored note");
+  assert.ok(ownGpx[0].note.includes("030/45") && ownGpx[0].note.includes("Formasi Pakuli"), "sanity: desc carries structure and unit");
+
+  // L3: ZIP menolak 65535 entri atau lebih (batas ZIP32 entri)
+  const manyEntries = (n) => Array.from({ length: n }, (_, i) => ({ name: `f${i}`, data: new Uint8Array(0) }));
+  assert.throws(() => zipM.buildZip(manyEntries(0xffff)), /too many/, "65535 entries rejected");
+  assert.ok(zipM.buildZip(manyEntries(0xfffe)).length > 0, "65534 entries allowed");
+  // Pihak ketiga: nama+koordinat sama dilewati; nama kosong diberi nomor berikutnya
+  const fpExt = mergeWaypoints([fpBase("p", "t", { name: "WP-001" })], [fpBase("q", "t", { name: "WP-001" }), fpBase("r", "t", { name: "", lat: -0.8, lng: 119.9 })], "external");
+  assert.deepEqual([fpExt.added, fpExt.skipped], [1, 1]);
+  assert.equal(fpExt.next[1].name, "WP-002", "unnamed third-party point gets next number");
+  const fpExt2 = mergeWaypoints(fpExt.next, [fpBase("s", "t", { name: "", lat: -0.8, lng: 119.9 })], "external");
+  assert.deepEqual([fpExt2.added, fpExt2.skipped], [0, 1], "re-importing an unnamed point at the same coordinates does not duplicate it");
+
+  // Skema tidak dikenal ditolak; paket yang foto atau acuannya rusak ditolak seluruhnya
+  const pkgFile = (project, extra = []) => new File([zipM.buildZip([{ name: "project.json", data: enc(JSON.stringify(project)) }, ...extra])], "p.zip", { type: "application/zip" });
+  await assert.rejects(readFieldFile(pkgFile({ schema: "orebit-geoatlas-field-v0", waypoints: [], photos: [], transect: [] })), (e) => e instanceof FieldImportError && e.key === "wpImportSchemaErr");
+  const fpPhotoMeta = { id: "ph1", wpId: "w1", caption: "", azimuth: null, takenAt: "2026-11-22T06:00:00.000Z", w: 10, h: 10, bytes: 4096, file: "photos/WP-001_1.jpg" };
+  const fpGood = {
+    schema: FIELD_SCHEMA,
+    app_version: "test",
+    exported_at: "2026-11-23T00:00:00.000Z",
+    view_hash: "",
+    waypoints: [fpBase("w1", "2026-11-22T06:00:00.000Z", { kind: "structure", structType: "bedding", strike: 30, dip: 45, photos: ["ph1"] })],
+    photos: [fpPhotoMeta],
+    transect: [{ lng: 119.8, lat: -0.9 }],
+  };
+  const fpWithPhoto = [{ name: "photos/WP-001_1.jpg", data: fpPhoto }];
+  // M1: akurasi ditolak bila non-finite atau negatif; elevasi menerima semua angka finite (termasuk negatif); tidak ada batas atas
+  const m1 = await readFieldFile(pkgFile({ ...fpGood, waypoints: [{ ...fpGood.waypoints[0], accM: 150000, elevM: 12000 }] }, fpWithPhoto));
+  assert.deepEqual([m1.waypoints[0].accM, m1.waypoints[0].elevM], [150000, 12000], "no upper bound on accM/elevM");
+  await assert.rejects(readFieldFile(pkgFile({ ...fpGood, waypoints: [{ ...fpGood.waypoints[0], accM: -1 }] }, fpWithPhoto)), (e) => e.key === "wpImportErr", "negative accM rejected");
+  const belowSea = await readFieldFile(pkgFile({ ...fpGood, waypoints: [{ ...fpGood.waypoints[0], elevM: -5 }] }, fpWithPhoto));
+  assert.equal(belowSea.waypoints[0].elevM, -5, "elevation below sea level is valid and must import");
+  await assert.rejects(readFieldFile(pkgFile({ ...fpGood, waypoints: [{ ...fpGood.waypoints[0], elevM: "12" }] }, fpWithPhoto)), (e) => e.key === "wpImportErr", "non-numeric elevM rejected");
+  const fpRead = await readFieldFile(pkgFile(fpGood, fpWithPhoto));
+  assert.equal(fpRead.kind, "package");
+  assert.deepEqual(fpRead.waypoints[0], fpGood.waypoints[0], "package waypoint restored field by field");
+  assert.equal(fpRead.photos.length, 1);
+  assert.equal(fpRead.photos[0].meta.file, undefined, "file path is not kept in photo meta");
+  await assert.rejects(readFieldFile(pkgFile(fpGood)), (e) => e.key === "wpImportErr", "missing photo file rejects the whole package");
+  await assert.rejects(readFieldFile(pkgFile({ ...fpGood, photos: [{ ...fpPhotoMeta, wpId: "zz" }] }, fpWithPhoto)), (e) => e.key === "wpImportErr", "photo pointing to unknown waypoint rejects");
+  await assert.rejects(readFieldFile(pkgFile({ ...fpGood, waypoints: [{ ...fpGood.waypoints[0], kind: "lava" }] }, fpWithPhoto)), (e) => e.key === "wpImportErr", "unknown waypoint kind rejects");
+  await assert.rejects(readFieldFile(new File([enc("bukan zip")], "rusak.zip")), (e) => e.key === "wpImportErr", "corrupt zip gives message, not a crash");
+  await assert.rejects(readFieldFile(new File([enc("x")], "lain.kml")), (e) => e.key === "wpImportFormatErr");
+
+  // Round-trip ekspor -> impor tanpa foto: setiap field waypoint dan lintasan kembali identik
+  const fpRt = [fpBase("s1", "2026-11-22T06:00:00.000Z", { kind: "structure", structType: "fault", strike: 0, dip: 90 }), fpBase("o2", "2026-11-22T06:01:00.000Z", { note: '<b>"q" & x</b> ]]>', elevM: 12.5, accM: 8 })];
+  const fpBuilt = await buildFieldPackage(fpRt, [{ lng: 119.8, lat: -0.9 }], "#map=9/-0.9/119.8");
+  assert.match(fpBuilt.filename, /^orebit-lapangan-\d{4}-\d{2}-\d{2}\.zip$/);
+  const fpBack = await readFieldFile(new File([fpBuilt.zip], fpBuilt.filename));
+  assert.deepEqual(fpBack.waypoints, fpRt, "round-trip waypoints identical");
+  assert.deepEqual(fpBack.transect, [{ lng: 119.8, lat: -0.9 }], "round-trip transect identical");
+  const fpEntsOut = await unzipEntries(fpBuilt.zip.buffer);
+  const fpGeo = JSON.parse(new TextDecoder().decode(fpEntsOut.get("waypoints.geojson")));
+  assert.equal(fpGeo.features.length, 2);
+  assert.ok(fpGeo.features.every((f) => f.geometry.type === "Point"), "GeoJSON: 2 Point features");
+  const fpGpxOut = parseGpx(new TextDecoder().decode(fpEntsOut.get("waypoints.gpx")));
+  assert.equal(fpGpxOut.length, 2, "exported GPX parses back");
+  const fpKmz = await unzipEntries(fpBuilt.kmz.buffer);
+  assert.equal(new TextDecoder().decode(fpKmz.get("doc.kml")).split("<Placemark>").length - 1, 2, "KMZ: one Placemark per waypoint");
+
+  console.log("✓ app contracts PASS (real module imports: UTM, i18n parity, searchNationalIndex, transect math, state roundtrip, field package round-trip)");
 } finally {
   rmSync(tempDir, { recursive: true, force: true });
 }

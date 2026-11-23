@@ -1254,6 +1254,7 @@ export function createTransectController(
       syncDrawBar();
       return true;
     },
+    points: (): TransectPoint[] => points.slice(),
     setPoints: (pts: readonly TransectPoint[]) => {
       points = pts.filter((p) => Number.isFinite(p.lng) && Number.isFinite(p.lat)).map((p) => ({ lng: p.lng, lat: p.lat }));
       syncGeojson();

@@ -6,6 +6,7 @@ import { getLang, t } from "./i18n";
 import { QUERY_LAYERS, styleReady } from "./layers";
 import { LITH_CLASSES } from "./lithology";
 import type { NationalUnit } from "./search";
+import { crc32 } from "./zip";
 
 export interface ImportedFeatureCollection {
   type: "FeatureCollection";
@@ -289,7 +290,8 @@ function parseDbfBuffer(buf: ArrayBuffer): Record<string, unknown>[] {
   return rows;
 }
 
-async function unzipEntries(buf: ArrayBuffer): Promise<Map<string, ArrayBuffer>> {
+/** Pembaca ZIP (store/deflate). Entri dengan CRC32 tidak cocok melempar galat, agar berkas rusak tidak terbaca diam-diam. */
+export async function unzipEntries(buf: ArrayBuffer): Promise<Map<string, ArrayBuffer>> {
   const dv = new DataView(buf);
   const bytes = new Uint8Array(buf);
   const dec = new TextDecoder("utf-8", { fatal: false });
@@ -309,6 +311,7 @@ async function unzipEntries(buf: ArrayBuffer): Promise<Map<string, ArrayBuffer>>
     const nameLen = dv.getUint16(cdOff + 28, true);
     const extraLen = dv.getUint16(cdOff + 30, true);
     const commentLen = dv.getUint16(cdOff + 32, true);
+    const storedCrc = dv.getUint32(cdOff + 16, true);
     const localHeaderOff = dv.getUint32(cdOff + 42, true);
     const name = dec.decode(bytes.subarray(cdOff + 46, cdOff + 46 + nameLen));
 
@@ -318,14 +321,18 @@ async function unzipEntries(buf: ArrayBuffer): Promise<Map<string, ArrayBuffer>>
     const rawSlice = bytes.subarray(dataStart, dataStart + compSize);
 
     if (!name.endsWith("/") && compSize > 0) {
+      let ab: ArrayBuffer | null = null;
       if (method === 0) {
-        out.set(name, rawSlice.buffer.slice(rawSlice.byteOffset, rawSlice.byteOffset + rawSlice.byteLength));
+        ab = rawSlice.buffer.slice(rawSlice.byteOffset, rawSlice.byteOffset + rawSlice.byteLength) as ArrayBuffer;
       } else if (method === 8 && typeof DecompressionStream !== "undefined") {
         const ds = new DecompressionStream("deflate-raw");
         const writer = ds.writable.getWriter();
         void writer.write(rawSlice);
         void writer.close();
-        const ab = await new Response(ds.readable).arrayBuffer();
+        ab = await new Response(ds.readable).arrayBuffer();
+      }
+      if (ab) {
+        if (crc32(new Uint8Array(ab)) !== storedCrc) throw new Error(`ZIP CRC mismatch: ${name}`);
         out.set(name, ab);
       }
     }

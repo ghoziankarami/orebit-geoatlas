@@ -26,6 +26,7 @@ import { ERA_PRESETS } from "./timescale";
 import { createTransectController } from "./transect";
 import { createGps } from "./gps";
 import { attitudeText, createWaypoints, drawWpIcon, hasAttitude, KIND_COLOR, kindOf, STRUCT_COLOR, WP_LAYER } from "./waypoints";
+import { createFieldPackage } from "./field_package";
 import { loadSession, restoreHashIfEmpty, saveSession } from "./session";
 import { createShpImportController } from "./shp_import";
 
@@ -937,6 +938,7 @@ function applyText() {
   shpImport.refresh();
   gps.refresh();
   wp.refresh();
+  fieldPkg.refresh();
 }
 
 function updateSheetHint() {
@@ -1252,7 +1254,10 @@ const wp = createWaypoints(map, {
   toast,
   saveBlob,
   getFix: () => gps.lastFix(),
-  onChange: () => transect.refresh(),
+  onChange: () => {
+    transect.refresh();
+    fieldPkg.refresh();
+  },
   unitAt: (lng, lat) => {
     const ql = queryLayers();
     const pt = map.project([lng, lat]);
@@ -1268,6 +1273,21 @@ const wp = createWaypoints(map, {
     hoverTip.hidden = true;
     if (isMobile()) setSnap("peek");
   },
+});
+
+// Paket Lapangan: ekspor zip/KMZ, bagikan, dan impor (gabung per id) lewat controller yang sama di panel waypoint.
+const fieldPkg = createFieldPackage({
+  host: { all: () => wp.all(), commit: (next) => wp.commit(next), close: () => wp.close() },
+  transect: {
+    points: () => transect.points(),
+    set: (pts) => {
+      transect.setPoints(pts);
+      saveSession({ transect: pts });
+      transect.refresh();
+    },
+  },
+  toast,
+  saveBlob,
 });
 
 // ---------- Impor SHP / GeoJSON (Cek Lokasi) ----------
