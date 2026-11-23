@@ -83,6 +83,8 @@ if [ -f "tests/test_pipeline_contracts.py" ]; then
 fi
 if [ -f "tests/test_app_contracts.mjs" ]; then
   run_check "app-contracts" node tests/test_app_contracts.mjs
+  # Coverage modul murni app: total line coverage wajib >= 60% (TEST-04 / WP-32)
+  run_check "coverage" bash ops/scripts/ci/coverage.sh 60
 fi
 
 # 4. Production TypeScript & Vite build
