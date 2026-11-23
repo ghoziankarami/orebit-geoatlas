@@ -43,6 +43,7 @@
         <button type="button" data-snap="half" id="snapHalf" aria-pressed="false"></button>
         <button type="button" data-snap="full" id="snapFull" aria-pressed="false"></button>
       </div>
+      <button class="install-chip" id="installChip" type="button" hidden></button>
     </div>
 
     <header class="brand">
@@ -250,6 +251,18 @@
         <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3 L13 13 M13 3 L3 13" /></svg>
       </button>
     </div>
+  </div>
+
+  <section class="install-sheet" id="installSheet" role="dialog" aria-labelledby="installSheetTitle" hidden>
+    <h2 id="installSheetTitle"></h2>
+    <ol id="installSteps"></ol>
+    <button type="button" class="install-sheet-close" id="installSheetClose"></button>
+  </section>
+
+  <div class="inapp-banner" id="inAppBanner" role="status" hidden>
+    <p id="inAppText"></p>
+    <button type="button" id="inAppCopy"></button>
+    <button type="button" id="inAppClose"></button>
   </div>
 
   <div class="map-ctrls" id="mapControls" aria-label="Navigasi peta">
