@@ -130,6 +130,18 @@
         <div id="shpImportSummary" class="shp-summary" hidden></div>
       </section>
 
+      <section class="block offline-block" id="offlineBlock">
+        <h2 id="t-offTitle"></h2>
+        <p class="opacity-hint" id="t-offHint"></p>
+        <div class="shp-actions">
+          <button type="button" class="btn primary shp-import-btn" id="offSave"></button>
+          <button type="button" class="btn" id="offCancel" hidden></button>
+          <button type="button" class="btn" id="offClear"></button>
+        </div>
+        <progress id="offProgress" class="off-progress" value="0" max="1" hidden></progress>
+        <div id="offStatus" class="off-status" aria-live="polite"></div>
+      </section>
+
       <section class="block wp-block" id="wpBlock">
         <h2><span id="t-wpTitle"></span> <span class="wp-count" id="wpCount">0</span></h2>
         <p class="opacity-hint" id="t-wpHint"></p>
