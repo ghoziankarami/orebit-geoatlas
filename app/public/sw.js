@@ -3,11 +3,12 @@
 // Service worker GeoAtlas: app shell offline + cache tile peta yang pernah dibuka (untuk sinyal lemah di lapangan).
 const VERSION = "v4"; // v3 -> v4 (WP-31): Range PMTiles + precache /assets/. Naikkan setiap mengubah sw.js agar pengguna lama menerima versi baru.
 const SHELL = `geoatlas-shell-${VERSION}`;
-const TILES = `geoatlas-tiles-${VERSION}`;
+// Nama cache tile basemap sengaja TIDAK memakai VERSION: nama lama (v3) dipertahankan agar upgrade SW tidak menghapus basemap pengguna.
+const TILES = "geoatlas-tiles-v3";
 const MAX_TILES = 3000;
-// Cache PMTiles geologi (respons 206 per rentang byte). Nama tidak mengikuti VERSION: isi tile ber-versi lewat nama berkas
-// (all-v3.pmtiles), jadi tetap dipakai lintas versi SW; berkas PMTiles lain dibuang otomatis saat entri baru disimpan.
-const PM_CACHE = "geoatlas-pmtiles-v1";
+// Cache PMTiles geologi (respons 206 per rentang byte), tidak mengikuti VERSION SW. Isi usang dibuang hanya bila ETag/isi header berubah.
+const PM_SAVED = "geoatlas-pmtiles-v1";
+const PM_BROWSE = "geoatlas-pmtiles-browse-v1";
 const PM_MAX_BYTES = 150 * 1024 * 1024;
 const SHELL_URLS = ["/", "/index.html", "/app/", "/app/index.html", "/manifest.json", "/favicon.svg", "/icon-192.png", "/data/indonesia-units-index.json"];
 const TILE_HOSTS = ["tiles.openfreemap.org", "tiles.macrostrat.org", "server.arcgisonline.com", "tiles.mapterhorn.com"];
@@ -49,7 +50,7 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k.startsWith("geoatlas-") && k !== SHELL && k !== TILES && k !== PM_CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k.startsWith("geoatlas-") && k !== SHELL && k !== TILES && k !== PM_SAVED && k !== PM_BROWSE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
@@ -61,13 +62,22 @@ async function trimTiles() {
 }
 
 // ---------- PMTiles Range ----------
+// Dua cache: PM_SAVED (area yang disimpan pengguna lewat "Simpan area", header x-geoatlas-save; tidak pernah dipangkas otomatis)
+// dan PM_BROWSE (tile yang kebetulan dilihat saat menjelajah; dipangkas sampai PM_MAX_BYTES). Mencari: SAVED dulu, lalu BROWSE.
 // Kunci sintetis memakai query, bukan #fragment: Cache API mengabaikan fragment sehingga semua rentang akan bertabrakan.
 const pmKey = (url, range) => new Request(url + (url.includes("?") ? "&" : "?") + "__bytes=" + range.replace(/^bytes=/, ""));
 let pmPuts = 0;
 let pmCleaned = false;
+let savedBytes = null; // perkiraan ukuran PM_SAVED; null = hitung ulang
 
 function notifyClients(msg) {
   return self.clients.matchAll().then((cs) => cs.forEach((c) => c.postMessage(msg)));
+}
+
+async function cacheBytes(cache) {
+  let sum = 0;
+  for (const k of await cache.keys()) sum += Number((await cache.match(k))?.headers.get("content-length")) || 0;
+  return sum;
 }
 
 async function pmTrim(cache) {
@@ -88,51 +98,128 @@ async function pmTrim(cache) {
   }
 }
 
-async function pmPurge(cache, keep, pathname) {
-  for (const k of await cache.keys()) {
-    const p = new URL(k.url).pathname;
-    if (keep ? p !== pathname : p === pathname) await cache.delete(k);
+// keep=true: buang entri berkas LAIN; keep=false: buang entri berkas ini. Mengembalikan jumlah yang dibuang dari PM_SAVED.
+async function pmPurge(keep, pathname) {
+  let droppedSaved = 0;
+  for (const name of [PM_SAVED, PM_BROWSE]) {
+    const cache = await caches.open(name);
+    for (const k of await cache.keys()) {
+      const p = new URL(k.url).pathname;
+      if (keep ? p !== pathname : p === pathname) {
+        await cache.delete(k);
+        if (name === PM_SAVED) droppedSaved++;
+      }
+    }
   }
+  savedBytes = null;
+  return droppedSaved;
 }
 
 // Cache.put menolak status 206, jadi disimpan sebagai 200 (dengan header Content-Range asli) dan dikembalikan sebagai 206.
 const as206 = (r) => new Response(r.body, { status: 206, statusText: "Partial Content", headers: r.headers });
 
+async function pmLookup(key) {
+  for (const name of [PM_SAVED, PM_BROWSE]) {
+    const hit = await (await caches.open(name)).match(key);
+    if (hit) return { hit, saved: name === PM_SAVED };
+  }
+  return { hit: undefined, saved: false };
+}
+
+// Simpan satu respons (200 + Content-Range asli) ke PM_SAVED; melempar bila melewati batas ukuran.
+async function pmSaveEntry(key, buf, headers) {
+  const cache = await caches.open(PM_SAVED);
+  savedBytes ??= await cacheBytes(cache);
+  if (savedBytes + buf.byteLength > PM_MAX_BYTES) throw new Error("saved cache cap"); // penuh: jangan lapor tersimpan
+  await cache.put(key, new Response(buf, { status: 200, headers })); // 206 tidak boleh di-put
+  savedBytes += buf.byteLength;
+}
+
+const sameBytes = async (a, b) => {
+  const x = new Uint8Array(await a.clone().arrayBuffer());
+  const y = new Uint8Array(b);
+  return x.length === y.length && x.every((v, i) => v === y[i]);
+};
+
+// Respons 206 valid: Content-Range sesuai rentang yang diminta dan panjang isi sama dengan rentang itu.
+function validRange(range, net, byteLength) {
+  const cr = /^bytes (\d+)-(\d+)\/(\d+|\*)$/.exec(net.headers.get("content-range") || "");
+  const rq = /^bytes=(\d+)-(\d*)$/.exec(range);
+  if (!cr || !rq) return false;
+  const [start, end, total] = [Number(cr[1]), Number(cr[2]), cr[3]];
+  if (start !== Number(rq[1]) || byteLength !== end - start + 1) return false;
+  if (rq[2] === "") return true; // "bytes=a-": sampai akhir berkas
+  return end === Number(rq[2]) || (total !== "*" && end === Number(total) - 1); // dipotong server hanya di akhir berkas
+}
+
+self.addEventListener("message", (e) => {
+  if (e.data?.type === "geoatlas-pm-reset") savedBytes = null;
+});
+
 async function pmRange(req) {
   const range = req.headers.get("range");
   const url = req.url;
-  const cache = await caches.open(PM_CACHE);
   const key = pmKey(url, range);
-  const hit = await cache.match(key);
+  const { hit, saved: hitSaved } = await pmLookup(key);
+  const toSaved = req.headers.has("x-geoatlas-save");
+  if (req.headers.has("x-geoatlas-cache-only")) return hit ? as206(hit) : new Response("not cached", { status: 504 }); // verifikasi simpan area
+  // req.cache sengaja tidak dipakai: Chromium melaporkan "reload" untuk SEMUA request ber-Range (diuji: default, no-store, setelah reload),
+  // jadi menghormatinya mematikan cache dan offline. Kasus yang dituju (pmtiles.js mustReload setelah ETag tidak cocok) ditangani oleh
+  // pengecekan ETag/isi pada permintaan header di bawah, yang membuang cache usang.
   // Rentang mulai 0 memuat header + direktori akar: selalu coba jaringan dulu agar berkas yang diganti terdeteksi.
   const isHead = /^bytes=0-/.test(range);
-  if (hit && !isHead) return as206(hit);
-  let net;
-  try {
-    net = await fetch(req);
-  } catch {
-    return hit ? as206(hit) : Response.error();
+  if (hit && !isHead) {
+    if (toSaved && !hitSaved) {
+      // Tile sudah ada di cache penjelajahan: salin ke area tersimpan, kalau tidak bisa terpangkas dan hilang offline.
+      try {
+        await pmSaveEntry(key, await hit.clone().arrayBuffer(), hit.headers);
+      } catch {
+        notifyClients({ type: "geoatlas-cache-full" });
+      }
+    }
+    return as206(hit);
   }
-  if (net.status !== 206) return net; // 200/404/416: teruskan apa adanya, jangan di-cache
-  const cr = /^bytes (\d+)-(\d+)\/(\d+|\*)$/.exec(net.headers.get("content-range") || "");
-  const buf = await net.arrayBuffer();
+  const fallback = () => (hit ? as206(hit) : Response.error());
+  const ctl = new AbortController();
+  const timer = hit && isHead ? setTimeout(() => ctl.abort(), 3000) : 0; // sinyal buruk: jangan menahan peta, pakai salinan
+  let net;
+  let buf;
+  try {
+    net = await fetch(req, { signal: ctl.signal });
+    if (net.status !== 206) return hit ? as206(hit) : net; // 200/4xx/5xx: pakai salinan bila ada, jangan di-cache
+    buf = await net.arrayBuffer();
+  } catch {
+    return fallback();
+  } finally {
+    clearTimeout(timer);
+  }
+  if (!validRange(range, net, buf.byteLength)) return fallback(); // parsial/terpotong/rentang salah: jangan disajikan atau disimpan
   const init = { status: 206, statusText: net.statusText, headers: new Headers() };
   for (const h of ["content-range", "content-type", "etag", "last-modified"]) if (net.headers.get(h)) init.headers.set(h, net.headers.get(h));
   init.headers.set("content-length", String(buf.byteLength));
   const out = () => new Response(buf, init);
-  if (!cr || buf.byteLength !== Number(cr[2]) - Number(cr[1]) + 1) return out(); // parsial/terpotong: sajikan tapi jangan simpan
   try {
-    const tag = (r) => r?.headers.get("etag") || r?.headers.get("last-modified");
     const pathname = new URL(url).pathname;
-    if (isHead && hit && tag(hit) && tag(net) && tag(hit) !== tag(net)) await pmPurge(cache, false, pathname); // berkas diganti: entri lama usang
+    if (isHead && hit) {
+      const tag = (r) => r.headers.get("etag") || r.headers.get("last-modified");
+      const [a, b] = [tag(hit), tag(net)];
+      const changed = a && b ? a !== b : !(await sameBytes(hit, buf)); // tanpa ETag/Last-Modified: bandingkan 16 KB header
+      if (changed && (await pmPurge(false, pathname)) > 0) notifyClients({ type: "geoatlas-saved-purged" }); // berkas diganti: area tersimpan usang
+    }
     if (!pmCleaned) {
       pmCleaned = true;
-      await pmPurge(cache, true, pathname); // buang PMTiles versi lain
+      await pmPurge(true, pathname); // buang PMTiles berkas lain
     }
-    await cache.put(key, new Response(buf, { status: 200, headers: init.headers })); // 206 tidak boleh di-put
-    if (++pmPuts % 25 === 0) pmTrim(cache).catch(() => undefined);
+    const stored = () => new Response(buf, { status: 200, headers: init.headers }); // 206 tidak boleh di-put
+    if (toSaved) {
+      await pmSaveEntry(key, buf, init.headers);
+    } else {
+      const cache = await caches.open(PM_BROWSE);
+      await cache.put(key, stored());
+      if (++pmPuts % 25 === 0) pmTrim(cache).catch(() => undefined);
+    }
   } catch {
-    notifyClients({ type: "geoatlas-cache-full" }); // kuota penuh: data tetap disajikan, tapi tidak tersimpan offline
+    if (toSaved) notifyClients({ type: "geoatlas-cache-full" }); // kuota/batas penuh: data tetap disajikan, tapi tidak tersimpan offline
   }
   return out();
 }

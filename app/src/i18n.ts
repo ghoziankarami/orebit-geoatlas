@@ -259,6 +259,9 @@ export const dict = {
     offDone: "Area tersimpan untuk offline.",
     offConfirmClear: "Hapus semua data geologi offline dari perangkat ini?",
     offCleared: "Data offline dihapus.",
+    offPurged: "Data geologi di server diperbarui; area offline lama dihapus. Simpan ulang area saat online.",
+    offLost: "Area offline tersimpan hilang dari cache perangkat; simpan ulang saat online.",
+    offCrossOrigin: "Data geologi dimuat dari origin lain; penyimpanan offline hanya untuk origin yang sama dengan aplikasi.",
   },
   en: {
     tagline: "Interactive Full-Indonesia Geologic Atlas (8 archipelago regions).",
@@ -516,6 +519,9 @@ export const dict = {
     offDone: "Area saved for offline.",
     offConfirmClear: "Delete all offline geology data from this device?",
     offCleared: "Offline data deleted.",
+    offPurged: "Geology data on the server was updated; the old offline area was removed. Save the area again while online.",
+    offLost: "The saved offline area is gone from the device cache; save it again while online.",
+    offCrossOrigin: "Geology data is loaded from another origin; offline saving only works for the app's own origin.",
   },
 } as const;
 

@@ -3,12 +3,13 @@
 // WP-31: simpan area peta (tile geologi PMTiles) agar poligon tetap tampil tanpa sinyal. Tile diunduh lewat PMTiles.getZxy;
 // service worker (public/sw.js) menyimpan tiap respons Range di cache "geoatlas-pmtiles-v1".
 import type { Map as MLMap } from "maplibre-gl";
-import { PMTiles } from "pmtiles";
+import { FetchSource, PMTiles } from "pmtiles";
 import { CONFIG } from "./config";
 import { esc } from "./detail";
 import { getLang, t } from "./i18n";
 
-export const PMTILES_CACHE = "geoatlas-pmtiles-v1";
+export const PMTILES_CACHE = "geoatlas-pmtiles-v1"; // area yang disimpan pengguna (tidak pernah dipangkas otomatis)
+export const PMTILES_BROWSE_CACHE = "geoatlas-pmtiles-browse-v1"; // tile hasil menjelajah (dipangkas)
 export const MAX_TILES = 2000;
 export const MAX_EXTRA_ZOOM = 3;
 export const ABS_MAX_ZOOM = 14;
@@ -63,10 +64,10 @@ const writeSaved = (v: Saved | null) => {
 
 const mb = (n: number) => `${(n / 1048576).toFixed(n < 10485760 ? 1 : 0)} MB`;
 
-async function cacheBytes(): Promise<number> {
+async function cacheBytes(name: string): Promise<number> {
   try {
-    if (!(await caches.has(PMTILES_CACHE))) return 0;
-    const c = await caches.open(PMTILES_CACHE);
+    if (!(await caches.has(name))) return 0;
+    const c = await caches.open(name);
     let sum = 0;
     for (const k of await c.keys()) sum += Number((await c.match(k))?.headers.get("content-length")) || 0;
     return sum;
@@ -75,6 +76,9 @@ async function cacheBytes(): Promise<number> {
   }
 }
 
+/** Service worker hanya mencegat PMTiles satu origin; di origin lain tile tidak bisa disimpan offline. */
+export const tilesSameOrigin = (url: string, base: string = location.href): boolean => new URL(url, base).origin === new URL(base).origin;
+
 export function initOffline(opts: { map: MLMap; toast: (msg: string) => void }): void {
   const block = document.getElementById("offlineBlock");
   if (!block) return;
@@ -82,6 +86,7 @@ export function initOffline(opts: { map: MLMap; toast: (msg: string) => void }):
     block.hidden = true; // mode Macrostrat: tidak ada PMTiles Orebit untuk disimpan
     return;
   }
+  const sameOrigin = tilesSameOrigin(CONFIG.orebitTiles);
   const el = (id: string) => document.getElementById(id) as HTMLElement;
   const title = el("t-offTitle");
   const hint = el("t-offHint");
@@ -96,7 +101,15 @@ export function initOffline(opts: { map: MLMap; toast: (msg: string) => void }):
   let note = ""; // pesan terakhir (sudah di-escape saat dirender)
 
   navigator.serviceWorker?.addEventListener("message", (e) => {
-    if ((e.data as { type?: string } | null)?.type === "geoatlas-cache-full") cacheFull = true;
+    const type = (e.data as { type?: string } | null)?.type;
+    if (type === "geoatlas-cache-full") cacheFull = true;
+    if (type === "geoatlas-saved-purged") {
+      // Berkas PMTiles diganti di server: area tersimpan dibuang SW; catatan area harus ikut dihapus dan pengguna diberi tahu.
+      writeSaved(null);
+      note = esc(t("offPurged"));
+      opts.toast(t("offPurged"));
+      void render();
+    }
   });
 
   async function render() {
@@ -108,7 +121,12 @@ export function initOffline(opts: { map: MLMap; toast: (msg: string) => void }):
     saveBtn.disabled = !!abort;
     cancelBtn.hidden = !abort;
     prog.hidden = !abort;
-    const size = await cacheBytes();
+    const [savedSize, browseSize] = await Promise.all([cacheBytes(PMTILES_CACHE), cacheBytes(PMTILES_BROWSE_CACHE)]);
+    const size = savedSize + browseSize;
+    if (!abort && readSaved() && savedSize === 0) {
+      writeSaved(null); // catatan area tanpa isi cache (dibersihkan peramban/SW): jangan klaim tersimpan
+      note = esc(t("offLost"));
+    }
     clearBtn.disabled = !!abort || size === 0;
     let quota = "";
     try {
@@ -132,6 +150,7 @@ export function initOffline(opts: { map: MLMap; toast: (msg: string) => void }):
   };
 
   async function save() {
+    if (!sameOrigin) return say(t("offCrossOrigin"));
     if (!navigator.serviceWorker?.controller) return say(t("offNoSw"));
     note = "";
     cacheFull = false;
@@ -139,7 +158,8 @@ export function initOffline(opts: { map: MLMap; toast: (msg: string) => void }):
     let pm: PMTiles;
     let plan: ReturnType<typeof planTiles>;
     try {
-      pm = new PMTiles(CONFIG.orebitTiles);
+      // Header x-geoatlas-save: service worker menaruh respons di cache area tersimpan (bukan cache penjelajahan yang dipangkas).
+      pm = new PMTiles(new FetchSource(CONFIG.orebitTiles, new Headers({ "x-geoatlas-save": "1" })));
       const h = await pm.getHeader();
       const b = opts.map.getBounds();
       plan = planTiles({ w: b.getWest(), s: b.getSouth(), e: b.getEast(), n: b.getNorth() }, opts.map.getZoom(), h.minZoom, h.maxZoom);
@@ -180,8 +200,23 @@ export function initOffline(opts: { map: MLMap; toast: (msg: string) => void }):
     await Promise.all([worker(), worker(), worker(), worker()]);
     const cancelled = ctl.signal.aborted;
     abort = null;
-    if (cancelled) say(t("offCancelled"));
-    else if (cacheFull || failed > 0) say(`${t("offPartial")} (${failed} ${t("offFailedTiles")})`);
+    if (cancelled) return say(t("offCancelled"));
+    // Verifikasi: tiap tile harus ada di cache (permintaan cache-only ke SW tidak pernah memakai jaringan).
+    const check = new PMTiles(new FetchSource(CONFIG.orebitTiles, new Headers({ "x-geoatlas-cache-only": "1" })));
+    let missing = 0;
+    let vi = 0;
+    const verifier = async () => {
+      while (vi < jobs.length) {
+        const [z, x, y] = jobs[vi++];
+        try {
+          await check.getZxy(z, x, y);
+        } catch {
+          missing++;
+        }
+      }
+    };
+    await Promise.all([verifier(), verifier(), verifier(), verifier()]);
+    if (cacheFull || failed > 0 || missing > 0) say(`${t("offPartial")} (${failed + missing} ${t("offFailedTiles")})`);
     else {
       const b = opts.map.getBounds();
       writeSaved({ savedAt: Date.now(), tiles: plan.total, bbox: { w: b.getWest(), s: b.getSouth(), e: b.getEast(), n: b.getNorth() } });
@@ -194,6 +229,8 @@ export function initOffline(opts: { map: MLMap; toast: (msg: string) => void }):
     if (!window.confirm(t("offConfirmClear"))) return;
     try {
       await caches.delete(PMTILES_CACHE);
+      await caches.delete(PMTILES_BROWSE_CACHE);
+      navigator.serviceWorker?.controller?.postMessage({ type: "geoatlas-pm-reset" }); // SW menghitung ulang ukuran cache
     } catch {
       /* diabaikan */
     }

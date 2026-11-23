@@ -94,6 +94,9 @@ run_check "app-build" npm --prefix app run build
 if [ "$MODE" = "full" ] && [ -f "tests/test_browser_uiux.py" ]; then
   run_check "browser-uiux" python3 tests/test_browser_uiux.py
 fi
+if [ "$MODE" = "full" ] && [ -f "tests/test_offline_geology_browser.py" ]; then
+  run_check "browser-offline-geology" python3 tests/test_offline_geology_browser.py
+fi
 
 DURATION=$(( $(date +%s) - STARTED ))
 END_SHA="$(git rev-parse HEAD)"

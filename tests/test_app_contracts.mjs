@@ -37,7 +37,7 @@ for (const name of modulesToCompile) {
   let src = readFileSync(resolve(ROOT, `app/src/${name}.ts`), "utf-8");
   src = src.replace(/import\.meta\.env/g, "globalThis.importMetaEnv");
   src = src.replace(/import maplibregl from "maplibre-gl";/, "const maplibregl = globalThis.maplibregl ?? {};");
-  src = src.replace(/import \{ PMTiles \} from "pmtiles";/, "const PMTiles = class {};");
+  src = src.replace(/import \{ FetchSource, PMTiles \} from "pmtiles";/, "const FetchSource = class {}; const PMTiles = class {};");
   src = src.replace(/from\s+"\.\/([^"]+)"/g, 'from "./$1.mjs"');
   const out = ts.transpileModule(src, {
     compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
@@ -1308,8 +1308,12 @@ try {
     assert.ok(!/const VERSION = "v3"/.test(sw), "VERSION SW dinaikkan dari v3");
     assert.match(sw, /geoatlas-pmtiles-v1/);
     assert.ok(!sw.includes('"#bytes='), "kunci Range tidak boleh memakai #fragment (diabaikan Cache API)");
-    assert.match(sw, /k !== PM_CACHE/, "cache PMTiles tidak dibuang saat activate");
-    assert.match(sw, /status !== 206/, "hanya 206 yang di-cache");
+    assert.match(sw, /k !== PM_SAVED && k !== PM_BROWSE/, "cache PMTiles tidak dibuang saat activate");
+    assert.match(sw, /net\.status !== 206/, "hanya 206 yang di-cache");
+    assert.match(sw, /const TILES = "geoatlas-tiles-v3"/, "nama cache basemap tidak memuat VERSION (upgrade tidak menghapusnya)");
+    assert.match(sw, /validRange\(range, net, buf\.byteLength\)/, "Content-Range dan panjang divalidasi sebelum disajikan/disimpan");
+    assert.equal(off.tilesSameOrigin("/tiles/all.pmtiles", "https://atlas.orebit.id/app/"), true);
+    assert.equal(off.tilesSameOrigin("https://staging.example.com/all.pmtiles", "https://atlas.orebit.id/app/"), false, "origin lain: tidak bisa disimpan offline");
     const html = readFileSync(resolve(ROOT, "app/app/index.html"), "utf-8");
     for (const id of ["offlineBlock", "offSave", "offClear", "offCancel", "offProgress", "offStatus", "t-offTitle", "t-offHint"]) assert.ok(html.includes(`id="${id}"`), `index.html memuat #${id}`);
   }
