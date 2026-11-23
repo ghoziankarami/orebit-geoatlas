@@ -606,13 +606,13 @@ class TestBrowserUIUX(unittest.TestCase):
                 project = json.loads(zipfile.ZipFile(path).read("project.json"))
                 return {w["name"]: w["updatedAt"] for w in project["waypoints"]}
 
-            def import_file(path: Path, expect_dialogs: int) -> None:
+            def import_file(path: Path, expect_dialogs: int, marker: str) -> None:
+                """Penanda selesai = toast yang memuat `marker`. Toast dikosongkan dulu agar tidak terbaca dari langkah sebelumnya.
+                Dialog dicatat saat konfirmasi muncul (sebelum toast), jadi jumlahnya dicek setelah toast."""
+                page.evaluate("document.getElementById('toast').textContent = ''")
                 page.locator("#wpImportFile").set_input_files(str(path))
-                for _ in range(60):
-                    if len(dialogs) >= expect_dialogs:
-                        break
-                    page.wait_for_timeout(100)
-                self.assertEqual(len(dialogs), expect_dialogs, f"dialogs so far: {dialogs}")
+                page.wait_for_function(f"document.getElementById('toast').textContent.includes({json.dumps(marker)})")
+                self.assertEqual(len(dialogs), expect_dialogs, f"dialogs after toast {marker!r}: {dialogs}")
 
             page.goto(self.app_url + "#map=9/-0.95/119.9", wait_until="domcontentloaded")
             page.wait_for_selector("#regionBar .region-chip")
@@ -649,15 +649,14 @@ class TestBrowserUIUX(unittest.TestCase):
 
             # Paket lama (isi berbeda, updatedAt lebih tua) = konflik. Konfirmasi ditolak: tidak ada yang berubah.
             before = page.evaluate(SNAPSHOT_JS)
-            import_file(pkg_a, expect_dialogs=1)
+            import_file(pkg_a, expect_dialogs=1, marker="dibatalkan")
             self.assertIn("berbeda", dialogs[-1])
             self.assertIn("akan dihapus", dialogs[-1], "confirmation must say local photos not in the file are deleted")
             self.assertEqual(page.evaluate(SNAPSHOT_JS), before, "declined confirmation must not apply anything")
 
             # Paket yang sama dengan isi lokal: dilewati tanpa konfirmasi
             policy["accept"] = True
-            import_file(pkg_b, expect_dialogs=1)
-            page.wait_for_function("document.getElementById('toast').textContent.includes('0 ditambah')")
+            import_file(pkg_b, expect_dialogs=1, marker="0 ditambah")
             self.assertEqual(page.evaluate(SNAPSHOT_JS), before)
 
             # Lintasan berbeda meminta konfirmasi (waypoint tidak berubah)
@@ -673,12 +672,11 @@ class TestBrowserUIUX(unittest.TestCase):
                     dst.writestr(info.filename, data)
             policy["accept"] = False
             before_tr = page.evaluate(SNAPSHOT_JS)
-            import_file(pkg_c, expect_dialogs=2)
+            import_file(pkg_c, expect_dialogs=2, marker="dibatalkan")
             self.assertIn("Lintasan", dialogs[-1])
             self.assertEqual(page.evaluate(SNAPSHOT_JS), before_tr, "declined transect confirmation must keep the transect")
             policy["accept"] = True
-            import_file(pkg_c, expect_dialogs=3)
-            page.wait_for_function("document.getElementById('toast').textContent.includes('Impor selesai')")
+            import_file(pkg_c, expect_dialogs=3, marker="Impor selesai")
             self.assertEqual(page.evaluate(SNAPSHOT_JS)["transect"], [{"lng": 120.0, "lat": -1.0}])
 
             self.assertEqual(errors, [], f"Unexpected pageerrors: {errors}")

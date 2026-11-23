@@ -513,13 +513,18 @@ export interface MergePlan {
   replaced: Waypoint[];
 }
 
-/** Titik pihak ketiga dianggap sama dengan titik lokal bila koordinat dan keterangan sama, nama sama (kecuali nama kosong), dan waktu sama bila berkas mencantumkannya. */
+/**
+ * Titik pihak ketiga sama dengan titik lokal bila koordinat sama.
+ * Berkas yang mencantumkan waktu (termasuk GPX dari aplikasi ini): waktu harus sama, dan nama harus sama bila titik bernama.
+ * Catatan tidak dibandingkan saat waktu ada, karena <desc> GPX dari aplikasi ini menggabungkan struktur, catatan, unit, dan akurasi.
+ * Berkas tanpa waktu: titik bernama dicocokkan lewat nama; titik tanpa nama lewat catatan.
+ */
 const sameExternal = (w: Waypoint, inc: Waypoint): boolean => {
   if (w.lat.toFixed(7) !== inc.lat.toFixed(7) || w.lng.toFixed(7) !== inc.lng.toFixed(7)) return false;
-  if ((w.note ?? "") !== inc.note) return false;
-  if (inc.name !== "" && w.name !== inc.name) return false;
   const src = EXT_SOURCE_TIME.get(inc) ?? null;
-  return src === null || w.time === src;
+  if (src !== null) return w.time === src && (inc.name === "" || w.name === inc.name);
+  if (inc.name !== "") return w.name === inc.name;
+  return (w.note ?? "") === inc.note;
 };
 
 /**
@@ -693,12 +698,17 @@ export function createFieldPackage(opts: FieldPkgOpts) {
       if (replacing > 0) parts.push(t("wpImportConfirmPhotos"));
       if (transectOverwrite) parts.push(t("wpImportConfirmTr"));
       // Konfirmasi ditolak: tidak ada yang ditulis, tidak ada waypoint, foto, atau lintasan yang berubah.
-      if (!confirm(parts.join(" "))) return;
+      if (!confirm(parts.join(" "))) {
+        // Penanda untuk pengguna: tidak ada yang ditulis; toast ini juga menandai selesainya langkah ditolak.
+        opts.toast(t("wpImportCancelled"));
+        return;
+      }
     }
 
     // Foto baru ditulis lebih dulu. Foto yang id-nya sudah ada di perangkat tidak ditulis ulang dan tidak masuk daftar
     // rollback, jadi galat di tengah tidak menghapus foto lokal yang sudah ada.
     const stored: string[] = [];
+    const metaUpdates: Array<{ id: string; caption: string; azimuth: number | null }> = [];
     const haveByWp = new Map<string, Set<string>>();
     for (const p of incoming.photos) {
       if (!plan.touched.has(p.meta.wpId)) continue;
@@ -708,8 +718,8 @@ export function createFieldPackage(opts: FieldPkgOpts) {
         haveByWp.set(p.meta.wpId, have);
       }
       if (have.has(p.meta.id)) {
-        // Foto sudah ada: bytes tidak ditulis ulang; keterangan dan arah ikut versi paket yang dikonfirmasi.
-        await updatePhotoMeta(p.meta.id, { caption: p.meta.caption, azimuth: p.meta.azimuth });
+        // Foto sudah ada: bytes tidak ditulis ulang; keterangan dan arah ikut versi paket, tetapi baru setelah semua foto baru tersimpan.
+        metaUpdates.push({ id: p.meta.id, caption: p.meta.caption, azimuth: p.meta.azimuth });
         continue;
       }
       if (!(await putPhoto(p.blob, p.meta))) {
@@ -718,6 +728,7 @@ export function createFieldPackage(opts: FieldPkgOpts) {
       }
       stored.push(p.meta.id);
     }
+    for (const m of metaUpdates) await updatePhotoMeta(m.id, { caption: m.caption, azimuth: m.azimuth });
     opts.host.close();
     opts.host.commit(plan.next);
     const keep = new Set(plan.next.flatMap((w) => w.photos ?? []));

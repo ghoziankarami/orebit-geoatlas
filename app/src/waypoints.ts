@@ -51,6 +51,8 @@ export const kindOf = (w: Waypoint): WpKind => (WP_KINDS.includes(w.kind as WpKi
 /** True when the waypoint carries a usable strike/dip measurement. */
 export const hasAttitude = (w: Waypoint): boolean =>
   kindOf(w) === "structure" && Number.isFinite(w.strike as number) && Number.isFinite(w.dip as number);
+/** Isi yang diedit di panel; perubahan pada nilai ini (dan hanya ini) menaikkan updatedAt saat Simpan. */
+const editableKey = (w: Waypoint): string => JSON.stringify([w.name, w.note, kindOf(w), w.structType ?? null, w.strike ?? null, w.dip ?? null]);
 /** "030/45" style strike/dip text (right-hand rule). */
 export const attitudeText = (w: Waypoint): string =>
   hasAttitude(w) ? `${String(Math.round(w.strike as number) % 360).padStart(3, "0")}/${Math.round(w.dip as number)}` : "";
@@ -556,9 +558,9 @@ export function createWaypoints(
         opts.toast(t("wpAzErr"));
         return;
       }
+      const before = editableKey(w);
       w.name = nameIn.value.trim() || w.name;
       w.note = noteIn.value.trim();
-      w.updatedAt = new Date().toISOString();
       w.kind = editKind;
       if (editKind === "structure") {
         w.structType = structSel.value as StructType;
@@ -569,6 +571,8 @@ export function createWaypoints(
         w.strike = null;
         w.dip = null;
       }
+      // updatedAt hanya naik bila isi yang diedit benar-benar berubah.
+      if (editableKey(w) !== before) w.updatedAt = new Date().toISOString();
       save();
     }
     close();

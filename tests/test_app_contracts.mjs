@@ -326,6 +326,18 @@ try {
   assert.equal(mergeWaypoints([], [fpTwin("A"), fpTwin("A")], "external").added, 2, "rows inside one file are not deduplicated against each other");
   const extLocal = mergeWaypoints([{ ...gpxIn[0] }], gpxIn, "external");
   assert.deepEqual([extLocal.added, extLocal.skipped], [2, 1], "point already present locally (name, coords, note, time) is skipped");
+  // Impor ulang GPX dari aplikasi sendiri tidak menggandakan: <desc> berisi struktur, catatan, unit, dan akurasi sekaligus
+  const ownWps = [
+    fpBase("g1", "2026-11-22T06:00:00.000Z", { name: "S-1", kind: "structure", structType: "bedding", strike: 30, dip: 45, accM: 8.6, unit: "Formasi Pakuli", symbol: "Qp", note: "catatan", elevM: 42.4 }),
+    fpBase("g2", "2026-11-22T06:05:00.000Z", { name: "", note: "tanpa nama", accM: 3, unit: "Formasi X", symbol: "Y" }),
+    fpBase("g3", "2026-11-22T06:06:00.000Z", { name: "O-3", accM: 5, unit: "Formasi Z", note: "" }),
+  ];
+  const wpM = await import(join(tempDir, "waypoints.mjs"));
+  const ownGpx = parseGpx(wpM.toGpx(ownWps));
+  const ownRe = mergeWaypoints(ownWps, ownGpx, "external");
+  assert.deepEqual([ownRe.added, ownRe.skipped], [0, 3], "re-importing our own GPX must not duplicate any point");
+  assert.notEqual(ownGpx[0].note, ownWps[0].note, "sanity: GPX desc is combined, so it differs from the stored note");
+  assert.ok(ownGpx[0].note.includes("030/45") && ownGpx[0].note.includes("Formasi Pakuli"), "sanity: desc carries structure and unit");
 
   // L3: ZIP menolak 65535 entri atau lebih (batas ZIP32 entri)
   const manyEntries = (n) => Array.from({ length: n }, (_, i) => ({ name: `f${i}`, data: new Uint8Array(0) }));
