@@ -29,6 +29,6 @@ sudo ls -lh /var/www/atlas.orebit.id/tiles/
 
 ## 3. Verifikasi Pasca-Deploy
 
-1. Uji respons `https://atlas.orebit.id/` (HTTP 200) dan `https://atlas.orebit.id/data/indonesia-units-index.json` (HTTP 200, JSON valid 8 wilayah).
-2. Uji header `Accept-Ranges: bytes` dan `206 Partial Content` pada berkas PMTiles di `/tiles/`.
+1. Wajib jalankan `python3 ops/scripts/ci/prod-smoke.py https://atlas.orebit.id` segera setelah symlink `current` dialihkan; bila ada cek `FAIL`, segera kembalikan `current` ke rilis sebelumnya (rollback).
+2. Pastikan seluruh 7 cek `prod-smoke.py` berstatus `PASS` (`/`, `/app/` HTTP 200 + `Permissions-Policy: geolocation=(self)`, `/assets/*.js` `immutable`, `/manifest.json`, `/sw.js`, `/data/indonesia-units-index.json` gzip + 8 wilayah + ≥ 2.000 unit, dan `/tiles/*.pmtiles` `206 Partial Content` + `Accept-Ranges: bytes` + CORS).
 3. Catat tanggal deploy, commit SHA, dan hasil verifikasi di `ACTIVE CHECKPOINT` pada [HANDOVER-geoatlas.md](../handover/HANDOVER-geoatlas.md).

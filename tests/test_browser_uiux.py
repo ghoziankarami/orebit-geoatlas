@@ -7,8 +7,8 @@ from __future__ import annotations
 
 import functools
 import http.server
+import json
 import re
-import socketserver
 import threading
 import unittest
 from pathlib import Path
@@ -82,6 +82,48 @@ def boxes_overlap(a: dict, b: dict, margin: float = 0.0) -> bool:
     )
 
 
+def attach_error_guards(page, *, allow_offline_disconnect: bool = False) -> tuple[list[str], list[str]]:
+    """Rekam pageerror dan console.error (kecuali ERR_INTERNET_DISCONNECTED saat uji offline sengaja)."""
+    page_errors: list[str] = []
+    console_errors: list[str] = []
+    page.on("pageerror", lambda err: page_errors.append(str(err)))
+
+    def on_console(msg) -> None:
+        if msg.type != "error":
+            return
+        text = msg.text or ""
+        if allow_offline_disconnect and "ERR_INTERNET_DISCONNECTED" in text:
+            return
+        console_errors.append(text)
+
+    page.on("console", on_console)
+    return page_errors, console_errors
+
+
+MIN_STYLE_JSON = json.dumps(
+    {"version": 8, "sources": {}, "layers": [{"id": "bg", "type": "background", "paint": {"background-color": "#e8edf0"}}]}
+)
+
+
+def route_external_hermetic(context, base_origin: str) -> None:
+    """Layani origin lokal apa adanya dan tiru host eksternal agar uji E2E hermetik tanpa flake jaringan."""
+    origin = base_origin.rstrip("/")
+
+    def handler(route) -> None:
+        url = route.request.url
+        if url.startswith(origin):
+            return route.continue_()
+        if "tiles.openfreemap.org/styles/" in url:
+            return route.fulfill(status=200, content_type="application/json", body=MIN_STYLE_JSON)
+        if "crossref.org" in url or "macrostrat.org/api" in url:
+            return route.fulfill(status=200, content_type="application/json", body="{}")
+        if url.endswith(".css") or "fonts.googleapis.com" in url:
+            return route.fulfill(status=200, content_type="text/css", body="")
+        return route.fulfill(status=204, body=b"")
+
+    context.route("**/*", handler)
+
+
 class QuietHandler(http.server.SimpleHTTPRequestHandler):
     def log_message(self, format, *args):  # noqa: A002
         pass
@@ -92,7 +134,7 @@ class TestBrowserUIUX(unittest.TestCase):
     def setUpClass(cls) -> None:
         assert DIST.is_dir(), f"Missing {DIST}; run npm run build first"
         handler = functools.partial(QuietHandler, directory=str(DIST))
-        cls.httpd = socketserver.TCPServer(("127.0.0.1", 0), handler)
+        cls.httpd = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
         cls.port = cls.httpd.server_address[1]
         cls.thread = threading.Thread(target=cls.httpd.serve_forever, daemon=True)
         cls.thread.start()
@@ -786,6 +828,245 @@ class TestBrowserUIUX(unittest.TestCase):
             self.assertLessEqual(scroll_w, 375, f"Horizontal overflow on mobile: {scroll_w}")
 
             self.assertEqual(errors, [], f"Unexpected mobile pageerrors: {errors}")
+            browser.close()
+
+    def test_new_user_journey_desktop_and_pixel7_id_en(self) -> None:
+        """TEST-05: Pengguna baru (Desktop 1366x768 + Pixel 7 412x839, ID & EN):
+        landing -> Buka peta/Open map -> cari 'Klabat' -> klik hasil -> detail tampil tanpa console.error/pageerror."""
+        pixel7_ua = (
+            "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/126.0.0.0 Mobile Safari/537.36"
+        )
+        cases = [
+            ("desktop-id", {"width": 1366, "height": 768}, "id-ID", None, "Buka peta", "Trias"),
+            ("desktop-en", {"width": 1366, "height": 768}, "en-US", None, "Open map", "Triassic"),
+            ("pixel7-id", {"width": 412, "height": 839}, "id-ID", pixel7_ua, "Buka peta", "Trias"),
+            ("pixel7-en", {"width": 412, "height": 839}, "en-US", pixel7_ua, "Open map", "Triassic"),
+        ]
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            for label, vp, locale, ua, cta_text, expected_age in cases:
+                with self.subTest(case=label):
+                    ctx_args = {"viewport": vp, "locale": locale}
+                    if ua:
+                        ctx_args["user_agent"] = ua
+                    context = browser.new_context(**ctx_args)
+                    route_external_hermetic(context, self.base_url)
+                    page = context.new_page()
+                    page_errors, console_errors = attach_error_guards(page)
+
+                    page.goto(self.base_url, wait_until="domcontentloaded")
+                    cta = page.locator("header a.btn.primary[href='/app/']")
+                    self.assertIn(cta_text, cta.inner_text())
+                    cta.click()
+
+                    page.wait_for_url(re.compile(r"/app/$"), wait_until="domcontentloaded")
+                    page.wait_for_selector("#regionBar .region-chip", state="attached")
+                    page.locator("#searchInput").fill("Klabat")
+                    page.wait_for_selector("#searchResults .search-item")
+                    page.locator("#searchResults .search-item").first.click()
+
+                    detail = page.locator("#detail")
+                    detail.wait_for(state="visible")
+                    text = detail.inner_text()
+                    self.assertIn("Granit Klabat", text)
+                    self.assertIn(expected_age, text)
+
+                    if vp["width"] >= 1000:
+                        box_detail = detail.bounding_box()
+                        box_ctrls = page.locator("#mapControls").bounding_box()
+                        assert box_detail and box_ctrls
+                        self.assertFalse(boxes_overlap(box_detail, box_ctrls))
+                    else:
+                        scroll_w = page.evaluate("document.documentElement.scrollWidth")
+                        self.assertLessEqual(scroll_w, vp["width"], f"overflow at {label}: {scroll_w}")
+
+                    self.assertEqual(page_errors, [], f"{label} pageerrors: {page_errors}")
+                    self.assertEqual(console_errors, [], f"{label} console.errors: {console_errors}")
+                    context.close()
+            browser.close()
+
+    def test_pixel7_photo_field_package_round_trip(self) -> None:
+        """TEST-05: Perjalanan lapangan di Pixel 7 (412x839, EN): waypoint + 2 foto -> Paket Lapangan .zip -> Hapus semua -> impor -> identik."""
+        import shutil
+        import tempfile
+        import zipfile
+
+        tmp = Path(tempfile.mkdtemp(prefix="geoatlas-pixel7-pkg-"))
+        p1 = tmp / "outcrop-1.png"
+        p2 = tmp / "outcrop-2.png"
+        write_png(p1, 1200, 900, (190, 95, 30))
+        write_png(p2, 640, 480, (40, 120, 180))
+        pixel7_ua = (
+            "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/126.0.0.0 Mobile Safari/537.36"
+        )
+
+        try:
+            with sync_playwright() as p:
+                browser = p.chromium.launch()
+                context = browser.new_context(
+                    viewport={"width": 412, "height": 839},
+                    user_agent=pixel7_ua,
+                    locale="en-US",
+                    accept_downloads=True,
+                )
+                route_external_hermetic(context, self.base_url)
+                page = context.new_page()
+                page_errors, console_errors = attach_error_guards(page)
+
+                def on_dialog(dlg) -> None:
+                    dlg.accept()
+
+                page.on("dialog", on_dialog)
+                page.goto(self.app_url + "#map=9/-0.95/119.9", wait_until="domcontentloaded")
+                page.wait_for_selector("#searchInput")
+                add_wp(page, 200, 260, "PX-1", kind="structure", strike="045", dip="35", note="Pixel 7 outcrop", photos=[p1, p2])
+
+                # Buka sheet penuh (peek -> half -> full) agar kontrol Paket Lapangan terlihat
+                page.locator("#sheetHandle").click()
+                page.locator("#sheetHandle").click()
+                self.assertEqual(page.locator("#panel").get_attribute("data-snap"), "full")
+                self.assertEqual(page.locator("#wpCount").inner_text(), "1")
+                snap1 = page.evaluate(SNAPSHOT_JS)
+                self.assertEqual(len(snap1["photos"]), 2)
+
+                with page.expect_download() as dl:
+                    page.locator("#wpExportPkg").click()
+                pkg = tmp / "pixel7-pkg.zip"
+                dl.value.save_as(str(pkg))
+                with zipfile.ZipFile(pkg) as zf:
+                    photo_files = [n for n in zf.namelist() if n.startswith("photos/")]
+                    self.assertEqual(len(photo_files), 2)
+
+                page.locator("#wpClearAll").click()
+                page.wait_for_function("document.getElementById('wpCount').textContent === '0'")
+                page.goto(self.app_url, wait_until="domcontentloaded")
+                page.wait_for_selector("#searchInput")
+                self.assertEqual(page.evaluate(SNAPSHOT_JS)["photos"], [])
+
+                page.locator("#sheetHandle").click()
+                page.locator("#sheetHandle").click()
+                page.locator("#wpImportFile").set_input_files(str(pkg))
+                page.wait_for_function("document.getElementById('wpCount').textContent === '1'")
+                snap2 = page.evaluate(SNAPSHOT_JS)
+                self.assertEqual(snap2["wps"], snap1["wps"])
+                self.assertEqual(snap2["photos"], snap1["photos"])
+
+                scroll_w = page.evaluate("document.documentElement.scrollWidth")
+                self.assertLessEqual(scroll_w, 412)
+                self.assertEqual(page_errors, [], f"Pixel 7 pageerrors: {page_errors}")
+                self.assertEqual(console_errors, [], f"Pixel 7 console.errors: {console_errors}")
+                browser.close()
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_mobile_install_ux_375_en(self) -> None:
+        """TEST-05: UX pemasangan iOS Safari, LinkedIn in-app, dan mode standalone pada viewport 375x812 (EN)."""
+        ios_ua = (
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 "
+            "(KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1"
+        )
+        linkedin_ua = (
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 "
+            "(KHTML, like Gecko) Mobile/15E148 LinkedInApp"
+        )
+        standalone_script = """
+        (() => {
+          const real = window.matchMedia.bind(window);
+          window.matchMedia = (q) => q.includes("display-mode: standalone")
+            ? { matches: true, media: q, onchange: null, addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {}, dispatchEvent() { return false; } }
+            : real(q);
+        })();
+        """
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            # 1. iPhone Safari (EN, 375x812)
+            ctx_ios = browser.new_context(viewport={"width": 375, "height": 812}, user_agent=ios_ua, locale="en-US")
+            route_external_hermetic(ctx_ios, self.base_url)
+            page = ctx_ios.new_page()
+            perr, cerr = attach_error_guards(page)
+            page.goto(self.app_url, wait_until="load")
+            page.wait_for_selector("#installChip:not([hidden])", state="visible")
+            page.locator("#installChip").click()
+            self.assertTrue(page.locator("#installSheet").is_visible())
+            steps_text = page.locator("#installSteps").inner_text()
+            self.assertIn("Share", steps_text)
+            self.assertIn("Add to Home Screen", steps_text)
+            self.assertEqual(perr, [])
+            self.assertEqual(cerr, [])
+            ctx_ios.close()
+
+            # 2. LinkedIn in-app browser (EN, 375x812)
+            ctx_li = browser.new_context(viewport={"width": 375, "height": 812}, user_agent=linkedin_ua, locale="en-US")
+            route_external_hermetic(ctx_li, self.base_url)
+            page = ctx_li.new_page()
+            perr, cerr = attach_error_guards(page)
+            page.goto(self.app_url, wait_until="load")
+            page.wait_for_selector("#inAppBanner", state="visible")
+            self.assertIn("Chrome/Safari", page.locator("#inAppText").inner_text())
+            self.assertTrue(page.locator("#inAppCopy").is_visible())
+            self.assertFalse(page.locator("#installChip").is_visible())
+            self.assertEqual(perr, [])
+            self.assertEqual(cerr, [])
+            ctx_li.close()
+
+            # 3. Standalone hides both chip & banner
+            for ua in (ios_ua, linkedin_ua):
+                ctx_st = browser.new_context(viewport={"width": 375, "height": 812}, user_agent=ua, locale="en-US")
+                route_external_hermetic(ctx_st, self.base_url)
+                ctx_st.add_init_script(standalone_script)
+                page = ctx_st.new_page()
+                perr, cerr = attach_error_guards(page)
+                page.goto(self.app_url, wait_until="load")
+                page.wait_for_timeout(200)
+                self.assertFalse(page.locator("#installChip").is_visible())
+                self.assertFalse(page.locator("#inAppBanner").is_visible())
+                self.assertEqual(perr, [])
+                self.assertEqual(cerr, [])
+                ctx_st.close()
+            browser.close()
+
+    def test_corrupt_storage_and_blocked_indexeddb(self) -> None:
+        """TEST-05: localStorage rusak & IndexedDB diblokir tidak menjatuhkan aplikasi; pencarian & waypoint dasar tetap jalan."""
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            context = browser.new_context(viewport={"width": 1366, "height": 768}, locale="id-ID")
+            route_external_hermetic(context, self.base_url)
+            context.add_init_script(
+                """
+                localStorage.setItem('geoatlas.waypoints.v1', '{rusak-json');
+                localStorage.setItem('geoatlas.session.v1', 'not-json');
+                localStorage.setItem('geoatlas.offline.v1', '[bad');
+                localStorage.setItem('geoatlas.ui.v1', '{bad');
+                localStorage.setItem('geoatlas.backup.v1', 'bad');
+                localStorage.setItem('geoatlas.lang', 'invalid');
+                Object.defineProperty(window, 'indexedDB', {
+                  configurable: true,
+                  get() { throw new DOMException('Blocked by policy', 'SecurityError'); },
+                });
+                """
+            )
+            page = context.new_page()
+            perr, cerr = attach_error_guards(page)
+
+            page.goto(self.app_url, wait_until="domcontentloaded")
+            page.wait_for_selector("#regionBar .region-chip")
+            self.assertEqual(page.locator("#regionBar .region-chip").count(), 9)
+
+            page.locator("#searchInput").fill("Klabat")
+            page.wait_for_selector("#searchResults .search-item")
+            page.locator("#searchResults .search-item").first.click()
+            page.locator("#detail").wait_for(state="visible")
+            self.assertIn("Granit Klabat", page.locator("#detail").inner_text())
+            page.keyboard.press("Escape")
+
+            # Menambah waypoint tanpa foto tetap berhasil meski IndexedDB diblokir
+            add_wp(page, 800, 400, "No-IDB-1", note="Aman tanpa IndexedDB")
+            self.assertEqual(page.locator("#wpCount").inner_text(), "1")
+
+            self.assertEqual(perr, [], f"Unexpected pageerrors with corrupt storage: {perr}")
+            self.assertEqual(cerr, [], f"Unexpected console.errors with corrupt storage: {cerr}")
             browser.close()
 
 

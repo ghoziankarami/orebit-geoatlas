@@ -80,6 +80,8 @@ def main(argv: list[str]) -> int:
     run_check("reference-validate", [py, "pipeline/validate_reference.py"], root, passed)
     if (root / "tests" / "test_pipeline_contracts.py").is_file():
         run_check("pipeline-contracts", [py, "tests/test_pipeline_contracts.py"], root, passed)
+    if (root / "tests" / "test_prod_smoke.py").is_file():
+        run_check("prod-smoke-unit", [py, "tests/test_prod_smoke.py"], root, passed)
     if (root / "tests" / "test_app_contracts.mjs").is_file():
         run_check("app-contracts", [node_bin, "tests/test_app_contracts.mjs"], root, passed)
         bash_bin = shutil.which("bash")
