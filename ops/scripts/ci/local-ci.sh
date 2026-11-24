@@ -91,8 +91,16 @@ fi
 run_check "app-build" npm --prefix app run build
 
 # 5. Full browser E2E Playwright suite (in --full mode when present)
-if [ "$MODE" = "full" ] && [ -f "tests/test_browser_uiux.py" ]; then
-  run_check "browser-uiux" python3 tests/test_browser_uiux.py
+if [ "$MODE" = "full" ]; then
+  if [ -f "tests/test_browser_uiux.py" ]; then
+    run_check "browser-uiux" python3 tests/test_browser_uiux.py
+  fi
+  if [ -f "tests/test_pwa_install_browser.py" ]; then
+    run_check "pwa-install-browser" python3 tests/test_pwa_install_browser.py
+  fi
+  if [ -f "tests/test_offline_geology_browser.py" ]; then
+    run_check "offline-geology-browser" python3 tests/test_offline_geology_browser.py
+  fi
 fi
 
 DURATION=$(( $(date +%s) - STARTED ))

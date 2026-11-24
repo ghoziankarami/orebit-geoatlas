@@ -25,6 +25,7 @@ Dokumen ini mencatat `ACTIVE CHECKPOINT` tunggal untuk kelanjutan sesi manusia m
   - Rebuild 8 wilayah + `data/out/all/all.pmtiles` (320 MB) & index 2.130 entri SELESAI (lokal, di `data/out/`, gitignored).
 - **Penghalang (STOP-TANYA):**
   - `HUM-01` (`WP-19`): menunggu sesi uji usability ≥5 peserta nyata.
-- **Gelombang H dibuka 23 Nov 2026** dari [Audit Produksi & Lapangan](../audits/audit-produksi-lapangan-2026-11-23.md): `local-ci --full` PASS 8/8 di `ad239fb`; coverage unit baseline 29%; tombol pasang PWA tak terlihat di HP (header di bawah sheet `peek` + `preventDefault` menekan infobar Chrome).
-- **WP-29 (`FLD-01`) selesai di branch `feat/waypoint-field-photos`** (belum di-push/merge): foto lapangan per waypoint; `local-ci --fast` PASS; `test_browser_uiux.py` 6/6 PASS termasuk `test_waypoint_field_photos`. Penghapusan foto/waypoint kini meminta konfirmasi.
-- **Satu Langkah Berikutnya (Next Action):** `WP-29` (`FLD-01`) sudah selesai di branch `feat/waypoint-field-photos` dan menunggu review serta merge oleh pemilik; jangan dijalankan ulang. Lanjutkan gelombang H1 dengan `WP-28`, `WP-32`, dan `WP-34`: `python3 ops/scripts/agents/wp.py workflow WP-28 WP-32 WP-34 --exec-model flash --review-model pro`. Rollback: `current` ke `releases/20261121T160417Z-38e566e`.
+- **Gelombang H (Audit Produksi & Lapangan 23 Nov 2026 — progres):**
+  - `WP-28` (`PWA-01`), `WP-29` (`FLD-01`), `WP-30` (`FLD-02`/`FLD-03`), `WP-32` (`TEST-04`, coverage ≥60%), dan `WP-34` (`DOC-02`) sudah **MERGED** ke `main` (`64340c9`) dan diarsipkan di `docs/geoatlas-completed.md`.
+  - `WP-31` (`PWA-02`, branch `feat/offline-geology-area` @ `d9c2742`): implementasi cache Range PMTiles SW v4 + `test_offline_geology_browser.py` sudah siap di worktree/branch lokal, menunggu review independen + merge ke `main`.
+- **Satu Langkah Berikutnya (Next Action):** Review & merge `WP-31` (`feat/offline-geology-area`), lalu selesaikan `WP-33` (`TEST-05`: E2E pengguna baru + `prod-smoke.py`) dan `WP-35` (`REL-03`: deploy v4 mobile/lapangan ke `atlas.orebit.id` dengan `local_ci.py --full --write-receipt`). Rollback produksi terakhir: `current` ke `releases/20261122T084825Z-89dd138`.

@@ -139,17 +139,53 @@ def local_heads(root: Path) -> dict[str, str]:
 
 
 def local_completions(root: Path, archived_task_ids: set[str], wps: list) -> dict[str, dict]:
-    """Resolve completed WPs from the completion archive (`docs/geoatlas-completed.md`) and git merge history."""
+    """Resolve completed WPs from git merge history (Merge WP-NN / merged branches) and completion archive."""
     done: dict[str, dict] = {}
     main_sha = subprocess.run(
+        ["git", "rev-parse", "main"],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=False,
+    ).stdout.strip() or subprocess.run(
         ["git", "rev-parse", "HEAD"],
         cwd=root,
         capture_output=True,
         text=True,
         check=False,
     ).stdout.strip()
+    by_branch = {w.branch: w.id for w in wps}
+    log_out = subprocess.run(
+        ["git", "log", "--first-parent", "--format=%H\t%P\t%s", "main"],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,
+    ).stdout
+    merge_wp_re = re.compile(r"^(?:Merge|Integrate)\s+(WP-\d{2})\b", re.IGNORECASE)
+    merge_br_re = re.compile(r"^Merge\s+(?:branch\s+'?)?([a-z]+/[a-z0-9][a-z0-9./-]*)'?", re.IGNORECASE)
+    for line in log_out.splitlines():
+        parts = line.split("\t", 2)
+        if len(parts) != 3:
+            continue
+        sha, parents, subject = parts
+        source_sha = parents.split()[1] if len(parents.split()) > 1 else sha
+        m = merge_wp_re.match(subject)
+        if m:
+            done.setdefault(
+                m.group(1).upper(),
+                {"status": "MERGED", "source_sha": source_sha, "merge_sha": sha},
+            )
+            continue
+        mb = merge_br_re.match(subject)
+        if mb and mb.group(1) in by_branch:
+            done.setdefault(
+                by_branch[mb.group(1)],
+                {"status": "MERGED", "source_sha": source_sha, "merge_sha": sha},
+            )
     for w in wps:
-        if w.closes and set(w.closes).issubset(archived_task_ids):
+        if w.id not in done and w.closes and set(w.closes).issubset(archived_task_ids):
             done[w.id] = {
                 "status": "MERGED",
                 "source_sha": main_sha,
