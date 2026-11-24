@@ -81,6 +81,9 @@ run_check "reference-validate" python3 pipeline/validate_reference.py
 if [ -f "tests/test_pipeline_contracts.py" ]; then
   run_check "pipeline-contracts" python3 tests/test_pipeline_contracts.py
 fi
+if [ -f "tests/test_prod_smoke.py" ]; then
+  run_check "prod-smoke-unit" python3 tests/test_prod_smoke.py
+fi
 if [ -f "tests/test_app_contracts.mjs" ]; then
   run_check "app-contracts" node tests/test_app_contracts.mjs
   # Coverage modul murni app: total line coverage wajib >= 60% (TEST-04 / WP-32)
