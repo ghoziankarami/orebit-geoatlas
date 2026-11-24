@@ -31,12 +31,13 @@ if (!globalThis.history) globalThis.history = { replaceState: () => {} };
 const keepDir = Boolean(process.env.GEOATLAS_COMPILE_DIR);
 const tempDir = keepDir ? resolve(ROOT, process.env.GEOATLAS_COMPILE_DIR) : mkdtempSync(join(tmpdir(), "geoatlas-contracts-"));
 if (keepDir) mkdirSync(tempDir, { recursive: true });
-const modulesToCompile = ["config", "i18n", "timescale", "lithology", "layers", "state", "coords", "search", "detail", "transect", "section_model", "shp_import", "gps", "photos", "waypoints", "zip", "field_package", "install", "session"];
+const modulesToCompile = ["config", "i18n", "timescale", "lithology", "layers", "state", "coords", "search", "detail", "transect", "section_model", "shp_import", "gps", "photos", "waypoints", "zip", "field_package", "install", "session", "offline"];
 
 for (const name of modulesToCompile) {
   let src = readFileSync(resolve(ROOT, `app/src/${name}.ts`), "utf-8");
   src = src.replace(/import\.meta\.env/g, "globalThis.importMetaEnv");
   src = src.replace(/import maplibregl from "maplibre-gl";/, "const maplibregl = globalThis.maplibregl ?? {};");
+  src = src.replace(/import \{ FetchSource, PMTiles \} from "pmtiles";/, "const FetchSource = class {}; const PMTiles = class {};");
   src = src.replace(/from\s+"\.\/([^"]+)"/g, 'from "./$1.mjs"');
   const out = ts.transpileModule(src, {
     compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
@@ -1288,6 +1289,35 @@ try {
     const gp = await import(join(tempDir, "gps.mjs"));
     assert.equal(gp.accuracyRing(10, 90, 1000).length, 49);
     assert.ok(gp.accuracyRing(10, 90, 1000).every((p) => Number.isFinite(p[0]) && Number.isFinite(p[1])));
+  }
+
+  // 17. WP-31: geologi offline (matematika tile + kontrak service worker)
+  {
+    const off = await import(join(tempDir, "offline.mjs"));
+    // Tile 0/0/0 menutup seluruh dunia; satu titik jatuh di satu tile per zoom.
+    assert.deepEqual(off.tileSpan({ w: -180, s: -85, e: 179.99, n: 85 }, 0), { z: 0, x0: 0, x1: 0, y0: 0, y1: 0 });
+    const pt = { w: 106.8, s: -6.2, e: 106.8, n: -6.2 };
+    const p1 = off.planTiles(pt, 10.4, 0, 14);
+    assert.equal(p1.total, 4, "zoom 10..13 = empat zoom, satu tile masing-masing");
+    assert.deepEqual(p1.spans.map((s) => s.z), [10, 11, 12, 13]);
+    assert.equal(off.planTiles(pt, 13, 0, 14).spans.at(-1).z, 14, "tidak melewati zoom 14");
+    assert.equal(off.planTiles(pt, 12, 0, 12).spans.length, 1, "dibatasi maxZoom berkas PMTiles");
+    const wide = off.planTiles({ w: 95, s: -11, e: 141, n: 6 }, 7, 0, 14);
+    assert.ok(wide.total > off.MAX_TILES, "tampilan nasional ditolak (> 2.000 tile)");
+    const sw = readFileSync(resolve(ROOT, "app/public/sw.js"), "utf-8");
+    assert.ok(!/const VERSION = "v3"/.test(sw), "VERSION SW dinaikkan dari v3");
+    assert.match(sw, /geoatlas-pmtiles-v1/);
+    assert.ok(!sw.includes('"#bytes='), "kunci Range tidak boleh memakai #fragment (diabaikan Cache API)");
+    assert.match(sw, /k !== PM_SAVED && k !== PM_BROWSE/, "cache PMTiles tidak dibuang saat activate");
+    assert.match(sw, /net\.status !== 206/, "hanya 206 yang di-cache");
+    assert.match(sw, /const TILES = "geoatlas-tiles-v3"/, "nama cache basemap tidak memuat VERSION (upgrade tidak menghapusnya)");
+    assert.equal(sw.match(/const VERSION = "(v\d+)"/)[1], off.SW_VERSION, "SW_VERSION di offline.ts sama dengan VERSION di sw.js");
+    assert.match(sw, /geoatlas-ping/, "SW menjawab ping versi");
+    assert.match(sw, /validRange\(range, net, buf\.byteLength\)/, "Content-Range dan panjang divalidasi sebelum disajikan/disimpan");
+    assert.equal(off.tilesSameOrigin("/tiles/all.pmtiles", "https://atlas.orebit.id/app/"), true);
+    assert.equal(off.tilesSameOrigin("https://staging.example.com/all.pmtiles", "https://atlas.orebit.id/app/"), false, "origin lain: tidak bisa disimpan offline");
+    const html = readFileSync(resolve(ROOT, "app/app/index.html"), "utf-8");
+    for (const id of ["offlineBlock", "offSave", "offClear", "offCancel", "offProgress", "offStatus", "offProgText", "t-offTitle", "t-offHint"]) assert.ok(html.includes(`id="${id}"`), `index.html memuat #${id}`);
   }
 
   console.log("✓ app contracts PASS (real module imports: UTM, i18n parity, searchNationalIndex, transect math, state roundtrip, field package, SHP/ZIP parsing, waypoints, layers, session, PWA install)");

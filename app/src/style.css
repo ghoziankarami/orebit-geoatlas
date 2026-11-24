@@ -328,6 +328,9 @@ svg path, svg circle { fill: none; stroke: currentColor; stroke-width: 1.6px; st
 /* ---------- Impor SHP / GeoJSON ---------- */
 .shp-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .shp-import-btn { width: 100%; justify-content: center; font-size: 12px; }
+.off-progress { width: 100%; height: 8px; margin-top: 8px; }
+.off-status { margin-top: 8px; font-size: 11px; color: var(--ink-soft); display: grid; gap: 3px; }
+.off-status b { color: var(--ink); font-variant-numeric: tabular-nums; }
 .shp-summary { margin-top: 8px; padding: 8px 10px; border-radius: 8px; background: var(--field); border: 1px solid var(--line); font-size: 11.5px; }
 .shp-audit-head { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 4px; }
 .shp-audit-head span { font-size: 10.5px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }

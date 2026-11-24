@@ -25,7 +25,6 @@ Dokumen ini mencatat `ACTIVE CHECKPOINT` tunggal untuk kelanjutan sesi manusia m
   - Rebuild 8 wilayah + `data/out/all/all.pmtiles` (320 MB) & index 2.130 entri SELESAI (lokal, di `data/out/`, gitignored).
 - **Penghalang (STOP-TANYA):**
   - `HUM-01` (`WP-19`): menunggu sesi uji usability ≥5 peserta nyata.
-- **Gelombang H (Audit Produksi & Lapangan 23 Nov 2026 — progres):**
-  - `WP-28` (`PWA-01`), `WP-29` (`FLD-01`), `WP-30` (`FLD-02`/`FLD-03`), `WP-32` (`TEST-04`, coverage ≥60%), dan `WP-34` (`DOC-02`) sudah **MERGED** ke `main` (`64340c9`) dan diarsipkan di `docs/geoatlas-completed.md`.
-  - `WP-31` (`PWA-02`, branch `feat/offline-geology-area` @ `d9c2742`): implementasi cache Range PMTiles SW v4 + `test_offline_geology_browser.py` sudah siap di worktree/branch lokal, menunggu review independen + merge ke `main`.
-- **Satu Langkah Berikutnya (Next Action):** Review & merge `WP-31` (`feat/offline-geology-area`), lalu selesaikan `WP-33` (`TEST-05`: E2E pengguna baru + `prod-smoke.py`) dan `WP-35` (`REL-03`: deploy v4 mobile/lapangan ke `atlas.orebit.id` dengan `local_ci.py --full --write-receipt`). Rollback produksi terakhir: `current` ke `releases/20261122T084825Z-89dd138`.
+- **Gelombang H (Audit Produksi & Lapangan 23–24 Nov 2026 — progres):**
+  - `WP-28` (`PWA-01`), `WP-29` (`FLD-01`), `WP-30` (`FLD-02`/`FLD-03`), `WP-31` (`PWA-02`, SW v4 Range PMTiles offline + `test_offline_geology_browser.py` 7/7 PASS, reviewer independen PASS), `WP-32` (`TEST-04`, coverage 66.07% ≥ 60%), dan `WP-34` (`DOC-02`) seluruhnya sudah **MERGED** ke `main` dan diarsipkan di `docs/geoatlas-completed.md`.
+- **Satu Langkah Berikutnya (Next Action):** Jalankan `WP-33` (`TEST-05`: E2E pengguna baru + `ops/scripts/ci/prod-smoke.py`) lalu `WP-35` (`REL-03`: deploy v4 mobile/lapangan ke `atlas.orebit.id` dengan `local_ci.py --full --write-receipt`). Rollback produksi terakhir: `current` ke `releases/20261122T084825Z-89dd138`.

@@ -10,6 +10,7 @@ import { formatCoordReadout } from "./coords";
 import { hideDetail, showDetail, showIndexUnitDetail } from "./detail";
 import { getLang, setLang, t, type Key } from "./i18n";
 import { initInstall } from "./install";
+import { initOffline } from "./offline";
 import {
   addGeologyLayers,
   applyGeologyFilters,
@@ -1463,6 +1464,7 @@ initSearch(map, {
 
 // ---------- PWA: pasang ke layar utama + offline ----------
 initInstall({ isMobile, toast });
+initOffline({ map, toast });
 
 syncConfButtons();
 syncBasemapButtons();
