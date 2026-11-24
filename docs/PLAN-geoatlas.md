@@ -18,9 +18,8 @@ Satu-satunya antrean kerja terbuka Orebit GeoAtlas. Tugas yang telah selesai (`D
 
 ---
 
-## Antrean Tugas Terbuka (HUM-01 + Sisa Gelombang H — 2 Tugas)
+## Antrean Tugas Terbuka (HUM-01 — 1 Tugas Manusia)
 
 | ID | Prio | Status | Tugas | PRD/SPEC | Selesai bila |
 |---|---|---|---|---|---|
 | HUM-01 | P1 | BLOCKED | Uji usability representatif ≥5 peserta geolog/mahasiswa untuk skenario eksplorasi & penampang geologi GeoAtlas | PRD §2, SPEC §6 | Kit uji [hum-1-geoatlas.md](audits/hum-1-geoatlas.md) siap pakai; menunggu jadwal sesi peserta nyata oleh pemilik (`WP-19`). |
-| REL-03 | P0 | TODO | Rilis produksi v4 (lapangan) ke atlas.orebit.id dengan receipt exact-SHA dan smoke produksi | [Audit §7](audits/audit-produksi-lapangan-2026-11-23.md) | Receipt `--full --write-receipt` PASS; `prod-smoke.py` PASS terhadap produksi; versi cache SW dinaikkan; rollback tercatat di handover (`WP-35`). |
